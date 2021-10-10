@@ -27,6 +27,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "sequelize": "^5.7.1",
+    "uuidv4": "^6.2.12",
     "validator": "^10.11.0"
   },
   "devDependencies": {
