@@ -6,7 +6,8 @@ import models from './models'
 
 const app = express();
 
-app.use(bodyParser.json());
+
+app.use(bodyParser.json({limit: '50mb'}));
 
 let port = process.env.PORT || 3589;
 

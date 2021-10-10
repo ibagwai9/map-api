@@ -256,3 +256,115 @@ exports.postBudget = (req, res) => {
 					})
 				})
 }
+
+
+exports.budget_summary = (req, res) => {
+	const {excelData} = req.body
+	// console.log(req.body)
+
+	db.sequelize.query(
+		`insert into budget_summary (mda_code, mda_name, economic_code, 
+		budget_description,
+		budget_amount) values ${excelData.map((item) => "(?)").join(",")};`,
+			{
+				replacements : excelData,
+				type : db.sequelize.QueryTypes.insert
+			}
+		)
+	.then((result) => {
+		res.json({result})
+	})
+	.catch((err) => console.log(err))
+
+// const {paymentScheduleTable} = req.body
+
+
+// 	paymentScheduleTable.forEach((item, idx) => {
+// 		db.sequelize.query(
+// 			`CALL budget_summary (:query_type,
+// :mda_code, :mda_name, :economic_code, :budget_description, :budget_amount
+// )`,
+// 			{
+// 		replacements : {
+// 		query_type : item.query_type ? item.query_type : "insert",
+// 		mda_code : item.mda_name ? item.mda_name : "",
+// 		economic_code : item.economic_code ? item.economic_code : "",
+// 		budget_description : item.budget_description ? item.budget_description : "",
+// 		budget_amount : item.budget_amount  ? item.budget_amount : "",		
+// 				}
+// 			}
+// 			)
+// 	})
+
+	
+// 				.catch((err) => {
+// 					res.json({
+// 						success : false,
+// 						err
+
+// 					})
+// 				})
+
+	// console.log(req.body)
+}
+
+exports.mda_bank_details = (req, res) => {
+	const {excelData, query_type} = req.body
+	// console.log(req.body
+	db.sequelize.query(
+		`insert into mda_bank_details (account_name, bank_name, 
+		account_number, 
+		sort_code
+		) values ${excelData.map((item) => "(?)").join(",")};`,
+			{
+				replacements : excelData,
+				type : db.sequelize.QueryTypes.insert
+			}
+		)
+	.then((result) => {
+		res.json({result})
+	})
+	.catch((err) => console.log(err))
+}
+
+exports.select_mda_bank_details = (req, res) => {
+	const {	
+		query_type = "",
+		account_name = "", 
+		bank_name = "", 
+		account_number = "", 
+		sort_code = ""
+	} = req.body
+
+	
+		db.sequelize.query(
+			`CALL mda_bank_details(
+			:account_name, :bank_name, 
+		:account_number, 
+		:sort_code, :query_type
+			)`,
+			{
+				replacements : {
+					account_name, bank_name, 
+		account_number, 
+		sort_code,
+		query_type 
+				}
+			}
+			).then((result) => {
+				res.json({
+					success : true,
+					result
+				})
+
+				console.log(result)
+			})
+				.catch((err) => {
+					console.log(err)
+					res.json({
+						success : false,
+						err
+
+					})
+		})
+}
