@@ -86,20 +86,19 @@ const login = (req, res) => {
     return res.status(400).json(errors);
   }
   const { email, password } = req.body;
-  User.findAll({ 
-    where: { 
-      email
-    } 
+  db.sequelize.query(`select * from users where email=:email or username=:email`,{
+    replacements:{email}
   })
-  .then(user => {
-
+  .then(users => {
+    console.log({users:users[0][0].email})
     //check for user
-    if (!user.length) {
+    if (!users.length) {
       errors.email = 'User not found!';
       return res.status(404).json(errors);
     }
+    const user = users[0][0];
      
-    let originalPassword = user[0].dataValues.password
+    let originalPassword = user.password
 
     //check for password
     bcrypt
@@ -108,7 +107,7 @@ const login = (req, res) => {
         if (isMatch) {
           // user matched
           console.log('matched!')
-          const { id, username } = user[0].dataValues;
+          const { id, username } = user;
           const payload = { id, username }; //jwt payload
           // console.log(payload)
 
@@ -118,7 +117,7 @@ const login = (req, res) => {
             res.json({
               success: true,
               token: 'Bearer ' + token,
-              role: user[0].dataValues.role
+              role: user.role
             });
           });
         } else {
