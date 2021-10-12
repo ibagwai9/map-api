@@ -8,9 +8,11 @@ const User = db.User;
 // load input validation
 import validateRegisterForm from '../validation/register';
 import validateLoginForm from '../validation/login';
+import isEmpty from '../validation/isEmpty';
 
 // create user
 const create = (req, res) => {
+  console.log(req.body);
   const { errors, isValid } = validateRegisterForm(req.body);
   let { 
     firstname, 
@@ -21,7 +23,6 @@ const create = (req, res) => {
     password,
   } = req.body;
 
-  // check validation
   if(!isValid) {
     return res.status(400).json(errors);
   }
@@ -55,6 +56,28 @@ const create = (req, res) => {
   });
 };
 
+const verifyAuth = (req, res, next) => {
+  const authToken = req.headers["authorization"];
+  const token = authToken.split(" ")[1];
+  jwt.verify(token, "secret", (error, decoded) => {
+    if (error) {
+      return res.json({
+        success: false,msg: "Failed to authenticate token." + error});
+    }
+    const { id } = decoded;
+    User.findOne({ where: { id } })
+      .then((user) => {
+        if(!isEmpty(user)){
+          res.json({success: true, user });
+          next();
+        }
+      })
+      .catch((error) => {
+        // res.status(500).json({ success: false, error });
+        console.log({error});
+      });
+  });
+};
 const login = (req, res) => {
   const { errors, isValid } = validateLoginForm(req.body);
 
@@ -62,23 +85,20 @@ const login = (req, res) => {
   if(!isValid) {
     return res.status(400).json(errors);
   }
-
   const { email, password } = req.body;
-
-  User.findAll({ 
-    where: { 
-      email 
-    } 
+  db.sequelize.query(`select * from users where email=:email or username=:email`,{
+    replacements:{email}
   })
-  .then(user => {
-
+  .then(users => {
+    console.log({users:users[0][0].email})
     //check for user
-    if (!user.length) {
+    if (!users.length) {
       errors.email = 'User not found!';
       return res.status(404).json(errors);
     }
+    const user = users[0][0];
      
-    let originalPassword = user[0].dataValues.password
+    let originalPassword = user.password
 
     //check for password
     bcrypt
@@ -87,7 +107,7 @@ const login = (req, res) => {
         if (isMatch) {
           // user matched
           console.log('matched!')
-          const { id, username } = user[0].dataValues;
+          const { id, username } = user;
           const payload = { id, username }; //jwt payload
           // console.log(payload)
 
@@ -97,15 +117,15 @@ const login = (req, res) => {
             res.json({
               success: true,
               token: 'Bearer ' + token,
-              role: user[0].dataValues.role
+              role: user.role
             });
           });
         } else {
           errors.password = 'Password not correct';
           return res.status(400).json(errors);
         }
-    }).catch(err => console.log(err));
-  }).catch(err => res.status(500).json({err}));
+    }).catch(error => console.log({error}));
+  }).catch(error => res.status(500).json({error}));
 };
 
 // fetch all users
@@ -163,5 +183,6 @@ export {
     findAllUsers, 
     findById, 
     update, 
+    verifyAuth,
     deleteUser 
 }
