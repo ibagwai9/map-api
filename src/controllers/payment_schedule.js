@@ -302,7 +302,9 @@ exports.select_mda_bank_details = (req, res) => {
 		account_name = "",
 		bank_name = "",
 		account_number = "",
-		sort_code = ""
+		sort_code = "",
+		account_type="",
+		id="",
 	} = req.body
 
 
@@ -310,14 +312,19 @@ exports.select_mda_bank_details = (req, res) => {
 		`CALL mda_bank_details(
 			:account_name, :bank_name, 
 		:account_number, 
-		:sort_code, :query_type
+		:sort_code, 
+		:account_type,
+		:id,
+		:query_type
 			)`,
 		{
 			replacements: {
 				account_name, bank_name,
 				account_number,
 				sort_code,
-				query_type
+				query_type,
+				account_type,
+				id,
 			}
 		}
 	).then((result) => {
