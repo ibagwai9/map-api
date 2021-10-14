@@ -453,10 +453,35 @@ exports.select_mda_bank_details = (req, res) => {
 	}
 
 exports.get_budget_summary = (req, res) => {
-  const { query_type } = req.query  
+  const { query_type = "",
+  mda_code = "",
+  economic_code = ""
+} = req.query 
+  // console.log(req.body)
+  console.log(req.query) 
   db.sequelize
-    .query(`CALL budget_summary(:query_type,:a,:b,:c,:d,:e)`, {
-      replacements: { query_type, a: '', b: '', c: '', d: '', e: '' },
+    .query(`CALL budget_summary(:query_type,:mda_code,:b,:economic_code,:d,:e)`, {
+      replacements: { query_type, mda_code,  b: '',economic_code, d: '', e: '' },
+    })
+    .then((result) => {
+      res.json({ success : "true",
+        result })
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).json({ err })
+    })
+}
+
+
+exports.get_batch_list = (req, res) => {
+  const { query_type = "", 
+    batch_no = "" 
+  } = req.body 
+  console.log(req.query) 
+  db.sequelize
+    .query(`CALL batch_list(:query_type, :batch_no )`, {
+      replacements: { query_type, batch_no },
     })
     .then((result) => {
       res.json({ result })

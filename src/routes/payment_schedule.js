@@ -6,7 +6,8 @@ import {
   budget_summary,
   mda_bank_details,
   select_mda_bank_details,
-  get_budget_summary
+  get_budget_summary,
+  get_batch_list
 } from "../controllers/payment_schedule";
 
 module.exports = (app) => {
@@ -19,4 +20,6 @@ module.exports = (app) => {
   app.post("/select_mda_bank_details", select_mda_bank_details);
   app.post("/select_mda_bank_details/:id", select_mda_bank_details);
   app.get('/get-budget-summary', get_budget_summary)
+  app.post('/get-budget-summary1', get_budget_summary)
+  app.post("/get_batch_list", get_batch_list);
 };
