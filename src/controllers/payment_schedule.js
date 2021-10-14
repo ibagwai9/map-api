@@ -2,56 +2,162 @@ const { uuid } = require('uuidv4')
 const db = require('../models')
 
 exports.paymentSchedule = (req, res) => {
-  const { paymentScheduleTable } = req.body
+   console.log("jello")
+ const {
+    query_type = "", 
+    date = "",
+    batch_no = "",  
+    treasury_account_name = "",
+    treasury_account_no = "",
+    treasury_bank_name = "",
+    mda_account_name = "",
+    mda_account_no = "",
+    mda_bank_name = "",
+    mda_acct_sort_code = "" ,
+    mda_code = "",
+    mda_name = "",
+    mda_description = "" ,
+    mda_budget_balance = "",
+    mda_economic_code = "",
+    amount = "",
+    description  = "",
+    attachment = "",
+    treasury_source_account = "" 
+  } = req.body
+
+  db.sequelize
+      .query(
+    `CALL payment_schedule (
+    :query_type, 
+    :date,
+    :batch_no,  
+    :treasury_account_name,
+    :treasury_account_no,
+    :treasury_bank_name,
+    :mda_account_name,
+    :mda_account_no,
+    :mda_bank_name,
+    :mda_acct_sort_code ,
+    :mda_code,
+    :mda_name,
+    :mda_description ,
+    :mda_budget_balance,
+    :mda_economic_code,
+    :amount,
+    :description ,
+    :attachment,
+    :treasury_source_account   
+      )`,
+
+    {
+        replacements: {
+    query_type, 
+    date,
+    batch_no,  
+    treasury_account_name,
+    treasury_account_no,
+    treasury_bank_name,
+    mda_account_name,
+    mda_account_no,
+    mda_bank_name,
+    mda_acct_sort_code ,
+    mda_code,
+    mda_name,
+    mda_description ,
+    mda_budget_balance,
+    mda_economic_code,
+    amount,
+    description ,
+    attachment,
+    treasury_source_account   
+        },
+      }
+    ).then((result) => {
+      res.json({
+        success: true,
+        result,
+      })
+
+      console.log(result)
+    })
+    .catch((err) => {
+      res.json({
+        success: false,
+        err,
+      })
+      console.log(err)
+    })
+
+  }
+
+exports.paymentScheduleArray = (req, res) => {
+  const { paymentScheduleTable, batch_no } = req.body
+  // const batch_no = uuid()
   console.log(req.body)
-  const batch_no = uuid()
   let count = 0
   paymentScheduleTable.forEach((item, idx) => {
     db.sequelize
       .query(
-        `CALL payment_schedule (:query_type,
-:date, :payment_type, :description, :economic_code, :amount, :batch_no,
-:source_account, :mda_name, :compliance_status, :compliance_details, :budget_status,
-:approval_status, :approved_by, :attachment_links
+    `CALL payment_schedule (
+    :query_type, 
+    :date,
+    :batch_no,  
+    :treasury_account_name,
+    :treasury_account_no,
+    :treasury_bank_name,
+    :mda_account_name,
+    :mda_account_no,
+    :mda_bank_name,
+    :mda_acct_sort_code ,
+    :mda_code,
+    :mda_name,
+    :mda_description ,
+    :mda_budget_balance,
+    :mda_economic_code,
+    :amount,
+    :description ,
+    :attachment,
+    :treasury_source_account   
 			)`,
         {
           replacements: {
             query_type: item.query_type ? item.query_type : 'insert',
             date: item.date ? item.date : '',
-            payment_type: item.payment_type ? item.payment_type : '',
-            description: item.description ? item.description : '',
-            economic_code: item.economic_code ? item.economic_code : '',
-            amount: item.amount ? item.amount : '',
-            batch_no,
-            source_account: item.source_account ? item.source_account : '',
+            batch_no: item.batch_no ? item.batch_no : batch_no,
+            
+            treasury_account_name: item.treasury_account_name ? item.treasury_account_name : '',
+            treasury_account_no: item.treasury_account_no ? item.treasury_account_no : '',
+            treasury_bank_name : item.treasury_bank_name ? item.treasury_bank_name : '',
+            mda_account_name: item.mda_account_name ? item.mda_account_name : '',
+            mda_account_no: item.mda_account_no ? item.mda_account_no : '',
+            mda_bank_name: item.mda_bank_name ? item.mda_bank_name : '',
+            mda_acct_sort_code: item.mda_acct_sort_code ? item.mda_acct_sort_code : '',
+            mda_code: item.mda_code ? item.mda_code : '',
             mda_name: item.mda_name ? item.mda_name : '',
-            compliance_status: item.compliance_status
-              ? item.compliance_status
-              : '',
-            compliance_details: item.compliance_status
-              ? item.compliance_status
-              : '',
-            budget_status: item.budget_status ? item.budget_status : '',
-            approval_status: item.approval_status ? item.approval_status : '',
-            approved_by: item.approved_by ? item.approved_by : '',
-            attachment_links: item.attachment_links
-              ? item.attachment_links
-              : '',
+            mda_description: item.mda_description ? item.mda_description : '',
+            mda_budget_balance: item.mda_budget_balance ? item.mda_budget_balance : '',
+            mda_economic_code: item.mda_economic_code ? item.mda_economic_code : '',
+            amount: item.amount ? item.amount : '',
+            description: item.description ? item.description : '',
+            attachment: item.attachment ? item.attachment : '', 
+            treasury_source_account: item.treasury_source_account ? item.treasury_source_account : ''          
           },
         },
       )
 
-      .then((result) => {
-        count += 1
-        console.log({ success: true, result, count })
-      })
-      .catch((error) => {
-        res.json({
-          success: false,
-          error,
-        })
-      })
+     
   })
+
+   // .then((result) => {
+   //      count += 1
+   //      console.log({ success: true, result, count })
+   //    })
+   //    .catch((error) => {
+   //      res.json({
+   //        success: false,
+   //        error,
+   //      })
+   //    })
   res.json({ success: true, batch_no })
 }
 
@@ -282,11 +388,12 @@ exports.budget_summary = (req, res) => {
 exports.mda_bank_details = (req, res) => {
   const { excelData, query_type } = req.body
   // console.log(req.body
+
   db.sequelize
     .query(
       `insert into mda_bank_details (account_name, bank_name, 
 		account_number, 
-		sort_code
+		sort_code, id
 		) values ${excelData.map((item) => '(?)').join(',')};`,
       {
         replacements: excelData,
@@ -307,27 +414,28 @@ exports.select_mda_bank_details = (req, res) => {
 		account_number = "",
 		sort_code = "",
 		account_type="",
-		id="",
+		
 	} = req.body
+  const {id = ""} = req.params
+  console.log(id)
 
 
 	db.sequelize.query(
 		`CALL mda_bank_details(
-			:account_name, :bank_name, 
+		:account_name, :bank_name, 
 		:account_number, 
-		:sort_code, 
-		:account_type,
-		:id,
-		:query_type
+		:sort_code, 				
+		:query_type,
+    :id
 			)`,
 		{
 			replacements: {
-				account_name, bank_name,
+				account_name, 
+        bank_name,
 				account_number,
-				sort_code,
-				query_type,
-				account_type,
-				id,
+				sort_code,						
+        query_type,
+        id			
 			}
 		}
 	).then((result) => {
@@ -345,9 +453,7 @@ exports.select_mda_bank_details = (req, res) => {
 	}
 
 exports.get_budget_summary = (req, res) => {
-  const { query_type } = req.query
-  // console.log(req.body)
-
+  const { query_type } = req.query  
   db.sequelize
     .query(`CALL budget_summary(:query_type,:a,:b,:c,:d,:e)`, {
       replacements: { query_type, a: '', b: '', c: '', d: '', e: '' },
