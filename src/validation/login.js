@@ -7,8 +7,8 @@ function validateLoginForm(data) {
   data.email = !isEmpty(data.email) ? data.email : '';
   data.password = !isEmpty(data.password) ? data.password : '';
 
-  if (!Validator.isEmail(data.email)) {
-    errors.email = 'Email is invalid';
+  if (!Validator.isEmail(data.email)&&!Validator.isLength(data.email,6,32)) {
+    errors.email = data.email.split('@').length>1?'Invalid Email.':'Invalid user name'
   }
 
   if (Validator.isEmpty(data.email)) {

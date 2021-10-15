@@ -4,18 +4,18 @@ import isEmpty from './isEmpty';
 function validateRegisterForm(data) {
   let errors = {};
 
-  data.firstname = !isEmpty(data.firstname) ? data.firstname : '';
-  data.lastname = !isEmpty(data.lastname) ? data.lastname : '';
-  data.role = !isEmpty(data.role) ? data.role : '';
-  data.username = !isEmpty(data.username) ? data.username : '';
-  data.email = !isEmpty(data.email) ? data.email : '';
-  data.password = !isEmpty(data.password) ? data.password : '';
+  // data.firstname = !isEmpty(data.firstname) ? data.firstname : '';
+  // data.lastname = !isEmpty(data.lastname) ? data.lastname : '';
+  // data.role = !isEmpty(data.role) ? data.role : '';
+  // data.username = !isEmpty(data.username) ? data.username : '';
+  // data.email = !isEmpty(data.email) ? data.email : '';
+  // data.password = !isEmpty(data.password) ? data.password : '';
 
-  if (!Validator.isLength(data.firstname, { min: 2, max: 30 })) {
+  if (!Validator.isLength(data.firstname, { min: 3, max: 30 })) {
     errors.firstname = 'First Name must be between 2 and 30 character long';
   }
 
-  if (!Validator.isLength(data.lastname, { min: 2, max: 30 })) {
+  if (!Validator.isLength(data.lastname, { min: 3, max: 30 })) {
     errors.lastname = 'Last Name must be between 2 and 30 character long';
   }
 
