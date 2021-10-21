@@ -7,11 +7,14 @@ import {
   mda_bank_details,
   select_mda_bank_details,
   get_budget_summary,
-  get_batch_list
+  get_batch_list,
+  updateBudgetCode,
+  postChequeDetails
 } from "../controllers/payment_schedule";
 
 module.exports = (app) => {
   app.post("/post_payment_schedule", paymentSchedule);
+  app.post("/post_check_details", postChequeDetails);
   app.post("/post_payment_schedule_array", paymentScheduleArray);
   app.post("/update_budgets", updateBudget);
   app.post("/post_budgets", postBudget);
@@ -22,4 +25,5 @@ module.exports = (app) => {
   app.get('/get-budget-summary', get_budget_summary)
   app.post('/get-budget-summary1', get_budget_summary)
   app.post("/get_batch_list", get_batch_list);
+  app.post("/update-budget-code", updateBudgetCode);
 };

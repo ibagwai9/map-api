@@ -2,7 +2,8 @@ const { uuid } = require('uuidv4')
 const db = require('../models')
 
 exports.paymentSchedule = (req, res) => {
-   console.log("jello")
+   console.log("kello")
+   console.log(req.body)
  const {
     query_type = "", 
     date = "",
@@ -20,9 +21,13 @@ exports.paymentSchedule = (req, res) => {
     mda_budget_balance = "",
     mda_economic_code = "",
     amount = "",
-    description  = "",
+    description = "" ,
     attachment = "",
-    treasury_source_account = "" 
+    budget = "",
+    approval = "",
+    treasury_source_account = "",
+    id = "",
+    status = ""
   } = req.body
 
   db.sequelize
@@ -46,7 +51,12 @@ exports.paymentSchedule = (req, res) => {
     :amount,
     :description ,
     :attachment,
-    :treasury_source_account   
+    :treasury_source_account,
+    :id,
+    :budget,
+    :approval,
+    :status
+    
       )`,
 
     {
@@ -67,9 +77,13 @@ exports.paymentSchedule = (req, res) => {
     mda_budget_balance,
     mda_economic_code,
     amount,
-    description ,
+    description,
     attachment,
-    treasury_source_account   
+    treasury_source_account,
+    id,
+    budget,
+    approval,
+    status
         },
       }
     ).then((result) => {
@@ -90,14 +104,72 @@ exports.paymentSchedule = (req, res) => {
 
   }
 
+const fetchCode = (query_type ="select", description = "batch_code", callback=f=>f, error=f=>f) => {
+  db.sequelize
+      .query(
+    `CALL batch_increment (
+      :description,
+      :query_type 
+      )`,
+        {
+          replacements: {
+            description,
+            query_type
+          }
+        }).then(result => 
+          callback(result)
+        ).catch(err => {
+          console.log(err) 
+          error(err)
+        })
+}
+
+
+ exports.updateBudgetCode = (req, res) => {
+const { description,query_type} = req.body
+  db.sequelize
+      .query(
+    `CALL batch_increment (
+      :description,
+      :query_type 
+      )`,
+        {
+          replacements: {
+            description,
+            query_type
+          },
+        },) 
+      .then((result) => {
+      res.json({
+        success: true,
+        result,
+      })
+
+      console.log(result)
+    }).catch(err => {
+          console.log(err) 
+          error(err)
+        })
+}
+
+
 exports.paymentScheduleArray = (req, res) => {
-  const { paymentScheduleTable, batch_no } = req.body
+  const { paymentScheduleTable, batch_no = "", status = "",
+   query_type = "", cheque_number = "" } = req.body
   // const batch_no = uuid()
-  console.log(req.body)
+   console.log(req.body)
+fetchCode('select','batch_code', (results) => {
+  if(results && results.length ) {
+    let batch_code1 = results[0].batch_code
+
+    console.log("body",req.body)
+    console.log(batch_code1)
+
   let count = 0
+
   paymentScheduleTable.forEach((item, idx) => {
     db.sequelize
-      .query(
+    .query(
     `CALL payment_schedule (
     :query_type, 
     :date,
@@ -117,14 +189,18 @@ exports.paymentScheduleArray = (req, res) => {
     :amount,
     :description ,
     :attachment,
-    :treasury_source_account   
-			)`,
+    :treasury_source_account,
+    :id,
+    :budget,
+    :approval,
+    :status,
+    :cheque_number   
+      )`,
         {
           replacements: {
-            query_type: item.query_type ? item.query_type : 'insert',
+            query_type: item.query_type ? item.query_type : query_type,
             date: item.date ? item.date : '',
-            batch_no: item.batch_no ? item.batch_no : batch_no,
-            
+            batch_no: item.batch_no ? item.batch_no : batch_code1,
             treasury_account_name: item.treasury_account_name ? item.treasury_account_name : '',
             treasury_account_no: item.treasury_account_no ? item.treasury_account_no : '',
             treasury_bank_name : item.treasury_bank_name ? item.treasury_bank_name : '',
@@ -140,13 +216,22 @@ exports.paymentScheduleArray = (req, res) => {
             amount: item.amount ? item.amount : '',
             description: item.description ? item.description : '',
             attachment: item.attachment ? item.attachment : '', 
-            treasury_source_account: item.treasury_source_account ? item.treasury_source_account : ''          
+            treasury_source_account: item.treasury_source_account ? item.treasury_source_account : '',
+            id : item.id ? item.id : "",  
+            budget : item.budget ? item.budget : '',
+            approval : item.approval ? item.approval : "",
+            status : status,
+            cheque_number  
           },
         },
       )
 
      
   })
+  res.json({ success: true, batch_code1 })
+  }
+})
+  
 
    // .then((result) => {
    //      count += 1
@@ -158,7 +243,6 @@ exports.paymentScheduleArray = (req, res) => {
    //        error,
    //      })
    //    })
-  res.json({ success: true, batch_no })
 }
 
 exports.numberGenerator = (res, req) => {
@@ -336,6 +420,8 @@ exports.postBudget = (req, res) => {
     })
 }
 
+
+
 exports.budget_summary = (req, res) => {
   const { excelData } = req.body
   // console.log(req.body)
@@ -476,12 +562,13 @@ exports.get_budget_summary = (req, res) => {
 
 exports.get_batch_list = (req, res) => {
   const { query_type = "", 
-    batch_no = "" 
+    batch_no = "",
+    status = "" 
   } = req.body 
   console.log(req.query) 
   db.sequelize
-    .query(`CALL batch_list(:query_type, :batch_no )`, {
-      replacements: { query_type, batch_no },
+    .query(`CALL batch_list(:query_type, :batch_no, :status )`, {
+      replacements: { query_type, batch_no, status },
     })
     .then((result) => {
       res.json({ result })
@@ -490,4 +577,47 @@ exports.get_batch_list = (req, res) => {
       console.log(err)
       res.status(500).json({ err })
     })
+}
+
+
+exports.postChequeDetails = (req, res) => {
+  console.log(req.body)
+  const {
+    date = "",
+    batch_number = "",
+    cheque_number = "",
+    total_amount = "",
+    query_type = "",
+    status = ""
+      
+  } = req.body.form
+
+  db.sequelize
+    .query(`CALL cheque_details(
+      :date,
+      :batch_number,
+      :cheque_number,
+      :total_amount,
+      :status,
+      :query_type
+     
+      )`, {
+      replacements: { 
+        date,
+    batch_number,
+    cheque_number,
+    total_amount,
+    status,
+    query_type
+     
+      },
+    })
+    .then((result) => {
+      res.json({ result })
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).json({ err })
+    })
+
 }
