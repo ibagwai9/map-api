@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 16, 2021 at 08:34 AM
+-- Generation Time: Oct 25, 2021 at 06:01 PM
 -- Server version: 10.1.38-MariaDB
 -- PHP Version: 7.3.2
 
@@ -26,15 +26,37 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` PROCEDURE `batch_list` (IN `in_query_type` VARCHAR(20), IN `in_batch_no` VARCHAR(20))  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `batch_increment` (IN `in_description` VARCHAR(50), IN `query_type` VARCHAR(50))  NO SQL
+BEGIN
+IF query_type = 'select' THEN
+	SELECT IFNULL(MAX(batch_code), 0) + 1 as batch_code FROM batch where description=in_description;
+    ELSEIF query_type = 'update' THEN
+    UPDATE batch set batch_code = batch_code + 1 WHERE description=in_description;
+    end IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `batch_list` (IN `in_query_type` VARCHAR(100), IN `in_batch_no` VARCHAR(100), IN `in_status` VARCHAR(20))  NO SQL
 if in_query_type = "select" THEN
-SELECT date,count(description) 'no_of_payments',sum(amount) 'total_amount',batch_no 'batch_number' FROM `payment_schedule` GROUP by date,batch_no;
+SELECT date,count(description) 'no_of_payments',sum(amount) 'total_amount',batch_no 'batch_number' FROM `payment_schedule` WHERE status = in_status GROUP by date,batch_no;
+
+ELSEIF in_query_type = "select_payment_list" THEN
+SELECT date,count(description) 'no_of_payments', count(mda_account_no) 'no_of_mda',sum(amount) 'total_amount',batch_no 'batch_number' FROM `payment_schedule` WHERE status = in_status AND batch_no = in_batch_no  GROUP by date,batch_no;
+
 
 ELSEIF in_query_type = "select_by_batch_no" THEN
-SELECT * FROM `payment_schedule` WHERE batch_no = in_batch_no;
+SELECT * FROM `payment_schedule` WHERE batch_no = in_batch_no AND status = in_status;
 
 ELSEIF in_query_type = "select_treasury" THEN
 SELECT * FROM payment_schedule WHERE batch_no = in_batch_no;
+
+ELSEIF in_query_type = "select_mda_group" THEN
+SELECT description, mda_name, mda_bank_name, sum(amount) as amount, mda_account_no, date  FROM `payment_schedule` WHERE batch_no = in_batch_no AND status = in_status GROUP BY description, mda_name, mda_bank_name, mda_account_no, date ORDER BY `batch_code`  ASC;
+
+ELSEIF in_query_type = "select_distinct_mda_info" THEN
+SELECT mda_name,narration,amount,cheque_number,date,treasury_bank_name,mda_bank_name,sum(amount) FROM `payment_schedule` where batch_no= in_batch_no GROUP by mda_name,narration,mda_code;
+
+ELSEIF in_query_type = "select_distinct" THEN
+SELECT  description, mda_name, mda_bank_name, arabic_date, sum(amount) as amount, mda_account_no, date  FROM `payment_schedule` WHERE batch_no = in_batch_no AND status = in_status GROUP BY mda_name, description  WITH ROLLUP;
 
 END IF$$
 
@@ -58,19 +80,26 @@ SELECT * FROM budget_summary WHERE mda_code = in_mda_code AND economic_code = in
 
 END IF$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `cheque_details` (IN `date` VARCHAR(20), IN `batch_number` VARCHAR(20), IN `cheque_number` INT(20), IN `query_type` VARCHAR(20))  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `cheque_details` (IN `in_date` VARCHAR(20), IN `in_batch_number` VARCHAR(20), IN `in_cheque_number` VARCHAR(20), IN `in_cheque_amount` VARCHAR(20), IN `in_status` VARCHAR(20), IN `query_type` INT(20))  NO SQL
 BEGIN
 IF query_type='INSERT' THEN
-INSERT INTO cheque_details(date,batch_number,cheque_number)
-VALUES(in_date,in_batch_number,in_cheque_number);
+INSERT INTO cheque_details(date,batch_number,cheque_number, cheque_amount, status)
+VALUES(in_date,in_batch_number,in_cheque_number, in_cheque_amount, in_status);
 
 ELSEIF  query_type='UPDATE' THEN
-UPDATE cheque_details SET date=in_date,batch_number=in_batch_number,cheque_number=in_cheque_number WHERE cheque_number=in_cheque_number;
+UPDATE cheque_details SET date=in_date,batch_number=in_batch_number,cheque_number=in_cheque_number, cheque_amount = in_cheque_amount WHERE cheque_number=in_cheque_number;
 
 ELSEIF query_type='DELETE' THEN
 DELETE FROM cheque_details WHERE cheque_number=in_cheque_number;
 END IF;
 END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `cheque_no` (IN `in_query_type` VARCHAR(50), IN `in_batch_no` VARCHAR(50), IN `in_total_amount` VARCHAR(50), IN `in_no_of_mda` VARCHAR(50), IN `in_status` VARCHAR(50))  NO SQL
+if query_type = "inssert" THEN
+INSERT INTO cheque_no (batch_no,total_amount,no_of_mda,status)
+VALUES(in_batch_no,in_total_amount,in_no_of_mda,in_status);
+
+END IF$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `contractor_details` (IN `in_query_type` VARCHAR(400), IN `in_contractor_name` VARCHAR(400), IN `in_contractor_phone_no` VARCHAR(400), IN `in_contractor_address` VARCHAR(400), IN `in_contractor_email` VARCHAR(400), IN `in_contractor_tin_no` VARCHAR(400))  NO SQL
 IF in_query_type = "insert" THEN
@@ -140,7 +169,7 @@ DELETE FROM table_b WHERE id=in_id;
 END IF; 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `payment_schedule` (IN `in_query_type` VARCHAR(400), IN `in_date` DATE, IN `in_batch_no` VARCHAR(400), IN `in_treasury_account_name` VARCHAR(400), IN `in_treasury_account_no` VARCHAR(400), IN `in_treasury_bank_name` VARCHAR(400), IN `in_mda_account_name` VARCHAR(400), IN `in_mda_account_no` VARCHAR(400), IN `in_mda_bank_name` VARCHAR(400), IN `in_mda_acct_sort_code` VARCHAR(400), IN `in_mda_code` VARCHAR(400), IN `in_mda_name` VARCHAR(400), IN `in_mda_description` VARCHAR(400), IN `in_mda_budget_balance` VARCHAR(400), IN `in_mda_economic_code` VARCHAR(400), IN `in_amount` VARCHAR(400), IN `in_description` VARCHAR(400), IN `in_attachment` VARCHAR(400), IN `in_treasury_source_account` VARCHAR(400))  NO SQL
+CREATE DEFINER=`root`@`localhost` PROCEDURE `payment_schedule` (IN `in_query_type` VARCHAR(400), IN `in_date` DATE, IN `in_batch_no` VARCHAR(400), IN `in_treasury_account_name` VARCHAR(400), IN `in_treasury_account_no` VARCHAR(400), IN `in_treasury_bank_name` VARCHAR(400), IN `in_mda_account_name` VARCHAR(400), IN `in_mda_account_no` VARCHAR(400), IN `in_mda_bank_name` VARCHAR(400), IN `in_mda_acct_sort_code` VARCHAR(400), IN `in_mda_code` VARCHAR(400), IN `in_mda_name` VARCHAR(400), IN `in_mda_description` VARCHAR(400), IN `in_mda_budget_balance` VARCHAR(400), IN `in_mda_economic_code` VARCHAR(400), IN `in_amount` VARCHAR(400), IN `in_description` VARCHAR(400), IN `in_attachment` VARCHAR(400), IN `in_treasury_source_account` VARCHAR(400), IN `in_id` VARCHAR(400), IN `in_budget` VARCHAR(400), IN `in_approval` VARCHAR(400), IN `in_status` VARCHAR(20), IN `in_cheque_no` VARCHAR(400), IN `in_narration` VARCHAR(400), IN `in_arabic_date` VARCHAR(400))  NO SQL
 IF in_query_type = "insert" THEN
 
 INSERT INTO payment_schedule(           
@@ -161,7 +190,14 @@ INSERT INTO payment_schedule(
     mda_economic_code,
     amount,
     description,
-    attachment   
+    attachment,
+    budget,
+    approval,
+    status,
+    cheque_number,
+    narration,
+    arabic_date
+    
 ) 
 
 VALUES (           
@@ -182,12 +218,57 @@ VALUES (
     in_mda_economic_code,
     in_amount,
     in_description,
-    in_attachment   
+    in_attachment,
+    in_budget,
+    in_approval,
+    in_status,
+    in_cheque_no,
+    in_narration,
+    in_arabic_date
+    
 );
 
 ELSEIF in_query_type = "select" THEN
 
 SELECT * FROM payment_schedule;
+
+ELSEIF in_query_type = "select_by_id" THEN
+SELECT * FROM payment_schedule WHERE id = in_id;
+
+ELSEIF in_query_type='UPDATE' THEN
+UPDATE payment_schedule SET  date = in_date,
+    batch_no = in_batch_no,
+    treasury_source_account = in_treasury_source_account,
+    treasury_account_name = in_treasury_account_name,
+    treasury_account_no = in_treasury_account_no,
+    treasury_bank_name = in_treasury_bank_name,
+    mda_account_name = in_mda_account_name,
+    mda_account_no = in_mda_account_no,
+    mda_bank_name = in_mda_bank_name,
+    mda_acct_sort_code = in_mda_acct_sort_code,
+    mda_code = in_mda_code,
+    mda_name = in_mda_name,
+    mda_description = in_mda_description,
+    mda_budget_balance = in_mda_budget_balance,
+    mda_economic_code = in_mda_economic_code,
+    amount = in_amount,
+    description = in_description,
+    attachment = in_attachment,
+    budget = in_budget,
+    approval = in_approval,
+    status = in_status,
+    narration = in_narration,
+    cheque_number = in_cheque_no,
+    arabic_date = in_arabic_date
+    WHERE id = in_id;
+
+
+ELSEIF in_query_type='UPDATE_BY_BATCH_No' THEN
+UPDATE payment_schedule SET  
+    cheque_number = in_cheque_no,
+    arabic_date = in_arabic_date,
+    status = in_status
+    WHERE batch_no = in_batch_no AND id = in_id;
 
 end if$$
 
@@ -263,6 +344,27 @@ END IF;
 END$$
 
 DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `batch`
+--
+
+CREATE TABLE `batch` (
+  `batch_id` int(15) NOT NULL,
+  `description` varchar(100) NOT NULL,
+  `batch_year` varchar(10) NOT NULL,
+  `batch_code` int(15) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `batch`
+--
+
+INSERT INTO `batch` (`batch_id`, `description`, `batch_year`, `batch_code`) VALUES
+(1, 'batch_code', '', 65),
+(1, 'document_id', '', 1);
 
 -- --------------------------------------------------------
 
@@ -5005,7 +5107,70 @@ INSERT INTO `budget_summary` (`id`, `mda_code`, `mda_name`, `economic_code`, `bu
 CREATE TABLE `cheque_details` (
   `date` varchar(20) NOT NULL,
   `batch_number` varchar(20) NOT NULL,
-  `cheque_number` varchar(20) NOT NULL
+  `cheque_number` varchar(20) NOT NULL,
+  `cheque_amount` varchar(400) NOT NULL,
+  `status` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `cheque_details`
+--
+
+INSERT INTO `cheque_details` (`date`, `batch_number`, `cheque_number`, `cheque_amount`, `status`) VALUES
+('2021-10-18', '40', '', '777', ''),
+('2021-10-18', '40', '88', '60000', ''),
+('2021-10-18', '34', '', '200209', 'uncommited'),
+('2021-10-18', '34', '', '200209', 'uncommited'),
+('2021-10-18', '34', '683833', '3556', 'uncommited'),
+('2021-10-18', '34', '7888', '3556', 'uncommited'),
+('2021-10-18', '34', '7667', '3556', 'uncommited'),
+('2021-10-18', '43', '679', '80006', 'uncommited'),
+('2021-10-18', '43', '7899', '80006', 'uncommited'),
+('2021-10-18', '43', '889', '80006', 'uncommited'),
+('2021-10-18', '43', '788', '80006', 'uncommited'),
+('2021-10-18', '43', '7667', '80006', 'uncommited'),
+('2021-10-18', '43', '788', '80006', 'uncommited'),
+('2021-10-18', '43', '5277272', '80006', 'uncommited'),
+('2021-10-18', '43', '895', '80006', 'uncommited'),
+('2021-10-18', '34', '89499', '3556', 'uncommited'),
+('2021-10-18', '43', '', '80006', 'uncommited'),
+('2021-10-21', '44', '6787487', '9089', 'uncommited'),
+('2021-10-21', '45', '77888', '808999', 'uncommited'),
+('2021-10-29', '47', '8999', '80800', 'uncommited'),
+('2021-10-22', '49', '80076', '900700', 'uncommited'),
+('2021-10-21', '50', '1234', '90199', 'uncommited'),
+('2021-10-22', '52', '899', '90', 'uncommited'),
+('2021-10-22', '53', '80000', '90000', 'uncommited'),
+('2021-10-21', '54', '877', '890', 'uncommited'),
+('2021-10-21', '55', '568899543', '7568015', 'uncommited'),
+('2021-10-22', '53', '88998982', '90000', 'uncommited'),
+('2021-10-22', '53', '89884983', '90000', 'uncommited'),
+('2021-10-22', '53', '88888', '90000', 'uncommited'),
+('2021-10-22', '49', '99009', '1800000', 'uncommited'),
+('2021-10-21', '56', '55778844', '148000', 'uncommited'),
+('2021-10-22', '62', '89997', '0', 'uncommited'),
+('2021-10-22', '63', '88998937', '3307032', 'uncommited'),
+('2021-10-23', '64', '55227744', '1087700', 'uncommited'),
+('2021-10-24', '65', '8849234', '1648399', 'uncommited'),
+('2021-10-29', '47', '88000', '1600', 'uncommited'),
+('2021-10-29', '47', '878737', '1600', 'uncommited'),
+('2021-10-29', '47', '8998897', '1600', 'uncommited'),
+('2021-10-29', '47', '88999898', '1600', 'uncommited'),
+('2021-10-24', '65', '112233', '1648399', 'uncommited'),
+('2021-10-24', '65', '556677', '1648399', 'uncommited');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `cheque_no`
+--
+
+CREATE TABLE `cheque_no` (
+  `id` int(11) NOT NULL,
+  `batch_no` varchar(20) NOT NULL,
+  `total_amount` varchar(400) NOT NULL,
+  `no_of_mda` varchar(400) NOT NULL,
+  `status` varchar(400) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -5226,41 +5391,82 @@ CREATE TABLE `payment_schedule` (
   `mda_description` varchar(400) NOT NULL,
   `mda_budget_balance` varchar(400) NOT NULL,
   `mda_economic_code` varchar(400) NOT NULL,
-  `attachment` varchar(400) NOT NULL
+  `attachment` varchar(400) NOT NULL,
+  `budget` varchar(400) NOT NULL,
+  `approval` varchar(400) NOT NULL,
+  `batch_code` varchar(400) NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `cheque_number` varchar(400) NOT NULL,
+  `narration` varchar(400) NOT NULL,
+  `arabic_date` varchar(400) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `payment_schedule`
 --
 
-INSERT INTO `payment_schedule` (`id`, `date`, `payment_type`, `description`, `amount`, `batch_no`, `treasury_source_account`, `treasury_account_name`, `treasury_account_no`, `treasury_bank_name`, `mda_account_name`, `mda_account_no`, `mda_bank_name`, `mda_acct_sort_code`, `mda_code`, `mda_name`, `mda_description`, `mda_budget_balance`, `mda_economic_code`, `attachment`) VALUES
-(1, '2021-10-21', '', 'REFRESHMENT & MEALS', '2000', '10', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100102', '', '', '500002', '', ''),
-(2, '2021-10-20', '', 'REFRESHMENT & MEALS', '70000', '11', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '', '11100100101', '', '', '500001', '', ''),
-(3, '2021-10-20', '', 'REFRESHMENT & MEALS', '70000', '11', '', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100104', '', '', '500004', '', ''),
-(4, '2021-10-20', '', 'REFRESHMENT & MEALS', '70000', '11', '', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100104', '', '', '500004', '', ''),
-(5, '2021-10-20', '', 'REFRESHMENT & MEALS', '70000', '11', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '', '11100100101', '', '', '500001', '', ''),
-(6, '2021-10-13', '', 'REFRESHMENT & MEALS', '7000', '200', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100101', '', '', '500001', '', ''),
-(7, '2021-10-13', '', 'REFRESHMENT & MEALS', '7000', '200', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100101', '', '', '500001', '', ''),
-(8, '2021-10-13', '', 'REFRESHMENT & MEALS', '7000', '200', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100101', '', '', '500001', '', ''),
-(9, '2021-10-13', '', 'REFRESHMENT & MEALS', '7000', '200', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100101', '', '', '500001', '', ''),
-(10, '2021-10-13', '', 'REFRESHMENT & MEALS', '7000', '200', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100101', '', '', '500001', '', ''),
-(11, '0000-00-00', '', 'REFRESHMENT & MEALS', '', '', '', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '', '11100100102', '', '', '500002', '', ''),
-(12, '0000-00-00', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''),
-(13, '2021-10-21', '', 'REFRESHMENT & MEALS', '2000', '', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100100100', '', '', '500000', '22021001', 'klnkl'),
-(14, '2021-10-15', '', 'REFRESHMENT & MEALS', '8000', '2002', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100100100', '', '', '500000', '22021001', ''),
-(15, '0000-00-00', '', 'REFRESHMENT & MEALS', '5000', '', '', '', '', '', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100100101', '', '', '500001', '22021002', ''),
-(16, '9889-08-08', '', 'REFRESHMENT & MEALS', '6000', 'hh', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100100100', '', '', '500000', '22021001', 'ii'),
-(17, '9889-08-08', '', 'REFRESHMENT & MEALS', '6000', 'hh', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100100100', '', '', '500000', '22021001', 'ii'),
-(18, '2021-10-28', '', 'REFRESHMENT & MEALS', '8000', '200', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100100100', '', '', '500000', '22021001', 'nill'),
-(19, '2021-10-28', '', 'REFRESHMENT & MEALS', '8000', '200', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100100101', '', '', '500001', '22021002', 'jj'),
-(20, '0000-00-00', '', 'REFRESHMENT & MEALS', '7700', '', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', ' Government House (11100100100)', '', '', '500000', '', ''),
-(21, '0000-00-00', '', 'REFRESHMENT & MEALS', '800', '', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', ' Government House (11100100102)', '', '', '500002', '', ''),
-(22, '0000-00-00', '', '', '60000', '', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '', '', '', ''),
-(23, '2021-10-21', '', 'SECURITY SERVICES', '6777', '2888', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '200000', '', ''),
-(24, '2021-10-21', '', 'MAGAZINES & PERIODICALS', '788', '2888', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101100100', '', '', '500000', '', ''),
-(25, '2021-10-28', '', 'MEDICAL EXPENSES-LOCAL', '788', '5000', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', '', '', '500000', '', ''),
-(26, '2021-10-21', '', 'MOTOR VEHICLE  FUEL COST', '9888', '7909', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100900100', '', '', '500000', '', ''),
-(27, '2021-10-14', '', 'PLANT / GENERATOR FUEL COST', '899', '8898', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100900100', '', '', '500000', '', '');
+INSERT INTO `payment_schedule` (`id`, `date`, `payment_type`, `description`, `amount`, `batch_no`, `treasury_source_account`, `treasury_account_name`, `treasury_account_no`, `treasury_bank_name`, `mda_account_name`, `mda_account_no`, `mda_bank_name`, `mda_acct_sort_code`, `mda_code`, `mda_name`, `mda_description`, `mda_budget_balance`, `mda_economic_code`, `attachment`, `budget`, `approval`, `batch_code`, `status`, `cheque_number`, `narration`, `arabic_date`) VALUES
+(89, '2021-10-17', '', 'ELECTRICITY CHARGES', '6000', '16', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', '', '', '500000', '22020201', 'approved', 'approved', 'approved', '', '', '', '', ''),
+(148, '2021-10-18', '', 'MAINTENANCE OF OFFICE BUILDING / RESIDENTIAL QTRS', '9000', '40', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101100100', '', '', '500000', '22020403', 'approved', 'No Budget', 'approved', '', 'returned', '', '', ''),
+(149, '2021-10-18', '', 'ELECTRICITY CHARGES', '60000', '40', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11103700100', '', '', '1000000', '22020201', 'approved', 'approved', 'No Approval', '', 'auditor_approved', '', '', ''),
+(152, '2021-10-18', '', 'UNIFORMS & OTHER CLOTHING', '80006', '43', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '200000', '22020309', 'No Attachment', '', 'Approved', '', 'auditor_approved', '', '', ''),
+(153, '2021-10-18', '', 'PURCHASE OF OFFICE FURNITURE AND FITTINGS', '39777', '43', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11105500100', '', '', '5000000', '23010112', 'No Attachment', '', 'No Approval', '', 'returned', '', '', ''),
+(154, '2021-10-21', '', 'ELECTRICITY CHARGES', '90', '44', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11103700100', '', '', '1000000', '22020201', 'No Attachment', '', 'Approved', '', 'auditor_approved', '6787487', '', ''),
+(155, '2021-10-21', '', 'ELECTRICITY CHARGES', '90', '44', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11103700100', '', '', '1000000', '22020201', 'No Attachment', '', 'Approved', '', 'auditor_approved', '6787487', '', ''),
+(156, '2021-10-21', '', 'Maintenance of Other Infrastructure', '8999', '45', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11105600100', '', '', '200000', '22020417', 'No Attachment', '', 'Approved', '', 'auditor_approved', '77888', '', ''),
+(157, '2021-10-21', '', 'Maintenance of Other Infrastructure', '8999', '45', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11105600100', '', '', '200000', '22020417', 'No Attachment', '', 'Approved', '', 'auditor_approved', '77888', '', ''),
+(158, '2021-10-21', '', 'GRANT TO LOCAL GOVERNMENTS -CURRENT', '79999', '46', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11103700100', '', '', '1000000', '22040103', 'No Attachment', '', 'No Approval', '', 'pending', '', '', ''),
+(159, '2021-10-29', '', 'WELFARE PACKAGES', '800', '47', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11105600100', '', '', '2000000', '22021007', 'skipped', '', 'Approved', '', 'Paid', '88999898', '', ''),
+(160, '2021-10-29', '', 'WELFARE PACKAGES', '800', '47', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11105600100', '', '', '2000000', '22021007', 'skipped', '', 'Approved', '', 'Paid', '88999898', '', ''),
+(161, '2021-10-21', '', 'SECURITY SERVICES', '700', '48', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '200000', '22020601', 'No Attachment', '', 'Approved', '', 'pending', '', '', ''),
+(162, '2021-10-21', '', 'SECURITY SERVICES', '89399', '48', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '200000', '22020601', 'No Attachment', '', 'No Approval', '', 'pending', '', '', ''),
+(163, '2021-10-22', '', 'GRANTS TO COMMUNITIES/NGOs', '900000', '49', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11105700100', '', '', '2000000', '22040109', 'skipped', '', 'skipped', '', 'Paid', '99009', '', ''),
+(164, '2021-10-22', '', 'GRANTS TO COMMUNITIES/NGOs', '900000', '49', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11105700100', '', '', '2000000', '22040109', 'skipped', '', 'skipped', '', 'Paid', '99009', '', ''),
+(165, '2021-10-21', '', 'SECURITY SERVICES', '800', '50', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '200000', '22020601', 'skipped', '', 'Approved', '', 'auditor_approved', '1234', '', ''),
+(166, '2021-10-21', '', 'PLANT / GENERATOR FUEL COST', '89399', '50', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100900100', '', '', '500000', '22020803', 'skipped', '', 'Approved', '', 'auditor_approved', '1234', '', ''),
+(167, '2021-10-21', '', 'LEGAL SERVICES', '800', '51', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11101000100', '', '', '200000', '22020703', 'No Attachment', '', 'Approved', '', 'pending', '', '', ''),
+(168, '2021-10-22', '', 'MAGAZINES & PERIODICALS', '90', '52', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101100100', '', '', '500000', '22020304', 'skipped', '', 'Approved', '', 'auditor_approved', '899', '', ''),
+(169, '2021-10-22', '', '', '', '52', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '', '', '', '', '', 'skipped', 'skipped', '', '', 'auditor_approved', '899', '', ''),
+(170, '2021-10-22', '', 'INTERNET ACCESS CHARGES', '10000', '53', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11105600100', '', '', '500000', '22020203', 'skipped', '', 'skipped', '', 'Paid', '88888', '', ''),
+(171, '2021-10-22', '', 'SATELLITE BROADCASTING ACCESS CHARGES', '80000', '53', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11105600100', '', '', '200000', '22020204', 'skipped', '', 'Approved', '', 'Paid', '88888', '', ''),
+(172, '2021-10-21', '', 'MOTOR VEHICLE  FUEL COST', '800', '54', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '500000', '22020801', 'skipped', '500000', 'Approved', '', 'auditor_approved', '877', '', ''),
+(173, '2021-10-21', '', '', '90', '54', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11105500100', '', '', '', '', 'skipped', 'skipped', 'Approved', '', 'auditor_approved', '877', '', ''),
+(174, '2021-10-21', '', '', '570008', '55', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11105700100', '', '', '', '', 'skipped', 'skipped', 'Approved', '', 'auditor_approved', '568899543', '', ''),
+(175, '2021-10-21', '', 'UNIFORMS & OTHER CLOTHING', '100000', '55', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11101000100', '', '', '200000', '22020309', 'skipped', '200000', 'skipped', '', 'auditor_approved', '568899543', '', ''),
+(176, '2021-10-21', '', 'PURCHASE OF COMPUTER PRINTERS', '8000', '55', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11103700100', '', '', '1000000', '23010114', 'skipped', '1000000', 'Approved', '', 'auditor_approved', '568899543', '', ''),
+(177, '2021-10-21', '', 'INTERNATIONAL  TRAINING', '6890007', '55', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '23405600100', '', '', '500000', '22020502', 'skipped', '500000', 'skipped', '', 'auditor_approved', '568899543', '', ''),
+(178, '2021-10-21', '', 'ELECTRICITY CHARGES', '89000', '56', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11103700100', '', '', '1000000', '22020201', 'skipped', '1000000', 'Approved', '', 'Paid', '55778844', '', ''),
+(179, '2021-10-21', '', 'MOTOR VEHICLE  FUEL COST', '59000', '56', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '500000', '22020801', 'skipped', '500000', 'Approved', '', 'Paid', '55778844', '', ''),
+(180, '2021-10-21', '', 'ELECTRICITY CHARGES', '80000', '57', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', '', '', '500000', '22020201', 'skipped', '500000', 'Approved', '', 'auditor_approved', '', '', ''),
+(181, '2021-10-21', '', 'LOCAL TRAVEL & TRANSPORT: TRAINING', '100000', '57', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100800100', '', '', '500000', '22020101', 'skipped', '500000', 'Approved', '', 'auditor_approved', '', '', ''),
+(182, '2021-10-21', '', 'OTHER TRANSPORT EQUIPMENT FUEL COST', '800', '57', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', '', '', '1000000', '22020802', 'skipped', '1000000', 'Approved', '', 'auditor_approved', '', '', ''),
+(183, '2021-10-21', '', 'SECURITY SERVICES', '8000987', '57', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11101000100', '', '', '200000', '22020601', 'skipped', '200000', 'Approved', '', 'auditor_approved', '', '', ''),
+(184, '2021-10-21', '', 'REHABILITATION / REPAIRS OF OFFICE BUILDINGS', '60000', '57', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11105500100', '', '', '2000000', '23030121', 'skipped', '2000000', 'Approved', '', 'auditor_approved', '', '', ''),
+(185, '2021-10-21', '', 'HONORARIUM & SITTING ALLOWANCE', '8000000', '57', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100900100', '', '', '1000000', '22021002', 'skipped', '1000000', 'Approved', '', 'auditor_approved', '', '', ''),
+(186, '2021-10-22', '', '', '', '60', '', '', '', '', '', '', '', '', '11103700100', ' Pilgrim Welfare Board (11103700100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'pending', '', 'uu', ''),
+(187, '2021-10-22', '', 'PLANT / GENERATOR FUEL COST', '7000', '61', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '500000', '22020803', 'skipped', '500000', 'Approved', '', 'auditor_approved', '', 'yuuuu', ''),
+(188, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(189, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(190, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11101100100', ' Public Complaint & Anti Corruption Dir. (11101100100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(191, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(192, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(193, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(194, '2021-10-22', '', '', '', '62', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', '', '', '', '', '11101000100', ' Due Process Directorate (11101000100)', '', '', '', 'No Attachment', 'No Budget', '', '', 'Paid', '89997', '', ''),
+(195, '2021-10-22', '', 'MEDICAL EXPENSES-LOCAL', '700000', '63', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '500000', '22021004', 'skipped', '500000', 'Approved', '', 'Paid', '88998937', 'Budget for 2021 ', ''),
+(196, '2021-10-22', '', 'POSTAGES & COURIER SERVICES', '897000', '63', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '1000000', '22021006', 'skipped', '1000000', 'Approved', '', 'Paid', '88998937', 'Budget of mda\'s ', ''),
+(197, '2021-10-22', '', 'MAINTENANCE OF MOTOR VEHICLE / TRANSPORT EQUIPMENT', '70033', '63', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '500000', '22020401', 'skipped', '500000', 'Approved', '', 'Paid', '88998937', 'Guidance and counseling Budget2021 ', ''),
+(198, '2021-10-22', '', 'HONORARIUM & SITTING ALLOWANCE', '830000', '63', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '1000000', '22021002', 'skipped', '1000000', 'Approved', '', 'Paid', '88998937', 'Guidance and counseling Budget 2021 and my self ', ''),
+(199, '2021-10-22', '', 'SURVEYING SERVICES', '809999', '63', 'Office of the Audit  (2004262028)', 'Office of the Audit ', '2004262028', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11101000100', ' Due Process Directorate (11101000100)', '', '200000', '22020706', 'skipped', '200000', 'Approved', '', 'Paid', '88998937', 'Due Process', ''),
+(200, '2021-10-23', '', 'INTERNATIONAL  TRAINING', '700', '64', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '1000000', '22020502', 'skipped', '1000000', 'skipped', '', 'Committed', '', 'No Narration', ''),
+(201, '2021-10-23', '', 'POSTAGES & COURIER SERVICES', '80000', '64', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '1000000', '22021006', 'skipped', '1000000', 'Approved', '', 'Committed', '', 'Budget is been used for renovations', ''),
+(202, '2021-10-23', '', 'MAINTENANCE OF MOTOR VEHICLE / TRANSPORT EQUIPMENT', '809000', '64', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '500000', '22020401', 'skipped', '500000', 'skipped', '', 'Committed', '', 'Guidance and counseling Narration', ''),
+(203, '2021-10-23', '', 'MOTOR VEHICLE  FUEL COST', '78000', '64', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11101000100', ' Due Process Directorate (11101000100)', '', '500000', '22020801', 'skipped', '500000', 'skipped', '', 'Committed', '', 'Due process narration', ''),
+(204, '2021-10-23', '', 'MAINTENANCE OF MOTOR VEHICLE / TRANSPORT EQUIPMENT', '120000', '64', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11100900100', ' Guidance and Counselling Board (11100900100)', '', '500000', '22020401', 'skipped', '500000', 'Approved', '', 'Committed', '', 'The money will be used for improvement of the office', ''),
+(205, '2021-10-24', '', 'INTERNATIONAL  TRAINING', '67000', '65', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '1000000', '22020502', 'skipped', '1000000', 'Approved', '', 'Committed', '', 'Being payment for International training', ''),
+(206, '2021-10-24', '', 'LOCAL TRAVEL & TRANSPORT: TRAINING', '700000', '65', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11100800100', ' Kano State Emergency Relief & Rehablitation Board (11100800100)', '', '500000', '22020101', 'skipped', '500000', 'Approved', '', 'Committed', '', 'Being payment for security guards', ''),
+(207, '2021-10-24', '', 'ELECTRICITY CHARGES', '89399', '65', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11103700100', ' Pilgrim Welfare Board (11103700100)', '', '1000000', '22020201', 'skipped', '1000000', 'Approved', '', 'Committed', '', 'Being payment for electric charge', ''),
+(208, '2021-10-24', '', 'SEWERAGE CHARGES', '12000', '65', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Secretary to the Sta', '115201126', 'Guaranty Trust Bank ', '82120555', '11103700100', ' Pilgrim Welfare Board (11103700100)', '', '1000000', '22020206', 'skipped', '1000000', 'skipped', '', 'Committed', '', 'Being payment for sewerage disposal  ', ''),
+(209, '2021-10-24', '', 'OTHER TRANSPORT EQUIPMENT FUEL COST', '780000', '65', 'Local Government Aud (2005875492)', 'Local Government Aud', '2005875492', 'First Bank Zoo Road', 'Ministry of Land & P', '1003268624', 'U. B. A.post office ', '33120012', '11103700100', ' Pilgrim Welfare Board (11103700100)', '', '4000000', '22020802', 'skipped', '4000000', 'Approved', '', 'Committed', '', 'Being payment for other transport', '');
 
 -- --------------------------------------------------------
 
@@ -5568,6 +5774,12 @@ ALTER TABLE `budget_summary`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `cheque_no`
+--
+ALTER TABLE `cheque_no`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `contractor_details`
 --
 ALTER TABLE `contractor_details`
@@ -5620,6 +5832,12 @@ ALTER TABLE `budget_summary`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4703;
 
 --
+-- AUTO_INCREMENT for table `cheque_no`
+--
+ALTER TABLE `cheque_no`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `contractor_details`
 --
 ALTER TABLE `contractor_details`
@@ -5635,7 +5853,7 @@ ALTER TABLE `mda_bank_details`
 -- AUTO_INCREMENT for table `payment_schedule`
 --
 ALTER TABLE `payment_schedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=210;
 
 --
 -- AUTO_INCREMENT for table `post_budget`

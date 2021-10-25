@@ -27,7 +27,10 @@ exports.paymentSchedule = (req, res) => {
     approval = "",
     treasury_source_account = "",
     id = "",
-    status = ""
+    status = "",
+    cheque_number = "",
+    narration = "",
+    arabic_date = ""
   } = req.body
 
   db.sequelize
@@ -55,7 +58,10 @@ exports.paymentSchedule = (req, res) => {
     :id,
     :budget,
     :approval,
-    :status
+    :status,
+    cheque_number,
+    :narration,
+    :arabic_date
     
       )`,
 
@@ -83,7 +89,10 @@ exports.paymentSchedule = (req, res) => {
     id,
     budget,
     approval,
-    status
+    status,
+    cheque_number,
+    narration,
+    arabic_date
         },
       }
     ).then((result) => {
@@ -155,7 +164,7 @@ const { description,query_type} = req.body
 
 exports.paymentScheduleArray = (req, res) => {
   const { paymentScheduleTable, batch_no = "", status = "",
-   query_type = "", cheque_number = "" } = req.body
+   query_type = "", cheque_number = "", arabic_date = "" } = req.body
   // const batch_no = uuid()
    console.log(req.body)
 fetchCode('select','batch_code', (results) => {
@@ -194,7 +203,9 @@ fetchCode('select','batch_code', (results) => {
     :budget,
     :approval,
     :status,
-    :cheque_number   
+    :cheque_number,
+    :narration,
+    :arabic_date   
       )`,
         {
           replacements: {
@@ -221,7 +232,9 @@ fetchCode('select','batch_code', (results) => {
             budget : item.budget ? item.budget : '',
             approval : item.approval ? item.approval : "",
             status : status,
-            cheque_number  
+            cheque_number,
+            narration : item.narration ? item.narration : "",
+            arabic_date  
           },
         },
       )
@@ -571,7 +584,9 @@ exports.get_batch_list = (req, res) => {
       replacements: { query_type, batch_no, status },
     })
     .then((result) => {
-      res.json({ result })
+      res.json({ 
+        success : true,
+        result })
     })
     .catch((err) => {
       console.log(err)
