@@ -3,7 +3,7 @@ const db = require('../models')
 
 exports.paymentSchedule = (req, res) => {
    console.log("kello")
-   console.log(req.body)
+   console.log("body", req.body)
  const {
     query_type = "", 
     date = "",
@@ -30,7 +30,9 @@ exports.paymentSchedule = (req, res) => {
     status = "",
     cheque_number = "",
     narration = "",
-    arabic_date = ""
+    arabic_date = "",
+    payment_type = ""
+
   } = req.body
 
   db.sequelize
@@ -59,9 +61,10 @@ exports.paymentSchedule = (req, res) => {
     :budget,
     :approval,
     :status,
-    cheque_number,
+    :cheque_number,
     :narration,
-    :arabic_date
+    :arabic_date,
+    :payment_type
     
       )`,
 
@@ -92,7 +95,8 @@ exports.paymentSchedule = (req, res) => {
     status,
     cheque_number,
     narration,
-    arabic_date
+    arabic_date,
+    payment_type
         },
       }
     ).then((result) => {
@@ -101,7 +105,7 @@ exports.paymentSchedule = (req, res) => {
         result,
       })
 
-      console.log(result)
+      // console.log("result1", result)
     })
     .catch((err) => {
       res.json({
@@ -167,7 +171,7 @@ exports.paymentScheduleArray = (req, res) => {
    query_type = "", cheque_number = "", arabic_date = "" } = req.body
   // const batch_no = uuid()
    console.log(req.body)
-fetchCode('select','batch_code', (results) => {
+fetchCode('select','batch_code1', (results) => {
   if(results && results.length ) {
     let batch_code1 = results[0].batch_code
 
@@ -205,7 +209,8 @@ fetchCode('select','batch_code', (results) => {
     :status,
     :cheque_number,
     :narration,
-    :arabic_date   
+    :arabic_date,
+    :payment_type   
       )`,
         {
           replacements: {
@@ -234,7 +239,8 @@ fetchCode('select','batch_code', (results) => {
             status : status,
             cheque_number,
             narration : item.narration ? item.narration : "",
-            arabic_date  
+            arabic_date,
+            payment_type : item.payment_type ? item.payment_type : "" 
           },
         },
       )
@@ -322,7 +328,7 @@ exports.bankDetails = (res, req) => {
         result,
       })
 
-      console.log(result)
+      // console.log(result)
     })
     .catch((err) => {
       res.json({
@@ -422,7 +428,7 @@ exports.postBudget = (req, res) => {
         result,
       })
 
-      console.log(result)
+      // console.log(result)
     })
     .catch((err) => {
       console.log(err)
@@ -543,7 +549,7 @@ exports.select_mda_bank_details = (req, res) => {
 			result
 		})
 
-		console.log(result)
+		// console.log(result)
 	})
 		.catch((err) => {
 			console.log(err)
@@ -571,6 +577,7 @@ exports.get_budget_summary = (req, res) => {
       res.status(500).json({ err })
     })
 }
+
 
 
 exports.get_batch_list = (req, res) => {
@@ -636,3 +643,106 @@ exports.postChequeDetails = (req, res) => {
     })
 
 }
+
+
+exports.approvalCollection = (req, res) => {
+   console.log("kello")
+   console.log("body", req.body)
+ const {
+    query_type = "", 
+    collection_date = '',
+    approval_date = '',
+    mda_name = '',
+    mda_description = '',
+    mda_budget_balance = '',
+    mda_economic_code = '',
+    approved_by = '',
+
+
+  } = req.body.form
+
+  db.sequelize
+      .query(
+    `CALL approval_collection (
+    :collection_date,
+    :approval_date,
+    :mda_name,
+    :mda_description,
+    :mda_budget_balance,
+    :approved_by,
+     :query_type,
+     :mda_economic_code
+      )`,
+
+    {
+        replacements: {
+    
+    collection_date,
+    approval_date,
+    mda_name,
+    mda_description,
+    mda_budget_balance,
+    approved_by,
+     query_type,
+     mda_economic_code
+        },
+      }
+    ).then((result) => {
+      res.json({
+        success: true,
+        result,
+      })
+
+      // console.log("result1", result)
+    })
+    .catch((err) => {
+      res.json({
+        success: false,
+        err,
+      })
+      console.log(err)
+    })
+
+  }
+
+
+  exports.getMdaBankDetails = (req, res) => {
+  const { 
+  account_name = "",
+  account_number = "",
+  sort_code = "",
+  bank_name = "",
+  query_type = "",
+  id = ""
+  
+} = req.query 
+  // console.log(req.body)
+  console.log(req.query) 
+  db.sequelize
+    .query(`CALL mda_bank_details(
+      :account_name,
+      :account_number,
+      :sort_code,
+      :bank_name,
+      :query_type,
+      :id
+      )`, {
+      replacements: { 
+      account_name,
+      account_number,
+      sort_code,
+      bank_name,
+      query_type,
+      id
+    },
+    })
+    .then((result) => {
+      res.json({ success : "true",
+        result })
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).json({ err })
+    })
+}
+
