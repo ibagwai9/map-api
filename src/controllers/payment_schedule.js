@@ -171,12 +171,13 @@ exports.paymentScheduleArray = (req, res) => {
    query_type = "", cheque_number = "", arabic_date = "" } = req.body
   // const batch_no = uuid()
    console.log(req.body)
-fetchCode('select','batch_code1', (results) => {
+fetchCode('select','batch_code', (results) => {
   if(results && results.length ) {
     let batch_code1 = results[0].batch_code
 
-    console.log("body",req.body)
+    console.log("body1",req.body)
     console.log(batch_code1)
+    console.log("result", results[0].batch_code)
 
   let count = 0
 
@@ -271,7 +272,7 @@ exports.numberGenerator = (res, req) => {
     .query(
       `CALL check_details(
 :description, :code, :query_type
-			)`,
+      )`,
       {
         replacements: {
           description,
@@ -311,7 +312,7 @@ exports.bankDetails = (res, req) => {
 :date, :payment_type, :description, :economic_code, :amount, :batch_no,
 :source_account, :mda_name, :compliance_status, :compliance_details, :budget_status,
 :approval_status, :approved_by, attachment_links
-			)`,
+      )`,
       {
         replacements: {
           account_name,
@@ -361,7 +362,7 @@ exports.updateBudget = (req, res) => {
       `CALL update_budget(
 :mda_name, :parent_code, :child_code, 
 :description, :amount, :remarks, :query_type, :id, :post_budget_amount
-			)`,
+      )`,
       {
         replacements: {
           mda_name,
@@ -405,13 +406,13 @@ exports.postBudget = (req, res) => {
   db.sequelize
     .query(
       `CALL post_budget(
-			:query_type,
+      :query_type,
 :date,
     :budget_code,
     :remarks,
     :budget_amount
      
-			)`,
+      )`,
       {
         replacements: {
           query_type,
@@ -448,8 +449,8 @@ exports.budget_summary = (req, res) => {
   db.sequelize
     .query(
       `insert into budget_summary (mda_code, mda_name, economic_code, 
-		budget_description,
-		budget_amount) values ${excelData.map((item) => '(?)').join(',')};`,
+    budget_description,
+    budget_amount) values ${excelData.map((item) => '(?)').join(',')};`,
       {
         replacements: excelData,
         type: db.sequelize.QueryTypes.insert,
@@ -462,30 +463,30 @@ exports.budget_summary = (req, res) => {
 
   // const {paymentScheduleTable} = req.body
 
-  // 	paymentScheduleTable.forEach((item, idx) => {
-  // 		db.sequelize.query(
-  // 			`CALL budget_summary (:query_type,
+  //  paymentScheduleTable.forEach((item, idx) => {
+  //    db.sequelize.query(
+  //      `CALL budget_summary (:query_type,
   // :mda_code, :mda_name, :economic_code, :budget_description, :budget_amount
   // )`,
-  // 			{
-  // 		replacements : {
-  // 		query_type : item.query_type ? item.query_type : "insert",
-  // 		mda_code : item.mda_name ? item.mda_name : "",
-  // 		economic_code : item.economic_code ? item.economic_code : "",
-  // 		budget_description : item.budget_description ? item.budget_description : "",
-  // 		budget_amount : item.budget_amount  ? item.budget_amount : "",
-  // 				}
-  // 			}
-  // 			)
-  // 	})
+  //      {
+  //    replacements : {
+  //    query_type : item.query_type ? item.query_type : "insert",
+  //    mda_code : item.mda_name ? item.mda_name : "",
+  //    economic_code : item.economic_code ? item.economic_code : "",
+  //    budget_description : item.budget_description ? item.budget_description : "",
+  //    budget_amount : item.budget_amount  ? item.budget_amount : "",
+  //        }
+  //      }
+  //      )
+  //  })
 
-  // 				.catch((err) => {
-  // 					res.json({
-  // 						success : false,
-  // 						err
+  //        .catch((err) => {
+  //          res.json({
+  //            success : false,
+  //            err
 
-  // 					})
-  // 				})
+  //          })
+  //        })
 
   // console.log(req.body)
 }
@@ -497,9 +498,9 @@ exports.mda_bank_details = (req, res) => {
   db.sequelize
     .query(
       `insert into mda_bank_details (account_name, bank_name, 
-		account_number, 
-		sort_code, id
-		) values ${excelData.map((item) => '(?)').join(',')};`,
+    account_number, 
+    sort_code, id
+    ) values ${excelData.map((item) => '(?)').join(',')};`,
       {
         replacements: excelData,
         type: db.sequelize.QueryTypes.insert,
@@ -512,50 +513,50 @@ exports.mda_bank_details = (req, res) => {
 }
 
 exports.select_mda_bank_details = (req, res) => {
-	const {
-		query_type = "",
-		account_name = "",
-		bank_name = "",
-		account_number = "",
-		sort_code = "",
-		account_type="",
-		
-	} = req.body
+  const {
+    query_type = "",
+    account_name = "",
+    bank_name = "",
+    account_number = "",
+    sort_code = "",
+    account_type="",
+    
+  } = req.body
   const {id = ""} = req.params
   console.log(id)
 
 
-	db.sequelize.query(
-		`CALL mda_bank_details(
-		:account_name, :bank_name, 
-		:account_number, 
-		:sort_code, 				
-		:query_type,
+  db.sequelize.query(
+    `CALL mda_bank_details(
+    :account_name, :bank_name, 
+    :account_number, 
+    :sort_code,         
+    :query_type,
     :id
-			)`,
-		{
-			replacements: {
-				account_name, 
+      )`,
+    {
+      replacements: {
+        account_name, 
         bank_name,
-				account_number,
-				sort_code,						
+        account_number,
+        sort_code,            
         query_type,
-        id			
-			}
-		}
-	).then((result) => {
-		res.json({
-			success: true,
-			result
-		})
+        id      
+      }
+    }
+  ).then((result) => {
+    res.json({
+      success: true,
+      result
+    })
 
-		// console.log(result)
-	})
-		.catch((err) => {
-			console.log(err)
-			res.json({success: false,	err})
-		})
-	}
+    // console.log(result)
+  })
+    .catch((err) => {
+      console.log(err)
+      res.json({success: false, err})
+    })
+  }
 
 exports.get_budget_summary = (req, res) => {
   const { query_type = "",
