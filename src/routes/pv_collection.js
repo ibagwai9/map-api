@@ -7,7 +7,8 @@ import {
   contractorSchedule,
   projectType,
   taxes,
-  contractorDetails
+  contractorDetails,
+  contractor_bank_details
 } from "../controllers/pv_collection";
 
 module.exports = (app) => {
@@ -20,4 +21,5 @@ module.exports = (app) => {
    app.post("/post_project_type", projectType);
    app.post("/post_taxes", taxes);
    app.post("/post_contractor_details", contractorDetails);
+    app.post("/post_contractor_bank_details", contractor_bank_details);
 };

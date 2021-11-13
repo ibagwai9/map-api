@@ -38,6 +38,7 @@ app.get('/', (req, res) => res.send('Hello my World'));
 require('./routes/user.js')(app);
 require("./routes/pv_collection.js")(app);
 require("./routes/payment_schedule.js")(app);
+require("./routes/auth.js")(app);
 
 //create a server
 var server = app.listen(port, function() {

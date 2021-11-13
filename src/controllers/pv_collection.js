@@ -641,7 +641,8 @@ exports.contractorDetails = (req, res) => {
 		contractor_phone = "",
 		contractor_address = "",
 		contractor_email = "",
-		contractor_tin_no = "",		
+		contractor_tin_no = "",
+    contractor_code = "",		
 		query_type = ""
 	} = req.body
 
@@ -649,7 +650,7 @@ exports.contractorDetails = (req, res) => {
 
 	fetchCode('select','contractor_code', (results) => {
   if(results && results.length ) {
-    let contractor_code = results[0].batch_code
+    let contractor_code1 = results[0].batch_code
 
 
 	
@@ -677,7 +678,7 @@ exports.contractorDetails = (req, res) => {
 				res.json({
 					success : true,
 					result,
-					contractor_code
+					contractor_code1
 				})
 
 				console.log(result)
@@ -693,3 +694,54 @@ exports.contractorDetails = (req, res) => {
 		})
 }
 
+
+
+exports.contractor_bank_details = (req, res) => {
+  const {
+    query_type = "",
+    account_name = "",
+    bank_name = "",
+    account_number = "",
+    sort_code = "",
+    contractor_name = ""
+    
+    
+  } = req.body
+  const {id = ""} = req.params
+  console.log(id)
+
+
+  db.sequelize.query(
+    `CALL contractor_bank_details(
+        :query_type,
+        :bank_name,
+        :account_name, 
+        :account_number,
+        :sort_code,
+        :contractor_name           
+        
+      )`,
+    {
+      replacements: {
+        query_type,
+        bank_name,
+        account_name, 
+        account_number,
+        sort_code,
+        contractor_name           
+              
+      }
+    }
+  ).then((result) => {
+    res.json({
+      success: true,
+      result
+    })
+
+    // console.log(result)
+  })
+    .catch((err) => {
+      console.log(err)
+      res.json({success: false, err})
+    })
+  }
