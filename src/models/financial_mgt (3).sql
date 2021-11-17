@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 06, 2021 at 08:35 AM
+-- Generation Time: Nov 17, 2021 at 04:57 AM
 -- Server version: 10.1.38-MariaDB
 -- PHP Version: 7.3.2
 
@@ -121,16 +121,41 @@ VALUES(in_batch_no,in_total_amount,in_no_of_mda,in_status);
 
 END IF$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `contractor_bank_details` (IN `in_query_type` VARCHAR(400), IN `in_bank_name` VARCHAR(400), IN `in_account_name` VARCHAR(400), IN `in_account_number` VARCHAR(400), IN `in_sort_code` VARCHAR(400), IN `in_contractor_name` VARCHAR(400))  NO SQL
+BEGIN 
+IF in_query_type='INSERT' THEN
+INSERT INTO contractor_bank_details(account_name,account_number,sort_code,bank_name, contractor_name)
+VALUES(in_account_name,in_account_number,in_sort_code,in_bank_name, in_contractor_name);
+
+#ELSEIF in_query_type = "select_all" THEN
+#SELECT * FROM mda_bank_details;
+
+ELSEIF in_query_type = "select" THEN
+SELECT id, account_name, account_number, sort_code, bank_name, contractor_name,   concat (account_name, " (",  account_number, ")") as account_info FROM contractor_bank_details;
+
+ELSEIF in_query_type = "select_by_id" THEN
+SELECT * FROM contractor_bank_details WHERE in_id = id;
+
+ELSEIF in_query_type='UPDATE' THEN
+UPDATE contractor_bank_details SET account_number=in_account_number,
+account_name=in_account_name,sort_code=in_sort_code,bank_name=in_bank_name WHERE account_number=in_account_number;
+
+ELSEIF  in_query_type='DELETE' THEN
+DELETE FROM contractor_details WHERE account_number=in_account_number;
+END IF;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `contractor_details` (IN `in_query_type` VARCHAR(400), IN `in_contractor_name` VARCHAR(400), IN `in_contractor_phone` VARCHAR(400), IN `in_contractor_address` VARCHAR(400), IN `in_contractor_email` VARCHAR(400), IN `in_contractor_tin_no` VARCHAR(400), IN `in_contractor_code` VARCHAR(400))  NO SQL
 IF in_query_type = "insert" THEN
 
 INSERT INTO contractor_details (contractor_code, contractor_name, contractor_phone, contractor_address, contractor_email, contractor_tin_no) 
-
 VALUES (in_contractor_code, in_contractor_name, in_contractor_phone, in_contractor_address, in_contractor_email, in_contractor_tin_no);
 
 ELSEIF in_query_type = "select" THEN
-
 SELECT * FROM contractor_details;
+
+ELSEIF in_query_type = "select_contractor_name" THEN
+SELECT contractor_name, concat (contractor_name, " (",  contractor_code, ")") as contractor_info FROM contractor_details;
 
 end if$$
 
@@ -564,7 +589,7 @@ INSERT INTO `batch` (`batch_id`, `description`, `batch_year`, `batch_code`) VALU
 (1, 'document_id', '', 1),
 (1, 'funding_code', '0', 38),
 (1, 'pv_code', '', 34),
-(1, 'contractor_code', '', 33);
+(1, 'contractor_code', '', 34);
 
 -- --------------------------------------------------------
 
@@ -5401,6 +5426,21 @@ CREATE TABLE `cheque_no` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `contractor_bank_details`
+--
+
+CREATE TABLE `contractor_bank_details` (
+  `id` int(11) NOT NULL,
+  `bank_name` varchar(400) NOT NULL,
+  `account_name` varchar(400) NOT NULL,
+  `account_number` varchar(400) NOT NULL,
+  `sort_code` varchar(400) NOT NULL,
+  `contractor_name` varchar(400) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `contractor_details`
 --
 
@@ -5413,14 +5453,6 @@ CREATE TABLE `contractor_details` (
   `contractor_email` varchar(400) NOT NULL,
   `contractor_tin_no` varchar(400) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `contractor_details`
---
-
-INSERT INTO `contractor_details` (`id`, `contractor_code`, `contractor_name`, `contractor_phone`, `contractor_address`, `contractor_email`, `contractor_tin_no`) VALUES
-(1, '31', 'Musa ', '080907854', '', 'musa@gmail.com', ''),
-(2, '33', 'Mr Suleman', '07067975938', 'Abuja, Garki Area', 'suleman@gmail.com', '');
 
 -- --------------------------------------------------------
 
@@ -5733,17 +5765,27 @@ CREATE TABLE `pv_collection` (
   `amount` varchar(400) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `pv_collection`
+-- Table structure for table `sign_up`
 --
 
-INSERT INTO `pv_collection` (`id`, `date`, `pv_code`, `pv_date`, `project_type`, `payment_type`, `mda_name`, `amount`) VALUES
-(1, '2021-11-03', '29', '0000-00-00', 'costruction', 'part_payment', 'Government House', '8900099'),
-(2, '2021-11-04', '30', '0000-00-00', '', '', '', ''),
-(3, '2021-11-04', '31', '0000-00-00', '', 'Full Payment', 'Yusuf Maitama Sule U', '900000'),
-(4, '2021-11-27', '32', '0000-00-00', 'construction of warehouse', 'Full Payment', 'Ministry of Land & P', '9000'),
-(5, '2021-11-05', '33', '0000-00-00', '', '', '', ''),
-(6, '2021-11-05', '34', '0000-00-00', 'Construction', 'Full Payment', 'Yusuf Maitama Sule U', '90000');
+CREATE TABLE `sign_up` (
+  `id` int(11) NOT NULL,
+  `username` varchar(400) NOT NULL,
+  `password` varchar(400) NOT NULL,
+  `role` varchar(400) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `sign_up`
+--
+
+INSERT INTO `sign_up` (`id`, `username`, `password`, `role`) VALUES
+(1, 'admin@gmail.com', '123456', ''),
+(2, 'admin@gmail.com1', '$2a$10$VTwNlb6eyWl1YA0DmpCaHOavjrt/2eE3iclJUSY2y1a0MYbTgZKU.', 'main_treasury'),
+(3, 'admin@gmail.com2', '$2a$10$VTwNlb6eyWl1YA0DmpCaHOavjrt/2eE3iclJUSY2y1a0MYbTgZKU.', 'sub_treasury');
 
 -- --------------------------------------------------------
 
@@ -6047,6 +6089,12 @@ ALTER TABLE `cheque_no`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `contractor_bank_details`
+--
+ALTER TABLE `contractor_bank_details`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `contractor_details`
 --
 ALTER TABLE `contractor_details`
@@ -6092,6 +6140,12 @@ ALTER TABLE `project_type`
 -- Indexes for table `pv_collection`
 --
 ALTER TABLE `pv_collection`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `sign_up`
+--
+ALTER TABLE `sign_up`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -6141,10 +6195,16 @@ ALTER TABLE `cheque_no`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `contractor_bank_details`
+--
+ALTER TABLE `contractor_bank_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `contractor_details`
 --
 ALTER TABLE `contractor_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `contractor_schedule`
@@ -6186,7 +6246,13 @@ ALTER TABLE `project_type`
 -- AUTO_INCREMENT for table `pv_collection`
 --
 ALTER TABLE `pv_collection`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `sign_up`
+--
+ALTER TABLE `sign_up`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `taxes`
