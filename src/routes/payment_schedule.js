@@ -1,3 +1,5 @@
+const {upload} = require('../config/multer.js')
+
 import {
   paymentSchedule,
   paymentScheduleArray,
@@ -11,7 +13,9 @@ import {
   updateBudgetCode,
   postChequeDetails,
   approvalCollection,
-  getMdaBankDetails
+  getMdaBankDetails,
+  fileUploader,
+  fetchApprovalImages
 } from "../controllers/payment_schedule";
 
 module.exports = (app) => {
@@ -30,4 +34,7 @@ module.exports = (app) => {
   app.post("/get_batch_list", get_batch_list);
   app.post("/update-budget-code", updateBudgetCode);
   app.get("/get_mdabank_details", getMdaBankDetails);
+  app.post("/fetch_approval_images", fetchApprovalImages);
+   app.post('/post_images', upload.array('files'), fileUploader)
+  
 };

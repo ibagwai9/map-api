@@ -658,6 +658,7 @@ exports.approvalCollection = (req, res) => {
     mda_budget_balance = '',
     mda_economic_code = '',
     approved_by = '',
+    mda_code = ""
 
 
   } = req.body.form
@@ -672,7 +673,8 @@ exports.approvalCollection = (req, res) => {
     :mda_budget_balance,
     :approved_by,
      :query_type,
-     :mda_economic_code
+     :mda_economic_code,
+     :mda_code
       )`,
 
     {
@@ -685,7 +687,8 @@ exports.approvalCollection = (req, res) => {
     mda_budget_balance,
     approved_by,
      query_type,
-     mda_economic_code
+     mda_economic_code,
+     mda_code
         },
       }
     ).then((result) => {
@@ -739,6 +742,68 @@ exports.approvalCollection = (req, res) => {
     })
     .then((result) => {
       res.json({ success : "true",
+        result })
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).json({ err })
+    })
+}
+
+exports.fileUploader =  (req, res) => {
+  console.log("ii", JSON.stringify(req.body.form))
+  console.log(req.files)
+  const files = req.files
+  // const {user, event_name} = req.body
+  console.log("jk", JSON.parse(req.body.form))
+  const {mda_name, mda_code, mda_economic_code, approved_by, approval} = JSON.parse(req.body.form)
+
+ files.forEach((item) => {
+    console.log(`${__dirname}/${item.name}`)
+  db.sequelize.query(
+      `INSERT INTO approval_collection_images ( image_url, mda_name, economic_code,
+    approved_by, approval, mda_code    
+ ) VALUES 
+      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}")`)
+     .catch((err) => {
+        console.log(err);
+        // res.status(500).json({ status: "failed", err });
+      }) 
+    })
+        res.json({
+          status: "success",
+          msg : "Event Pictures Posted successfully"
+        })
+      
+}
+
+exports.fetchApprovalImages = (req, res) => {
+  const { 
+  query_type = "",
+  economic_code = "",
+  mda_code = ""
+  
+} = req.body 
+  console.log('pp',req.body)
+  // console.log(req.query) 
+  db.sequelize
+    .query(`CALL approval_collection_images(
+      :query_type,
+  :economic_code,
+  :mda_code 
+  
+      )`, {
+      replacements: { 
+      query_type,
+  economic_code,
+  mda_code
+  
+    },
+    })
+    .then((result) => {
+      console.log("result", result)
+      res.json({ 
+        success : "true",
         result })
     })
     .catch((err) => {

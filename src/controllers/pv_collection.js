@@ -745,3 +745,48 @@ exports.contractor_bank_details = (req, res) => {
       res.json({success: false, err})
     })
   }
+
+
+
+  exports.fetchNgfAccountChart = (req, res) => {
+  const {
+   query_type = "",
+   parent_code = "",
+   child_code = "",
+   sector = ""
+  } = req.body.form
+
+  
+  db.sequelize
+    .query(
+      `CALL ngf_account_chart(
+:query_type,
+:parent_code,
+:child_code,
+:sector      
+      )`,
+      {
+        replacements: {
+          query_type,
+          parent_code, 
+          child_code,
+          sector
+        },
+      },
+    )
+    .then((result) => {
+      res.json({
+        success: true,
+        result,
+      })
+
+      console.log(result)
+    })
+    .catch((err) => {
+      console.log(err)
+      res.json({
+        success: false,
+        err,
+      })
+    })
+}

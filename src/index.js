@@ -3,6 +3,9 @@ import passport from 'passport';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import models from './models'
+import multer   from 'multer'
+const path = require('path');
+var upload = multer({ dest: 'uploads/' })
 
 const app = express();
 
@@ -16,6 +19,9 @@ app.set('view engine', 'ejs');
 
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + '/public'));
+app.use("/uploads", express.static(path.join(__dirname, 'uploads')));
+
+//app.use(express.static(__dirname + upload));
 
 
 app.use(cors());
