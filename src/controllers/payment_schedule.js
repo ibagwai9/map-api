@@ -161,7 +161,7 @@ const { description,query_type} = req.body
       console.log(result)
     }).catch(err => {
           console.log(err) 
-          error(err)
+          // error(err)
         })
 }
 
@@ -350,6 +350,11 @@ exports.updateBudget = (req, res) => {
     id = '',
     post_budget_amount = '',
     remarks = '',
+    Proposed_budget = "",
+          Approved_budget = "",
+          revised_budget = "",
+          buget_code = "",
+          buget_year = ""
   } = req.body.form
 
   const query_type = req.body.query_type
@@ -361,7 +366,12 @@ exports.updateBudget = (req, res) => {
     .query(
       `CALL update_budget(
 :mda_name, :parent_code, :child_code, 
-:description, :amount, :remarks, :query_type, :id, :post_budget_amount
+:description, :amount, :remarks, :query_type, :id, :post_budget_amount,
+:Proposed_budget,
+          :Approved_budget,
+          :revised_budget,
+          :buget_code,
+          :buget_year
       )`,
       {
         replacements: {
@@ -374,6 +384,11 @@ exports.updateBudget = (req, res) => {
           query_type,
           id,
           post_budget_amount,
+          Proposed_budget,
+          Approved_budget,
+          revised_budget,
+          buget_code,
+          buget_year
         },
       },
     )
@@ -811,4 +826,3 @@ exports.fetchApprovalImages = (req, res) => {
       res.status(500).json({ err })
     })
 }
-

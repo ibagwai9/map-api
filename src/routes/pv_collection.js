@@ -1,7 +1,7 @@
 import {
   pvCollection,
   tsaFundingArray,
-  tsaFunding,
+  fecthTsaFunding,
   updatePvCode,
   contractorScheduleArray,
   contractorSchedule,
@@ -15,7 +15,7 @@ import {
 module.exports = (app) => {
   app.post("/post_pv_collection", pvCollection);
    app.post("/post_tsa_funding", tsaFundingArray);
-   app.post("/post_tsa_funding_s", tsaFunding);
+   app.post("/post_tsa_funding_s", fecthTsaFunding);
    app.post("/update_pv_code", updatePvCode);
    app.post("/post_contractor_schedule_array", contractorScheduleArray);
    app.post("/post_contractor_schedule", contractorSchedule);

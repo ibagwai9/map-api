@@ -1,0 +1,29 @@
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `update_budget`(IN `in_mda_name` VARCHAR(20), IN `in_mda_parent_code` VARCHAR(20), IN `in_mda_child_code` VARCHAR(20), IN `in_description` VARCHAR(20), IN `in_amount` FLOAT(10), IN `in_remarks` VARCHAR(20), IN `in_query_type` VARCHAR(50), IN `in_id` VARCHAR(400), IN `in_post_budget_amount` VARCHAR(400), IN `in_Proposed_budget` FLOAT(10), IN `in_Approved_budget` FLOAT(10), IN `in_revised_budget` FLOAT(10), IN `in_buget_code` VARCHAR(60), IN `in_buget_year` VARCHAR(5))
+    NO SQL
+BEGIN
+IF in_query_type ='INSERT' THEN
+INSERT INTO update_budget(	mda_name,	mda_parent_code,	mda_child_code,	description,	amount,	remarks,	Proposed_budget,	Approved_budget,	revised_budget,	buget_code,	buget_year,	id	) 
+VALUES(in_mda_name,	in_mda_parent_code,	in_mda_child_code,	in_description,	in_amount,	in_remarks,	in_Proposed_budget,	in_Approved_budget,	in_revised_budget,	in_buget_code,	in_buget_year,id ) on duplicate key update Proposed_budget=in_Proposed_budget,	Approved_budget=in_Approved_budget,	revised_budget=in_revised_budget;
+
+ELSEIF in_query_type ='UPDATE' THEN
+UPDATE update_budget SET mda_name=in_mda_name,mda_parent_code=in_mda_parent_code,description=in_description,amount=in_amount + in_post_budget_amount,remarks=in_remarks WHERE mda_child_code=in_mda_child_code;
+
+ELSEIF in_query_type ='DELETE' THEN
+DELETE FROM update_budget WHERE in_mda_child_code=mda_child_code;
+
+ELSEIF in_query_type = "select_all_child_code1" THEN
+SELECT * FROM update_budget; 
+
+ELSEIF in_query_type = "tree" THEN
+SELECT  mda_parent_code as  subhead, mda_child_code as  title, description, amount, id from update_budget;
+
+ELSEIF in_query_type = "select_by_tree" THEN
+SELECT MAX(mda_child_code) + 1 as child_code FROM update_budget WHERE mda_parent_code = in_mda_parent_code;
+
+ELSEIF in_query_type = "select_all_child_code" THEN 
+SELECT mda_child_code, description, amount, mda_parent_code,  concat (description, "(", mda_child_code, ")") as budget FROM update_budget;
+
+END IF; 
+END$$
+DELIMITER ;

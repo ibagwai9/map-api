@@ -154,104 +154,72 @@ exports.tsaFundingArray = (req, res) => {
 
   let count = 0
 
-fetchCode('select','funding_code', (results) => {
+fetchCode('select','reference_number', (results) => {
   if(results && results.length ) {
-    let funding_code = results[0].batch_code
+    let reference_number = results[0].batch_code
 
   tsaBatch.forEach((item, idx) => {
     db.sequelize
     .query(
     `CALL tsa_funding (
-    :query_type,
-    :funding_code,
-    :date,
+    :fund_date,
     :mda_source_account,
     :mda_account_no,
     :mda_bank_name,
     :mda_sort_code,
-    :treasury_source_account,
     :treasury_account_name,
     :treasury_account_no,
     :treasury_bank_name,
-    :amount       
-      )`,
+    :amount,
+    :reference_number       
+     )`,
         {
           replacements: {
-            query_type: item.query_type ? item.query_type : query_type,
-            funding_code : item.funding_code ? item.funding_code : funding_code,
-            date : item.date ? item.date : "",
+            fund_date: item.fund_date ? item.fund_date : "",
             mda_source_account : item.mda_source_account ? item.mda_source_account : "",
             mda_account_no : item.mda_account_no ? item.mda_account_no : "",
             mda_bank_name : item.mda_bank_name ? item.mda_bank_name : "",
             mda_sort_code : item.mda_sort_code ? item.mda_sort_code : "",
-            treasury_source_account : item.treasury_source_account ? item.treasury_source_account : "",
             treasury_account_name : item.treasury_account_name ? item.treasury_account_name : "",
             treasury_account_no : item.treasury_account_no ? item.treasury_account_no : "",
             treasury_bank_name : item.treasury_bank_name ? item.treasury_bank_name : "",
-            amount : item.amount ? item.amount : item.amount
+            amount : item.amount ? item.amount : item.amount,
+            reference_number : item.reference_number ? item.reference_number : reference_number
           }, 
         },
       )
      
   })
-  res.json({ success: true, funding_code })
+  res.json({ success: true, reference_number })
    }
 })
  
 }
 
 
-exports.tsaFunding = (req, res) => {
+exports.fecthTsaFunding = (req, res) => {
    console.log("kello")
    console.log("body", req.body)
  const {
     query_type = "",
-    funding_code = "",
-    date = "",
-    mda_source_account = "",
-    mda_account_no = "",
-    mda_bank_name = "",
-    mda_sort_code = "",
-    treasury_source_account = "",
-    treasury_account_name = "",
-    treasury_account_no = "",
-    treasury_bank_name = "",
-    amount = ""       
+    account_number = "",
+    account_type = ""
     
   } = req.body
 
   db.sequelize
       .query(
-    `CALL tsa_funding (
+    `CALL fetch_tsa_funding (
     :query_type,
-    :funding_code,
-    :date,
-    :mda_source_account,
-    :mda_account_no,
-    :mda_bank_name,
-    :mda_sort_code,
-    :treasury_source_account,
-    :treasury_account_name,
-    :treasury_account_no,
-    :treasury_bank_name,
-    :amount       
-    
+    :account_number,
+    :account_type
       )`,
 
     {
         replacements: {
-    query_type,
-    funding_code,
-    date,
-    mda_source_account,
-    mda_account_no,
-    mda_bank_name,
-    mda_sort_code,
-    treasury_source_account,
-    treasury_account_name,
-    treasury_account_no,
-    treasury_bank_name,
-    amount       
+   query_type,
+   account_number,
+   account_type
         },
       }
     ).then((result) => {
@@ -286,31 +254,28 @@ exports.tsaFunding = (req, res) => {
 
   let count = 0
 
-fetchCode('select','funding_code', (results) => {
+fetchCode('select','reference_number', (results) => {
   if(results && results.length ) {
-    let funding_code = results[0].batch_code
+    let reference_number = results[0].batch_code
 
   tsaBatch.forEach((item, idx) => {
     db.sequelize
     .query(
     `CALL tsa_funding (
-    :query_type,
-    :funding_code,
-    :date,
+   :fund_date,
     :mda_source_account,
     :mda_account_no,
     :mda_bank_name,
     :mda_sort_code,
-    :treasury_source_account,
     :treasury_account_name,
     :treasury_account_no,
     :treasury_bank_name,
-    :amount       
-      )`,
+    :amount,
+    :reference_number       
+       )`,
         {
           replacements: {
-            query_type: item.query_type ? item.query_type : query_type,
-            funding_code : item.funding_code ? item.funding_code : funding_code,
+            fund_date : item.fund_date ? item.fund_date : "",
             date : item.date ? item.date : "",
             mda_source_account : item.mda_source_account ? item.mda_source_account : "",
             mda_account_no : item.mda_account_no ? item.mda_account_no : "",
@@ -320,13 +285,14 @@ fetchCode('select','funding_code', (results) => {
             treasury_account_name : item.treasury_account_name ? item.treasury_account_name : "",
             treasury_account_no : item.treasury_account_no ? item.treasury_account_no : "",
             treasury_bank_name : item.treasury_bank_name ? item.treasury_bank_name : "",
-            amount : item.amount ? item.amount : item.amount
+            amount : item.amount ? item.amount : item.amount,
+            reference_number : item.reference_number ? item.reference_number : reference_number
           }, 
         },
       )
      
   })
-  res.json({ success: true, funding_code })
+  res.json({ success: true, reference_number })
    }
 })
  
