@@ -123,7 +123,7 @@ END IF;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `cheque_no` (IN `in_query_type` VARCHAR(50), IN `in_batch_no` VARCHAR(50), IN `in_total_amount` VARCHAR(50), IN `in_no_of_mda` VARCHAR(50), IN `in_status` VARCHAR(50))  NO SQL
-if query_type = "inssert" THEN
+if in_query_type = "inssert" THEN
 INSERT INTO cheque_no (batch_no,total_amount,no_of_mda,status)
 VALUES(in_batch_no,in_total_amount,in_no_of_mda,in_status);
 
@@ -299,10 +299,10 @@ ELSEIF in_query_type='DELETE' THEN
 DELETE FROM update_budget WHERE in_mda_child_code=mda_child_code;
 
 
-ELSEIF query_type = "select_by_tree" THEN
+ELSEIF in_query_type = "select_by_tree" THEN
 SELECT MAX(child_code) + "1" as child_code FROM ngf_account_chart WHERE parent_code = in_parent_code;
 
-ELSEIF query_type = "select_all_child_code" THEN 
+ELSEIF in_query_type = "select_all_child_code" THEN 
 SELECT mda_child_code, description, amount, mda_parent_code,  concat (description, "(", mda_child_code, ")") as budget FROM update_budget;
 
 

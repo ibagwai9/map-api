@@ -2,42 +2,41 @@ const { uuid } = require('uuidv4')
 const db = require('../models')
 
 exports.paymentSchedule = (req, res) => {
-   console.log("kello")
-   console.log("body", req.body)
- const {
-    query_type = "", 
-    date = "",
-    batch_no = "",  
-    treasury_account_name = "",
-    treasury_account_no = "",
-    treasury_bank_name = "",
-    mda_account_name = "",
-    mda_account_no = "",
-    mda_bank_name = "",
-    mda_acct_sort_code = "" ,
-    mda_code = "",
-    mda_name = "",
-    mda_description = "" ,
-    mda_budget_balance = "",
-    mda_economic_code = "",
-    amount = "",
-    description = "" ,
-    attachment = "",
-    budget = "",
-    approval = "",
-    treasury_source_account = "",
-    id = "",
-    status = "",
-    cheque_number = "",
-    narration = "",
-    arabic_date = "",
-    payment_type = ""
-
+  console.log('kello')
+  console.log('body', req.body)
+  const {
+    query_type = '',
+    date = '',
+    batch_no = '',
+    treasury_account_name = '',
+    treasury_account_no = '',
+    treasury_bank_name = '',
+    mda_account_name = '',
+    mda_account_no = '',
+    mda_bank_name = '',
+    mda_acct_sort_code = '',
+    mda_code = '',
+    mda_name = '',
+    mda_description = '',
+    mda_budget_balance = '',
+    mda_economic_code = '',
+    amount = '',
+    description = '',
+    attachment = '',
+    budget = '',
+    approval = '',
+    treasury_source_account = '',
+    id = '',
+    status = '',
+    cheque_number = '',
+    narration = '',
+    arabic_date = '',
+    payment_type = '',
   } = req.body
 
   db.sequelize
-      .query(
-    `CALL payment_schedule (
+    .query(
+      `CALL payment_schedule (
     :query_type, 
     :date,
     :batch_no,  
@@ -64,42 +63,43 @@ exports.paymentSchedule = (req, res) => {
     :cheque_number,
     :narration,
     :arabic_date,
-    :payment_type
-    
+    :payment_type,
+    ''
       )`,
 
-    {
+      {
         replacements: {
-    query_type, 
-    date,
-    batch_no,  
-    treasury_account_name,
-    treasury_account_no,
-    treasury_bank_name,
-    mda_account_name,
-    mda_account_no,
-    mda_bank_name,
-    mda_acct_sort_code ,
-    mda_code,
-    mda_name,
-    mda_description ,
-    mda_budget_balance,
-    mda_economic_code,
-    amount,
-    description,
-    attachment,
-    treasury_source_account,
-    id,
-    budget,
-    approval,
-    status,
-    cheque_number,
-    narration,
-    arabic_date,
-    payment_type
+          query_type,
+          date,
+          batch_no,
+          treasury_account_name,
+          treasury_account_no,
+          treasury_bank_name,
+          mda_account_name,
+          mda_account_no,
+          mda_bank_name,
+          mda_acct_sort_code,
+          mda_code,
+          mda_name,
+          mda_description,
+          mda_budget_balance,
+          mda_economic_code,
+          amount,
+          description,
+          attachment,
+          treasury_source_account,
+          id,
+          budget,
+          approval,
+          status,
+          cheque_number,
+          narration,
+          arabic_date,
+          payment_type,
         },
-      }
-    ).then((result) => {
+      },
+    )
+    .then((result) => {
       res.json({
         success: true,
         result,
@@ -114,155 +114,179 @@ exports.paymentSchedule = (req, res) => {
       })
       console.log(err)
     })
-
-  }
-
-const fetchCode = (query_type ="select", description = "batch_code", callback=f=>f, error=f=>f) => {
-  db.sequelize
-      .query(
-    `CALL batch_increment (
-      :description,
-      :query_type 
-      )`,
-        {
-          replacements: {
-            description,
-            query_type
-          }
-        }).then(result => 
-          callback(result)
-        ).catch(err => {
-          console.log(err) 
-          error(err)
-        })
 }
 
-
- exports.updateBudgetCode = (req, res) => {
-const { description,query_type} = req.body
+const fetchCode = (
+  query_type = 'select',
+  description = 'batch_code',
+  callback = (f) => f,
+  error = (f) => f,
+) => {
   db.sequelize
-      .query(
-    `CALL batch_increment (
+    .query(
+      `CALL batch_increment (
       :description,
       :query_type 
       )`,
-        {
-          replacements: {
-            description,
-            query_type
-          },
-        },) 
-      .then((result) => {
+      {
+        replacements: {
+          description,
+          query_type,
+        },
+      },
+    )
+    .then((result) => callback(result))
+    .catch((err) => {
+      console.log(err)
+      error(err)
+    })
+}
+
+exports.updateBudgetCode = (req, res) => {
+  const { description, query_type } = req.body
+  db.sequelize
+    .query(
+      `CALL batch_increment (
+      :description,
+      :query_type 
+      )`,
+      {
+        replacements: {
+          description,
+          query_type,
+        },
+      },
+    )
+    .then((result) => {
       res.json({
         success: true,
         result,
       })
 
       console.log(result)
-    }).catch(err => {
-          console.log(err) 
-          // error(err)
-        })
+    })
+    .catch((err) => {
+      console.log(err)
+      // error(err)
+    })
 }
 
-
 exports.paymentScheduleArray = (req, res) => {
-  const { paymentScheduleTable, batch_no = "", status = "",
-   query_type = "", cheque_number = "", arabic_date = "" } = req.body
+  const {
+    paymentScheduleTable,
+    batch_no = '',
+    status = '',
+    query_type = '',
+    cheque_number = '',
+    arabic_date = '',
+  } = req.body
   // const batch_no = uuid()
-   console.log(req.body)
-fetchCode('select','batch_code', (results) => {
-  if(results && results.length ) {
-    let batch_code1 = results[0].batch_code
+  console.log(req.body)
 
-    console.log("body1",req.body)
-    console.log(batch_code1)
-    console.log("result", results[0].batch_code)
+  fetchCode('select', 'batch_code', (results) => {
+    if (results && results.length) {
+      let batch_code1 = results[0].batch_code
 
-  let count = 0
+      console.log('body1', req.body)
+      console.log(batch_code1)
+      console.log('result', results[0].batch_code)
 
-  paymentScheduleTable.forEach((item, idx) => {
-    db.sequelize
-    .query(
-    `CALL payment_schedule (
-    :query_type, 
-    :date,
-    :batch_no,  
-    :treasury_account_name,
-    :treasury_account_no,
-    :treasury_bank_name,
-    :mda_account_name,
-    :mda_account_no,
-    :mda_bank_name,
-    :mda_acct_sort_code ,
-    :mda_code,
-    :mda_name,
-    :mda_description ,
-    :mda_budget_balance,
-    :mda_economic_code,
-    :amount,
-    :description ,
-    :attachment,
-    :treasury_source_account,
-    :id,
-    :budget,
-    :approval,
-    :status,
-    :cheque_number,
-    :narration,
-    :arabic_date,
-    :payment_type   
-      )`,
-        {
-          replacements: {
-            query_type: item.query_type ? item.query_type : query_type,
-            date: item.date ? item.date : '',
-            batch_no: item.batch_no ? item.batch_no : batch_code1,
-            treasury_account_name: item.treasury_account_name ? item.treasury_account_name : '',
-            treasury_account_no: item.treasury_account_no ? item.treasury_account_no : '',
-            treasury_bank_name : item.treasury_bank_name ? item.treasury_bank_name : '',
-            mda_account_name: item.mda_account_name ? item.mda_account_name : '',
-            mda_account_no: item.mda_account_no ? item.mda_account_no : '',
-            mda_bank_name: item.mda_bank_name ? item.mda_bank_name : '',
-            mda_acct_sort_code: item.mda_acct_sort_code ? item.mda_acct_sort_code : '',
-            mda_code: item.mda_code ? item.mda_code : '',
-            mda_name: item.mda_name ? item.mda_name : '',
-            mda_description: item.mda_description ? item.mda_description : '',
-            mda_budget_balance: item.mda_budget_balance ? item.mda_budget_balance : '',
-            mda_economic_code: item.mda_economic_code ? item.mda_economic_code : '',
-            amount: item.amount ? item.amount : '',
-            description: item.description ? item.description : '',
-            attachment: item.attachment ? item.attachment : '', 
-            treasury_source_account: item.treasury_source_account ? item.treasury_source_account : '',
-            id : item.id ? item.id : "",  
-            budget : item.budget ? item.budget : '',
-            approval : item.approval ? item.approval : "",
-            status : status,
-            cheque_number,
-            narration : item.narration ? item.narration : "",
-            arabic_date,
-            payment_type : item.payment_type ? item.payment_type : "" 
+      let count = 0
+
+      paymentScheduleTable.forEach((item, idx) => {
+        db.sequelize.query(
+          `CALL payment_schedule (
+            :query_type, 
+            :date,
+            :batch_no,  
+            :treasury_account_name,
+            :treasury_account_no,
+            :treasury_bank_name,
+            :mda_account_name,
+            :mda_account_no,
+            :mda_bank_name,
+            :mda_acct_sort_code ,
+            :mda_code,
+            :mda_name,
+            :mda_description ,
+            :mda_budget_balance,
+            :mda_economic_code,
+            :amount,
+            :description ,
+            :attachment,
+            :treasury_source_account,
+            :id,
+            :budget,
+            :approval,
+            :status,
+            :cheque_number,
+            :narration,
+            :arabic_date,
+            :payment_type, ''
+          )`,
+          {
+            replacements: {
+              query_type: item.query_type ? item.query_type : query_type,
+              date: item.date ? item.date : '',
+              batch_no: item.batch_no ? item.batch_no : batch_code1,
+              treasury_account_name: item.treasury_account_name
+                ? item.treasury_account_name
+                : '',
+              treasury_account_no: item.treasury_account_no
+                ? item.treasury_account_no
+                : '',
+              treasury_bank_name: item.treasury_bank_name
+                ? item.treasury_bank_name
+                : '',
+              mda_account_name: item.mda_account_name
+                ? item.mda_account_name
+                : '',
+              mda_account_no: item.mda_account_no ? item.mda_account_no : '',
+              mda_bank_name: item.mda_bank_name ? item.mda_bank_name : '',
+              mda_acct_sort_code: item.mda_acct_sort_code
+                ? item.mda_acct_sort_code
+                : '',
+              mda_code: item.mda_code ? item.mda_code : '',
+              mda_name: item.mda_name ? item.mda_name : '',
+              mda_description: item.mda_description ? item.mda_description : '',
+              mda_budget_balance: item.mda_budget_balance
+                ? item.mda_budget_balance
+                : '',
+              mda_economic_code: item.mda_economic_code
+                ? item.mda_economic_code
+                : '',
+              amount: item.amount ? item.amount : '',
+              description: item.description ? item.description : '',
+              attachment: item.attachment ? item.attachment : '',
+              treasury_source_account: item.treasury_source_account
+                ? item.treasury_source_account
+                : '',
+              id: item.id ? item.id : '',
+              budget: item.budget ? item.budget : '',
+              approval: item.approval ? item.approval : '',
+              status: status,
+              cheque_number,
+              narration: item.narration ? item.narration : '',
+              arabic_date,
+              payment_type: item.payment_type ? item.payment_type : '',
+            },
           },
-        },
-      )
-
-     
+        )
+      })
+      res.json({ success: true, batch_code1 })
+    }
   })
-  res.json({ success: true, batch_code1 })
-  }
-})
-  
 
-   // .then((result) => {
-   //      count += 1
-   //      console.log({ success: true, result, count })
-   //    })
-   //    .catch((error) => {
-   //      res.json({
-   //        success: false,
-   //        error,
-   //      })
-   //    })
+  // .then((result) => {
+  //      count += 1
+  //      console.log({ success: true, result, count })
+  //    })
+  //    .catch((error) => {
+  //      res.json({
+  //        success: false,
+  //        error,
+  //      })
+  //    })
 }
 
 exports.numberGenerator = (res, req) => {
@@ -339,40 +363,30 @@ exports.bankDetails = (res, req) => {
     })
 }
 
-exports.updateBudget = (req, res) => {
-  const {
-    child_code = '',
-    parent_code = '',
-    // mda_parent_code,
-    // mda_child_code,
-    description = '',
-    amount = '',
-    id = '',
-    post_budget_amount = '',
-    remarks = '',
-    Proposed_budget = "",
-          Approved_budget = "",
-          revised_budget = "",
-          buget_code = "",
-          buget_year = ""
-  } = req.body.form
-
-  const query_type = req.body.query_type
-
-  const mda_name = ''
-  const remarks1 = ''
-
+function saveBudget(
+  {
+    mda_name,
+    parent_code,
+    child_code,
+    description,
+    amount,
+    remarks,
+    query_type,
+    id,
+    post_budget_amount,
+    Proposed_budget,
+    Approved_budget,
+    revised_budget,
+    buget_code,
+    buget_year,
+  },
+  callback = (f) => f,
+  error = (f) => f,
+) {
   db.sequelize
     .query(
-      `CALL update_budget(
-:mda_name, :parent_code, :child_code, 
-:description, :amount, :remarks, :query_type, :id, :post_budget_amount,
-:Proposed_budget,
-          :Approved_budget,
-          :revised_budget,
-          :buget_code,
-          :buget_year
-      )`,
+      `CALL update_budget(:mda_name, :parent_code, :child_code, :description, :amount, :remarks, :query_type, :id, 
+        :post_budget_amount,:Proposed_budget, :Approved_budget,:revised_budget, :buget_code, :buget_year)`,
       {
         replacements: {
           mda_name,
@@ -388,7 +402,98 @@ exports.updateBudget = (req, res) => {
           Approved_budget,
           revised_budget,
           buget_code,
-          buget_year
+          buget_year,
+        },
+      },
+    )
+    .then(callback)
+    .catch(error)
+}
+
+exports.batchUpload = (req, res) => {
+  const { data = [] } = req.body
+
+  // budget_amount: 500000
+  // budget_description: "MEDICAL EXPENSES-LOCAL"
+  // economic_code: 22021004
+  // mda_code: 11100800100
+  // mda_name: " Kano State Emergency Relief & Rehablitation Board"
+
+  for (let d = 0; d < data.length; d++) {
+    let item = data[d]
+    saveBudget(
+      {
+        mda_name: item.mda_name,
+        parent_code: item.economic_code,
+        child_code: item.mda_code,
+        description: item.budget_description,
+        amount: item.budget_amount,
+        remarks: '',
+        query_type: 'INSERT',
+        id: '',
+        post_budget_amount: 0,
+        Proposed_budget: 0,
+        Approved_budget: item.budget_amount,
+        revised_budget: 0,
+        buget_code: 0,
+        buget_year: item.year,
+      },
+      () => {
+        console.log('Done')
+      },
+      (err) => {
+        console.log(err)
+        res.status(500).json({ success: true, err })
+      },
+    )
+  }
+
+  res.json({ success: true })
+}
+
+exports.updateBudget = (req, res) => {
+  const {
+    child_code = '',
+    parent_code = '',
+    // mda_parent_code,
+    // mda_child_code,
+    description = '',
+    amount = '',
+    id = '',
+    post_budget_amount = '',
+    remarks = '',
+    Proposed_budget = '',
+    Approved_budget = '',
+    revised_budget = '',
+    buget_code = '',
+    buget_year = '',
+  } = req.body.form
+
+  const query_type = req.body.query_type
+
+  const mda_name = ''
+  const remarks1 = ''
+
+  db.sequelize
+    .query(
+      `CALL update_budget(:mda_name, :parent_code, :child_code, :description, :amount, :remarks, :query_type, :id, 
+        :post_budget_amount,:Proposed_budget, :Approved_budget,:revised_budget, :buget_code, :buget_year)`,
+      {
+        replacements: {
+          mda_name,
+          parent_code,
+          child_code,
+          description,
+          amount,
+          remarks,
+          query_type,
+          id,
+          post_budget_amount,
+          Proposed_budget,
+          Approved_budget,
+          revised_budget,
+          buget_code,
+          buget_year,
         },
       },
     )
@@ -454,8 +559,6 @@ exports.postBudget = (req, res) => {
       })
     })
 }
-
-
 
 exports.budget_summary = (req, res) => {
   const { excelData } = req.body
@@ -529,64 +632,70 @@ exports.mda_bank_details = (req, res) => {
 
 exports.select_mda_bank_details = (req, res) => {
   const {
-    query_type = "",
-    account_name = "",
-    bank_name = "",
-    account_number = "",
-    sort_code = "",
-    account_type="",
-    
+    query_type = '',
+    account_name = '',
+    bank_name = '',
+    account_number = '',
+    sort_code = '',
+    account_type = '',
   } = req.body
-  const {id = ""} = req.params
+  const { id = '' } = req.params
   console.log(id)
 
-
-  db.sequelize.query(
-    `CALL mda_bank_details(
-    :account_name, :bank_name, 
-    :account_number, 
-    :sort_code,         
-    :query_type,
-    :id
+  db.sequelize
+    .query(
+      `CALL mda_bank_details(
+        :account_name, :bank_name, 
+        :account_number, 
+        :sort_code,         
+        :query_type,
+        :id
       )`,
-    {
-      replacements: {
-        account_name, 
-        bank_name,
-        account_number,
-        sort_code,            
-        query_type,
-        id      
-      }
-    }
-  ).then((result) => {
-    res.json({
-      success: true,
-      result
-    })
+      {
+        replacements: {
+          account_name,
+          bank_name,
+          account_number,
+          sort_code,
+          query_type,
+          id,
+        },
+      },
+    )
+    .then((result) => {
+      res.json({
+        success: true,
+        result,
+      })
 
-    // console.log(result)
-  })
+      // console.log(result)
+    })
     .catch((err) => {
       console.log(err)
-      res.json({success: false, err})
+      res.json({ success: false, err })
     })
-  }
+}
 
 exports.get_budget_summary = (req, res) => {
-  const { query_type = "",
-  mda_code = "",
-  economic_code = ""
-} = req.query 
+  const { query_type = '', mda_code = '', economic_code = '' } = req.query
   // console.log(req.body)
-  console.log(req.query) 
+  console.log(req.query)
   db.sequelize
-    .query(`CALL budget_summary(:query_type,:mda_code,:b,:economic_code,:d,:e)`, {
-      replacements: { query_type, mda_code,  b: '',economic_code, d: '', e: '' },
-    })
+    .query(
+      `CALL budget_summary(:query_type,:mda_code,:b,:economic_code,:d,:e)`,
+      {
+        replacements: {
+          query_type,
+          mda_code,
+          b: '',
+          economic_code,
+          d: '',
+          e: '',
+        },
+      },
+    )
     .then((result) => {
-      res.json({ success : "true",
-        result })
+      res.json({ success: 'true', result })
     })
     .catch((err) => {
       console.log(err)
@@ -594,22 +703,18 @@ exports.get_budget_summary = (req, res) => {
     })
 }
 
-
-
 exports.get_batch_list = (req, res) => {
-  const { query_type = "", 
-    batch_no = "",
-    status = "" 
-  } = req.body 
-  console.log(req.query) 
+  const { query_type = '', batch_no = '', status = '' } = req.body
+  console.log(req.query)
   db.sequelize
     .query(`CALL batch_list(:query_type, :batch_no, :status )`, {
       replacements: { query_type, batch_no, status },
     })
     .then((result) => {
-      res.json({ 
-        success : true,
-        result })
+      res.json({
+        success: true,
+        result,
+      })
     })
     .catch((err) => {
       console.log(err)
@@ -617,21 +722,20 @@ exports.get_batch_list = (req, res) => {
     })
 }
 
-
 exports.postChequeDetails = (req, res) => {
   console.log(req.body)
   const {
-    date = "",
-    batch_number = "",
-    cheque_number = "",
-    total_amount = "",
-    query_type = "",
-    status = ""
-      
+    date = '',
+    batch_number = '',
+    cheque_number = '',
+    total_amount = '',
+    query_type = '',
+    status = '',
   } = req.body.form
 
   db.sequelize
-    .query(`CALL cheque_details(
+    .query(
+      `CALL cheque_details(
       :date,
       :batch_number,
       :cheque_number,
@@ -639,17 +743,18 @@ exports.postChequeDetails = (req, res) => {
       :status,
       :query_type
      
-      )`, {
-      replacements: { 
-        date,
-    batch_number,
-    cheque_number,
-    total_amount,
-    status,
-    query_type
-     
+      )`,
+      {
+        replacements: {
+          date,
+          batch_number,
+          cheque_number,
+          total_amount,
+          status,
+          query_type,
+        },
       },
-    })
+    )
     .then((result) => {
       res.json({ result })
     })
@@ -657,15 +762,13 @@ exports.postChequeDetails = (req, res) => {
       console.log(err)
       res.status(500).json({ err })
     })
-
 }
 
-
 exports.approvalCollection = (req, res) => {
-   console.log("kello")
-   console.log("body", req.body)
- const {
-    query_type = "", 
+  console.log('kello')
+  console.log('body', req.body)
+  const {
+    query_type = '',
     collection_date = '',
     approval_date = '',
     mda_name = '',
@@ -673,14 +776,12 @@ exports.approvalCollection = (req, res) => {
     mda_budget_balance = '',
     mda_economic_code = '',
     approved_by = '',
-    mda_code = ""
-
-
+    mda_code = '',
   } = req.body.form
 
   db.sequelize
-      .query(
-    `CALL approval_collection (
+    .query(
+      `CALL approval_collection (
     :collection_date,
     :approval_date,
     :mda_name,
@@ -692,21 +793,21 @@ exports.approvalCollection = (req, res) => {
      :mda_code
       )`,
 
-    {
+      {
         replacements: {
-    
-    collection_date,
-    approval_date,
-    mda_name,
-    mda_description,
-    mda_budget_balance,
-    approved_by,
-     query_type,
-     mda_economic_code,
-     mda_code
+          collection_date,
+          approval_date,
+          mda_name,
+          mda_description,
+          mda_budget_balance,
+          approved_by,
+          query_type,
+          mda_economic_code,
+          mda_code,
         },
-      }
-    ).then((result) => {
+      },
+    )
+    .then((result) => {
       res.json({
         success: true,
         result,
@@ -721,43 +822,42 @@ exports.approvalCollection = (req, res) => {
       })
       console.log(err)
     })
+}
 
-  }
-
-
-  exports.getMdaBankDetails = (req, res) => {
-  const { 
-  account_name = "",
-  account_number = "",
-  sort_code = "",
-  bank_name = "",
-  query_type = "",
-  id = ""
-  
-} = req.query 
+exports.getMdaBankDetails = (req, res) => {
+  const {
+    account_name = '',
+    account_number = '',
+    sort_code = '',
+    bank_name = '',
+    query_type = '',
+    id = '',
+  } = req.query
   // console.log(req.body)
-  console.log(req.query) 
+  console.log(req.query)
   db.sequelize
-    .query(`CALL mda_bank_details(
+    .query(
+      `CALL mda_bank_details(
       :account_name,
       :account_number,
       :sort_code,
       :bank_name,
       :query_type,
       :id
-      )`, {
-      replacements: { 
-      account_name,
-      account_number,
-      sort_code,
-      bank_name,
-      query_type,
-      id
-    },
-    })
+      )`,
+      {
+        replacements: {
+          account_name,
+          account_number,
+          sort_code,
+          bank_name,
+          query_type,
+          id,
+        },
+      },
+    )
     .then((result) => {
-      res.json({ success : "true",
-        result })
+      res.json({ success: 'true', result })
     })
     .catch((err) => {
       console.log(err)
@@ -765,61 +865,66 @@ exports.approvalCollection = (req, res) => {
     })
 }
 
-exports.fileUploader =  (req, res) => {
-  console.log("ii", JSON.stringify(req.body.form))
+exports.fileUploader = (req, res) => {
+  console.log('ii', JSON.stringify(req.body.form))
   console.log(req.files)
   const files = req.files
   // const {user, event_name} = req.body
-  console.log("jk", JSON.parse(req.body.form))
-  const {mda_name, mda_code, mda_economic_code, approved_by, approval} = JSON.parse(req.body.form)
+  console.log('jk', JSON.parse(req.body.form))
+  const {
+    mda_name,
+    mda_code,
+    mda_economic_code,
+    approved_by,
+    approval,
+  } = JSON.parse(req.body.form)
 
- files.forEach((item) => {
+  files.forEach((item) => {
     console.log(`${__dirname}/${item.name}`)
-  db.sequelize.query(
-      `INSERT INTO approval_collection_images ( image_url, mda_name, economic_code,
+    db.sequelize
+      .query(
+        `INSERT INTO approval_collection_images ( image_url, mda_name, economic_code,
     approved_by, approval, mda_code    
  ) VALUES 
-      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}")`)
-     .catch((err) => {
-        console.log(err);
+      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}")`,
+      )
+      .catch((err) => {
+        console.log(err)
         // res.status(500).json({ status: "failed", err });
-      }) 
-    })
-        res.json({
-          status: "success",
-          msg : "Event Pictures Posted successfully"
-        })
-      
+      })
+  })
+  res.json({
+    status: 'success',
+    msg: 'Event Pictures Posted successfully',
+  })
 }
 
 exports.fetchApprovalImages = (req, res) => {
-  const { 
-  query_type = "",
-  economic_code = "",
-  mda_code = ""
-  
-} = req.body 
-  console.log('pp',req.body)
-  // console.log(req.query) 
+  const { query_type = '', economic_code = '', mda_code = '' } = req.body
+  console.log('pp', req.body)
+  // console.log(req.query)
   db.sequelize
-    .query(`CALL approval_collection_images(
+    .query(
+      `CALL approval_collection_images(
       :query_type,
   :economic_code,
   :mda_code 
   
-      )`, {
-      replacements: { 
-      query_type,
-  economic_code,
-  mda_code
-  
-    },
-    })
+      )`,
+      {
+        replacements: {
+          query_type,
+          economic_code,
+          mda_code,
+        },
+      },
+    )
     .then((result) => {
-      console.log("result", result)
-      res.json({ 
-        success : "true",
-        result })
+      console.log('result', result)
+      res.json({
+        success: 'true',
+        result,
+      })
     })
     .catch((err) => {
       console.log(err)
