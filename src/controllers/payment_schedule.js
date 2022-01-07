@@ -31,7 +31,7 @@ exports.paymentSchedule = (req, res) => {
     cheque_number = '',
     narration = '',
     arabic_date = '',
-    payment_type = '',
+    payment_type = '', budget_year=''
   } = req.body
 
   db.sequelize
@@ -63,8 +63,7 @@ exports.paymentSchedule = (req, res) => {
     :cheque_number,
     :narration,
     :arabic_date,
-    :payment_type,
-    ''
+    :payment_type, :budget_year
       )`,
 
       {
@@ -96,6 +95,7 @@ exports.paymentSchedule = (req, res) => {
           narration,
           arabic_date,
           payment_type,
+          budget_year
         },
       },
     )
@@ -222,7 +222,7 @@ exports.paymentScheduleArray = (req, res) => {
             :cheque_number,
             :narration,
             :arabic_date,
-            :payment_type, ''
+            :payment_type, :budget_year
           )`,
           {
             replacements: {
@@ -269,6 +269,7 @@ exports.paymentScheduleArray = (req, res) => {
               narration: item.narration ? item.narration : '',
               arabic_date,
               payment_type: item.payment_type ? item.payment_type : '',
+              budget_year: item.budget_year ? item.budget_year : ''
             },
           },
         )
