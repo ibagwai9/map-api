@@ -15,7 +15,7 @@ import {
   approvalCollection,
   getMdaBankDetails,
   fileUploader,
-  fetchApprovalImages,batchUpload
+  fetchApprovalImages,batchUpload, getReports
 } from "../controllers/payment_schedule";
 
 module.exports = (app) => {
@@ -38,4 +38,5 @@ module.exports = (app) => {
   app.post("/fetch_approval_images", fetchApprovalImages);
   app.post('/post_images', upload.array('files'), fileUploader)
   
+  app.get('/get-reports', getReports)
 };

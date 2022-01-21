@@ -31,7 +31,8 @@ exports.paymentSchedule = (req, res) => {
     cheque_number = '',
     narration = '',
     arabic_date = '',
-    payment_type = '', budget_year=''
+    payment_type = '',
+    budget_year = '',
   } = req.body
 
   db.sequelize
@@ -95,7 +96,7 @@ exports.paymentSchedule = (req, res) => {
           narration,
           arabic_date,
           payment_type,
-          budget_year
+          budget_year,
         },
       },
     )
@@ -269,7 +270,7 @@ exports.paymentScheduleArray = (req, res) => {
               narration: item.narration ? item.narration : '',
               arabic_date,
               payment_type: item.payment_type ? item.payment_type : '',
-              budget_year: item.budget_year ? item.budget_year : ''
+              budget_year: item.budget_year ? item.budget_year : '',
             },
           },
         )
@@ -380,6 +381,11 @@ function saveBudget(
     revised_budget,
     buget_code,
     buget_year,
+    segment_code,
+    admin_code,
+    functional_code,
+    fund_code,
+    geo_code,
   },
   callback = (f) => f,
   error = (f) => f,
@@ -387,7 +393,8 @@ function saveBudget(
   db.sequelize
     .query(
       `CALL update_budget(:mda_name, :parent_code, :child_code, :description, :amount, :remarks, :query_type, :id, 
-        :post_budget_amount,:Proposed_budget, :Approved_budget,:revised_budget, :buget_code, :buget_year)`,
+        :post_budget_amount,:Proposed_budget, :Approved_budget,:revised_budget, :buget_code, :buget_year,
+        :segment_code,:admin_code,:functional_code,:fund_code,:geo_code)`,
       {
         replacements: {
           mda_name,
@@ -404,6 +411,11 @@ function saveBudget(
           revised_budget,
           buget_code,
           buget_year,
+          segment_code,
+          admin_code,
+          functional_code,
+          fund_code,
+          geo_code,
         },
       },
     )
@@ -438,6 +450,11 @@ exports.batchUpload = (req, res) => {
         revised_budget: 0,
         buget_code: 0,
         buget_year: item.year,
+        segment_code: item.segment_code,
+        admin_code: item.admin_code,
+        functional_code: item.functional_code,
+        fund_code: item.fund_code,
+        geo_code: item.geo_code,
       },
       () => {
         console.log('Done')
@@ -468,6 +485,11 @@ exports.updateBudget = (req, res) => {
     revised_budget = '',
     buget_code = '',
     buget_year = '',
+    segment_code = '',
+    admin_code = '',
+    functional_code = '',
+    fund_code = '',
+    geo_code = '',
   } = req.body.form
 
   const query_type = req.body.query_type
@@ -478,7 +500,8 @@ exports.updateBudget = (req, res) => {
   db.sequelize
     .query(
       `CALL update_budget(:mda_name, :parent_code, :child_code, :description, :amount, :remarks, :query_type, :id, 
-        :post_budget_amount,:Proposed_budget, :Approved_budget,:revised_budget, :buget_code, :buget_year)`,
+        :post_budget_amount,:Proposed_budget, :Approved_budget,:revised_budget, :buget_code, :buget_year,
+        :segment_code,:admin_code,:functional_code,:fund_code,:geo_code)`,
       {
         replacements: {
           mda_name,
@@ -495,6 +518,11 @@ exports.updateBudget = (req, res) => {
           revised_budget,
           buget_code,
           buget_year,
+          segment_code,
+          admin_code,
+          functional_code,
+          fund_code,
+          geo_code,
         },
       },
     )
@@ -504,7 +532,7 @@ exports.updateBudget = (req, res) => {
         result,
       })
 
-      console.log(result)
+      // console.log(result)
     })
     .catch((err) => {
       console.log(err)
@@ -925,6 +953,30 @@ exports.fetchApprovalImages = (req, res) => {
       res.json({
         success: 'true',
         result,
+      })
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).json({ err })
+    })
+}
+
+exports.getReports = (req, res) => {
+  const { query_type='', economic_code='', admin_code='', segment_code='', functional_code='', 
+    fund_code='', geo_code='', operation='', revenue_head='' } = req.query
+
+  db.sequelize
+    .query(`CALL get_reports(:query_type, :economic_code, :admin_code, :segment_code, :functional_code, 
+      :fund_code, :geo_code, :operation, :revenue_head)`, {
+      replacements: {
+        query_type, economic_code, admin_code, segment_code, functional_code, 
+    fund_code, geo_code, operation, revenue_head
+      },
+    })
+    .then((results) => {
+      res.json({
+        success: 'true',
+        results,
       })
     })
     .catch((err) => {

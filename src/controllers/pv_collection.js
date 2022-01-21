@@ -1,5 +1,7 @@
 const db = require('../models')
 
+const UUIDV4 = require('uuid').v4
+
 exports.updatePvCode = (req, res) => {
   const { description, query_type } = req.body
   db.sequelize
@@ -154,6 +156,21 @@ exports.tsaFundingArray = (req, res) => {
 
   let count = 0
 
+  // reference_number: '',
+  //     fund_date: '2022-01-10',
+  //     mda_source_account: '',
+  //     mda_account_no: '3230230231',
+  //     mda_bank_name: '',
+  //     mda_sort_code: '300',
+  //     treasury_source_account: 'FCMB (2004262028)',
+  //     treasury_account_name: 'FCMB',
+  //     treasury_account_no: '2004262028',
+  //     treasury_bank_name: 'FCMB',
+  //     amount: '500',
+  //     accType: 'Other Treasury Accounts',
+  //     selectedAccountType: 'Statutory',
+  //     fund_code: '123'
+
   fetchCode('select', 'reference_number', (results) => {
     if (results && results.length) {
       let reference_number = results[0].batch_code
@@ -161,7 +178,8 @@ exports.tsaFundingArray = (req, res) => {
       tsaBatch.forEach((item, idx) => {
         db.sequelize.query(
           `CALL tsa_funding (:fund_date,:mda_source_account,:mda_account_no,:mda_bank_name,:mda_sort_code,
-      :treasury_account_name,:treasury_account_no,:treasury_bank_name,:amount,:reference_number)`,
+      :treasury_account_name,:treasury_account_no,:treasury_bank_name,:amount,:reference_number,
+      :fund_source,:fund_code,:fund_source_type)`,
           {
             replacements: {
               fund_date: item.fund_date ? item.fund_date : '',
@@ -184,6 +202,11 @@ exports.tsaFundingArray = (req, res) => {
               reference_number: item.reference_number
                 ? item.reference_number
                 : reference_number,
+              fund_source: item.selectedAccountType
+                ? item.selectedAccountType
+                : '',
+              fund_source_type: item.accType ? item.accType : '',
+              fund_code: item.fund_code ? item.fund_code : '',
             },
           },
         )
@@ -194,7 +217,7 @@ exports.tsaFundingArray = (req, res) => {
 }
 
 function queryTsaAccount(
-  { query_type='', account='' },
+  { query_type = '', account = '' },
   callback = (f) => f,
   error = (f) => f,
 ) {
@@ -280,7 +303,8 @@ exports.tsaFundingArray = (req, res) => {
       tsaBatch.forEach((item, idx) => {
         db.sequelize.query(
           `CALL tsa_funding (:fund_date,:mda_source_account,:mda_account_no,:mda_bank_name,:mda_sort_code,
-      :treasury_account_name,:treasury_account_no,:treasury_bank_name,:amount,:reference_number)`,
+      :treasury_account_name,:treasury_account_no,:treasury_bank_name,:amount,:reference_number,
+      :fund_source,:fund_code,:fund_source_type)`,
           {
             replacements: {
               fund_date: item.fund_date ? item.fund_date : '',
@@ -307,6 +331,11 @@ exports.tsaFundingArray = (req, res) => {
               reference_number: item.reference_number
                 ? item.reference_number
                 : reference_number,
+              fund_source: item.selectedAccountType
+                ? item.selectedAccountType
+                : '',
+              fund_source_type: item.accType ? item.accType : '',
+              fund_code: item.fund_code ? item.fund_code : '',
             },
           },
         )
@@ -318,13 +347,14 @@ exports.tsaFundingArray = (req, res) => {
 
 exports.pvCollection = (req, res) => {
   const {
-    // pv_code = "",
+    pv_code = '',
     date = '',
     project_type = '',
     payment_type = '',
     mda_name = '',
     amount = '',
     query_type = '',
+    description = '',
   } = req.body.form
 
   const { batch_code = '' } = req.body
@@ -332,66 +362,68 @@ exports.pvCollection = (req, res) => {
   const computer_pv_no = ''
   console.log(req.body)
 
-  fetchCode('select', 'pv_code', (results) => {
-    if (results && results.length) {
-      let pv_code = results[0].batch_code
+  // fetchCode('select', 'pv_code', (results) => {
+  //   if (results && results.length) {
+  //     let pv_code = results[0].batch_code
 
-      db.sequelize
-        .query(
-          `call pv_collection (
-	:query_type,
-	:date, 
-	:pv_code,
-    :project_type,
-    :payment_type,
-    :mda_name,
-    :amount
-	)`,
-          {
-            replacements: {
-              query_type,
-              date,
-              pv_code,
-              project_type,
-              payment_type,
-              mda_name,
-              amount,
-            },
-          },
-        )
-        .then((result) => {
-          res.json({
-            success: true,
-            pv_code,
-            result,
-          })
-          console.log(result)
-        })
-        .catch((err) => {
-          console.log(err)
-          res.json({
-            success: false,
-            err,
-          })
-        })
-    }
-  })
+  db.sequelize
+    .query(
+      `call pv_collection (
+            :query_type,
+            :date, 
+            :pv_code,
+            :project_type,
+            :payment_type,
+            :mda_name,
+            :amount,
+            :description
+          )`,
+      {
+        replacements: {
+          query_type,
+          date,
+          pv_code,
+          project_type,
+          payment_type,
+          mda_name,
+          amount,
+          description,
+        },
+      },
+    )
+    .then((result) => {
+      res.json({
+        success: true,
+        pv_code,
+        result,
+      })
+      console.log(result)
+    })
+    .catch((err) => {
+      console.log(err)
+      res.json({
+        success: false,
+        err,
+      })
+    })
+  //   }
+  // })
 }
 
 exports.contractorScheduleArray = (req, res) => {
   const {
     contractScheduleTable,
-    batch_no = '',
+    // batch_no = '',
     status = '',
     query_type = '',
     cheque_number = '',
     arabic_date = '',
   } = req.body
-  // const batch_no = uuid()
+  // const batch_no = UUIDV4()
   console.log(req.body)
   fetchCode('select', 'contractor_code', (results) => {
     if (results && results.length) {
-      let contractor_code = results[0].batch_code
+      let batch_code = results[0].batch_code
 
       console.log('body', req.body)
       // console.log(batch_code1)
@@ -399,31 +431,32 @@ exports.contractorScheduleArray = (req, res) => {
       let count = 0
 
       contractScheduleTable.forEach((item, idx) => {
+        const contract_code = batch_code + '-' + idx+1
         db.sequelize.query(
           `CALL contractor_schedule (
-    :query_type,
-    :contractor_code, 
-    :date,
-    :mda_name,
-    :project_description,
-    :contractor,
-    :amount,
-    :project_type,
-    :payment_type,
-    :project_classification,
-    :VAT,
-    :WHT,
-    :SD,
-    :EL,
-    :tender,
-    :WR,
-    :others,
-    :total_taxes  
-      )`,
+            :query_type,
+            :contractor_code, 
+            :date,
+            :mda_name,
+            :project_description,
+            :contractor,
+            :amount,
+            :project_type,
+            :payment_type,
+            :project_classification,
+            :VAT,
+            :WHT,
+            :SD,
+            :EL,
+            :tender,
+            :WR,
+            :others,
+            :total_taxes, :contract_code, :contractor_tin, :mda_tin, :batch_no
+          )`,
           {
             replacements: {
               query_type: item.query_type ? item.query_type : query_type,
-              contractor_code: contractor_code,
+              contractor_code: item.contractor_id ? item.contractor_id : '',
               date: item.date ? item.date : '',
               mda_name: item.mda_name ? item.mda_name : '',
               project_description: item.project_description
@@ -444,13 +477,76 @@ exports.contractorScheduleArray = (req, res) => {
               WR: item.WR ? item.WR : '',
               others: item.others ? item.others : '',
               total_taxes: item.total_taxes ? item.total_taxes : '',
+              contract_code, 
+              contractor_tin: item.contractor_tin ? item.contractor_tin : '', 
+              mda_tin: item.mda_tin ? item.mda_tin : '',
+              batch_no: batch_code
             },
           },
         )
+
+        if (item.taxesApplied && item.taxesApplied.length) {
+          item.taxesApplied.map((tax) => {
+            db.sequelize.query(
+              'CALL tax_entry (:contractor_code, :description, :amount, :batch_no, :query_type)',
+              {
+                replacements: {
+                  contractor_code: item.contractor_id,
+                  description: tax.description,
+                  amount: tax.amount,
+                  batch_no: contract_code,
+                  query_type: 'new',
+                },
+              },
+            )
+          })
+        }
       })
-      res.json({ success: true, contractor_code })
+
+      res.json({ success: true, contractor_code:batch_code })
     }
   })
+}
+
+function tsaBanks(
+  { account = '', account_name = '', account_bank = '' },
+  callback = (f) => f,
+  error = (f) => f,
+) {
+  db.sequelize
+    .query('CALL tsa_banks(:acc, :acc_name, :acc_bank)', {
+      replacements: {
+        account,
+        account_name,
+        account_bank,
+      },
+    })
+    .then(callback)
+    .catch(error)
+}
+
+exports.getTsaAccount
+
+exports.getTaxes = (req, res) => {
+  db.sequelize
+    .query(
+      'CALL tax_entry (:contractor_code, :description, :amount, :batch_no, :query_type)',
+      {
+        replacements: {
+          contractor_code: item.contractor_code,
+          description: tax.description,
+          amount: tax.amount,
+          batch_no,
+          query_type: tax.query_type ? tax.query_type : 'new',
+        },
+      },
+    )
+    .then((results) => {
+      res.json({ success: false, results })
+    })
+    .catch((err) => {
+      res.status(500).json({ success: false, err })
+    })
 }
 
 exports.contractorSchedule = (req, res) => {
@@ -475,30 +571,31 @@ exports.contractorSchedule = (req, res) => {
     WR = '',
     others = '',
     total_taxes = '',
+    batch_id = '', contractor_tin='', mda_tin='', batch_no=''
   } = req.body
 
   db.sequelize
     .query(
       `CALL contractor_schedule (
-    :query_type,
-    :contractor_code, 
-    :date,
-    :mda_name,
-    :project_description,
-    :contractor,
-    :amount,
-    :project_type,
-    :payment_type,
-    :project_classification,
-    :VAT,
-    :WHT,
-    :SD,
-    :EL,
-    :tender,
-    :WR,
-    :others,
-    :total_taxes
-    
+        :query_type,
+        :contractor_code, 
+        :date,
+        :mda_name,
+        :project_description,
+        :contractor,
+        :amount,
+        :project_type,
+        :payment_type,
+        :project_classification,
+        :VAT,
+        :WHT,
+        :SD,
+        :EL,
+        :tender,
+        :WR,
+        :others,
+        :total_taxes,
+        :batch_id, :contractor_tin, :mda_tin, :batch_no
       )`,
 
       {
@@ -521,6 +618,7 @@ exports.contractorSchedule = (req, res) => {
           WR,
           others,
           total_taxes,
+          batch_id,contractor_tin, mda_tin, batch_no
         },
       },
     )
@@ -615,9 +713,10 @@ exports.contractorDetails = (req, res) => {
     contractor_phone = '',
     contractor_address = '',
     contractor_email = '',
-    contractor_tin_no = '',
+    contractor_tin = '',
     contractor_code = '',
     query_type = '',
+    bankList = [],
   } = req.body
 
   console.log('bodd', req.body)
@@ -629,24 +728,29 @@ exports.contractorDetails = (req, res) => {
       db.sequelize
         .query(
           `CALL contractor_details(
-				:query_type,
- :contractor_name, :contractor_phone, :contractor_address, 
-:contractor_email, :contractor_tin_no, :contractor_code 
+				    :query_type,
+            :contractor_name, :contractor_phone, :contractor_address, 
+            :contractor_email, :contractor_tin, :contractor_code
 			)`,
           {
             replacements: {
               query_type,
-
               contractor_name,
               contractor_phone,
               contractor_address,
               contractor_email,
-              contractor_tin_no,
+              contractor_tin,
               contractor_code,
             },
           },
         )
         .then((result) => {
+          if (bankList && bankList.length) {
+            bankList.forEach((item) => {
+              saveContractorBank(Object.assign({}, item, { contractor_code }))
+            })
+          }
+
           res.json({
             success: true,
             result,
@@ -665,18 +769,19 @@ exports.contractorDetails = (req, res) => {
   })
 }
 
-exports.contractor_bank_details = (req, res) => {
-  const {
+const saveContractorBank = (
+  {
     query_type = '',
     account_name = '',
     bank_name = '',
     account_number = '',
     sort_code = '',
     contractor_name = '',
-  } = req.body
-  const { id = '' } = req.params
-  console.log(id)
-
+    contractor_code = '',
+  },
+  callback = (f) => f,
+  error = (f) => f,
+) => {
   db.sequelize
     .query(
       `CALL contractor_bank_details(
@@ -685,8 +790,8 @@ exports.contractor_bank_details = (req, res) => {
         :account_name, 
         :account_number,
         :sort_code,
-        :contractor_name           
-        
+        :contractor_name,     
+        :contractor_code
       )`,
       {
         replacements: {
@@ -696,21 +801,32 @@ exports.contractor_bank_details = (req, res) => {
           account_number,
           sort_code,
           contractor_name,
+          contractor_code,
         },
       },
     )
-    .then((result) => {
+    .then(callback)
+    .catch(error)
+}
+
+exports.contractor_bank_details = (req, res) => {
+  const {} = req.body
+  // const { id = '' } = req.params
+  // console.log(id)
+
+  saveContractorBank(
+    Object.assign( req.body),
+    (result) => {
       res.json({
         success: true,
         result,
       })
-
-      // console.log(result)
-    })
-    .catch((err) => {
+    },
+    (err) => {
       console.log(err)
       res.json({ success: false, err })
-    })
+    },
+  )
 }
 
 exports.fetchNgfAccountChart = (req, res) => {
