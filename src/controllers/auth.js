@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
  exports.SignUp = (req, res) => {
     let form = req.body.form
     console.log(req.body)
-    const {  username, password} = req.body;
+    const {  username, password, fullname, role, accessTo} = req.body;
 
     db.sequelize
     .query(`SELECT  max(id) + 1 as id from sign_up `)
@@ -18,7 +18,7 @@ import jwt from 'jsonwebtoken'
     .then(resp => {
       if(resp[0].length) {
         console.log('user exist')
-        return res.status(400).json({ success: false, msg: 'email already registered' })
+        return res.status(400).json({ success: false, msg: 'username already registered' })
       } else {
         bcrypt.genSalt(10, (err, salt) => {
           bcrypt.hash(password, salt, (err, hash) => {
@@ -26,8 +26,8 @@ import jwt from 'jsonwebtoken'
             let newPass = hash;
 
             db.sequelize.query(
-              `INSERT INTO sign_up (id, username, password ) VALUES 
-              ("${maxId}", "${username}","${newPass}")`)
+              `INSERT INTO sign_up (id, username, password,fullname, role, accessTo ) VALUES 
+              ("${maxId}", "${username}","${newPass}","${fullname}","${role}","${accessTo}")`)
               .then((results) => {
                 db.sequelize.query(`SELECT * from sign_up 
                   where username="${username}"`)
@@ -165,5 +165,19 @@ exports.verifyToken = (req, res) => {
       })    
     
   })
+}
+
+exports.getUsers = (req, res) => {
+  const { role='' } = req.query
+    db.sequelize.query(`SELECT * from sign_up 
+      where role="${role}"`)
+    .then(result => {
+      res.json({ success: true, users: result[0]})
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({ status: "failed", err });
+      })    
+    
+
 }
 

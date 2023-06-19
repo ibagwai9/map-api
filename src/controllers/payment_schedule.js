@@ -1,3 +1,4 @@
+const moment = require('moment')
 const { uuid } = require('uuidv4')
 const db = require('../models')
 
@@ -33,6 +34,7 @@ exports.paymentSchedule = (req, res) => {
     arabic_date = '',
     payment_type = '',
     budget_year = '',
+    type = '',
   } = req.body
 
   db.sequelize
@@ -64,7 +66,9 @@ exports.paymentSchedule = (req, res) => {
     :cheque_number,
     :narration,
     :arabic_date,
-    :payment_type, :budget_year
+    :payment_type, 
+    :budget_year,
+    :type
       )`,
 
       {
@@ -97,6 +101,7 @@ exports.paymentSchedule = (req, res) => {
           arabic_date,
           payment_type,
           budget_year,
+          type,
         },
       },
     )
@@ -142,6 +147,8 @@ const fetchCode = (
       error(err)
     })
 }
+
+exports.fetchCode_batchIncrement = fetchCode;
 
 exports.updateBudgetCode = (req, res) => {
   const { description, query_type } = req.body
@@ -195,8 +202,9 @@ exports.paymentScheduleArray = (req, res) => {
       let count = 0
 
       paymentScheduleTable.forEach((item, idx) => {
-        db.sequelize.query(
-          `CALL payment_schedule (
+        db.sequelize
+          .query(
+            `CALL payment_schedule (
             :query_type, 
             :date,
             :batch_no,  
@@ -223,57 +231,92 @@ exports.paymentScheduleArray = (req, res) => {
             :cheque_number,
             :narration,
             :arabic_date,
-            :payment_type, :budget_year
+            :payment_type, :budget_year, :type
           )`,
-          {
-            replacements: {
-              query_type: item.query_type ? item.query_type : query_type,
-              date: item.date ? item.date : '',
-              batch_no: item.batch_no ? item.batch_no : batch_code1,
-              treasury_account_name: item.treasury_account_name
-                ? item.treasury_account_name
-                : '',
-              treasury_account_no: item.treasury_account_no
-                ? item.treasury_account_no
-                : '',
-              treasury_bank_name: item.treasury_bank_name
-                ? item.treasury_bank_name
-                : '',
-              mda_account_name: item.mda_account_name
-                ? item.mda_account_name
-                : '',
-              mda_account_no: item.mda_account_no ? item.mda_account_no : '',
-              mda_bank_name: item.mda_bank_name ? item.mda_bank_name : '',
-              mda_acct_sort_code: item.mda_acct_sort_code
-                ? item.mda_acct_sort_code
-                : '',
-              mda_code: item.mda_code ? item.mda_code : '',
-              mda_name: item.mda_name ? item.mda_name : '',
-              mda_description: item.mda_description ? item.mda_description : '',
-              mda_budget_balance: item.mda_budget_balance
-                ? item.mda_budget_balance
-                : '',
-              mda_economic_code: item.mda_economic_code
-                ? item.mda_economic_code
-                : '',
-              amount: item.amount ? item.amount : '',
-              description: item.description ? item.description : '',
-              attachment: item.attachment ? item.attachment : '',
-              treasury_source_account: item.treasury_source_account
-                ? item.treasury_source_account
-                : '',
-              id: item.id ? item.id : '',
-              budget: item.budget ? item.budget : '',
-              approval: item.approval ? item.approval : '',
-              status: status,
-              cheque_number,
-              narration: item.narration ? item.narration : '',
-              arabic_date,
-              payment_type: item.payment_type ? item.payment_type : '',
-              budget_year: item.budget_year ? item.budget_year : '',
+            {
+              replacements: {
+                query_type: item.query_type ? item.query_type : query_type,
+                date: item.date ? item.date : '',
+                batch_no: item.batch_no ? item.batch_no : batch_code1,
+                treasury_account_name: item.treasury_account_name
+                  ? item.treasury_account_name
+                  : '',
+                treasury_account_no: item.treasury_account_no
+                  ? item.treasury_account_no
+                  : '',
+                treasury_bank_name: item.treasury_bank_name
+                  ? item.treasury_bank_name
+                  : '',
+                mda_account_name: item.mda_account_name
+                  ? item.mda_account_name
+                  : '',
+                mda_account_no: item.mda_account_no ? item.mda_account_no : '',
+                mda_bank_name: item.mda_bank_name ? item.mda_bank_name : '',
+                mda_acct_sort_code: item.mda_acct_sort_code
+                  ? item.mda_acct_sort_code
+                  : '',
+                mda_code: item.mda_code ? item.mda_code : '',
+                mda_name: item.mda_name ? item.mda_name : '',
+                mda_description: item.mda_description
+                  ? item.mda_description
+                  : '',
+                mda_budget_balance: item.mda_budget_balance
+                  ? item.mda_budget_balance
+                  : '',
+                mda_economic_code: item.mda_economic_code
+                  ? item.mda_economic_code
+                  : '',
+                amount: item.amount ? item.amount : '',
+                description: item.description ? item.description : '',
+                attachment: item.attachment ? item.attachment : '',
+                treasury_source_account: item.treasury_source_account
+                  ? item.treasury_source_account
+                  : '',
+                id: item.id ? item.id : '',
+                budget: item.budget ? item.budget : '',
+                approval: item.approval ? item.approval : '',
+                status: status,
+                cheque_number,
+                narration: item.narration ? item.narration : '',
+                arabic_date,
+                payment_type: item.payment_type ? item.payment_type : '',
+                budget_year: item.budget_year ? item.budget_year : '',
+                type: item.type ? item.type : '',
+              },
             },
-          },
-        )
+          )
+          .then(() => {
+            if (item.payment_type === 'full_payment' && item.approval_no) {
+              db.sequelize.query(
+                `CALL approval_collection (
+                  :collection_date,
+                  :approval_date,
+                  :mda_name,
+                  :mda_description,
+                  :approved_amount,
+                  :approved_by,
+                  :query_type,
+                  :mda_economic_code,
+                  :mda_code, :approval_no, :filter
+                )`,
+                {
+                  replacements: {
+                    collection_date: '',
+                    approval_date: '',
+                    mda_name: '',
+                    mda_description: '',
+                    approved_amount: '',
+                    approved_by: '',
+                    query_type: 'update_approval',
+                    mda_economic_code: '',
+                    mda_code: '',
+                    approval_no: item.approval_no,
+                    filter: '',
+                  },
+                },
+              )
+            }
+          })
       })
       res.json({ success: true, batch_code1 })
     }
@@ -443,18 +486,18 @@ exports.batchUpload = (req, res) => {
         amount: item.budget_amount,
         remarks: '',
         query_type: 'INSERT',
-        id: '',
+        id: item.id,
         post_budget_amount: 0,
         Proposed_budget: 0,
-        Approved_budget: item.budget_amount,
+        Approved_budget: item.budget_amount ? item.budget_amount : '',
         revised_budget: 0,
         buget_code: 0,
-        buget_year: item.year,
-        segment_code: item.segment_code,
-        admin_code: item.admin_code,
-        functional_code: item.functional_code,
-        fund_code: item.fund_code,
-        geo_code: item.geo_code,
+        buget_year: item.year ? item.year : '',
+        segment_code: item.segment_code ? item.segment_code : '',
+        admin_code: item.admin_code ? item.admin_code : '',
+        functional_code: item.functional_code ? item.functional_code : '',
+        fund_code: item.fund_code ? item.fund_code : '',
+        geo_code: item.geo_code ? item.geo_code : '',
       },
       () => {
         console.log('Done')
@@ -555,12 +598,11 @@ exports.postBudget = (req, res) => {
   db.sequelize
     .query(
       `CALL post_budget(
-      :query_type,
-:date,
-    :budget_code,
-    :remarks,
-    :budget_amount
-     
+        :query_type,
+        :date,
+        :budget_code,
+        :remarks,
+        :budget_amount
       )`,
       {
         replacements: {
@@ -674,9 +716,10 @@ exports.select_mda_bank_details = (req, res) => {
   db.sequelize
     .query(
       `CALL mda_bank_details(
-        :account_name, :bank_name, 
+        :account_name,
         :account_number, 
-        :sort_code,         
+        :sort_code,      
+        :bank_name,    
         :query_type,
         :id
       )`,
@@ -733,11 +776,16 @@ exports.get_budget_summary = (req, res) => {
 }
 
 exports.get_batch_list = (req, res) => {
-  const { query_type = '', batch_no = '', status = '' } = req.body
-  console.log(req.query)
+  const {
+    query_type = '',
+    batch_no = '',
+    status = '',
+    type = 'main_treasury',
+  } = req.body
+  // console.log(req.body)
   db.sequelize
-    .query(`CALL batch_list(:query_type, :batch_no, :status )`, {
-      replacements: { query_type, batch_no, status },
+    .query(`CALL batch_list(:query_type, :batch_no, :status,:type)`, {
+      replacements: { query_type, batch_no, status, type },
     })
     .then((result) => {
       res.json({
@@ -761,6 +809,7 @@ exports.postChequeDetails = (req, res) => {
     query_type = '',
     status = '',
   } = req.body.form
+  const {type=''} = req.body
 
   db.sequelize
     .query(
@@ -771,7 +820,7 @@ exports.postChequeDetails = (req, res) => {
       :total_amount,
       :status,
       :query_type
-     
+      :type
       )`,
       {
         replacements: {
@@ -780,7 +829,7 @@ exports.postChequeDetails = (req, res) => {
           cheque_number,
           total_amount,
           status,
-          query_type,
+          query_type, type
         },
       },
     )
@@ -802,55 +851,79 @@ exports.approvalCollection = (req, res) => {
     approval_date = '',
     mda_name = '',
     mda_description = '',
-    mda_budget_balance = '',
+    approved_amount = '',
     mda_economic_code = '',
     approved_by = '',
     mda_code = '',
+    filter = '',
   } = req.body.form
 
-  db.sequelize
-    .query(
-      `CALL approval_collection (
-    :collection_date,
-    :approval_date,
-    :mda_name,
-    :mda_description,
-    :mda_budget_balance,
-    :approved_by,
-     :query_type,
-     :mda_economic_code,
-     :mda_code
+  number_generator(
+    { query_type: 'select', prefix: 'app' },
+    (resp) => {
+      let nextcode = resp && resp.length ? resp[0].next_code : Date.now()
+      let yearcode = moment().format('YY')
+      let monthcode = moment().format("MM")
+      let approval_no = `${yearcode}${monthcode}${nextcode}`
+      console.log('success', approval_no)
+
+      db.sequelize
+        .query(
+          `CALL approval_collection (
+        :collection_date,
+        :approval_date,
+        :mda_name,
+        :mda_description,
+        :approved_amount,
+        :approved_by,
+        :query_type,
+        :mda_economic_code,
+        :mda_code, :approval_no, :filter
       )`,
+          {
+            replacements: {
+              collection_date,
+              approval_date,
+              mda_name,
+              mda_description,
+              approved_amount,
+              approved_by,
+              query_type,
+              mda_economic_code,
+              mda_code,
+              approval_no,
+              filter,
+            },
+          },
+        )
+        .then((result) => {
+          if (query_type === 'insert') {
+            number_generator({
+              query_type: 'update',
+              prefix: 'app',
+              code: nextcode,
+            })
+          }
 
-      {
-        replacements: {
-          collection_date,
-          approval_date,
-          mda_name,
-          mda_description,
-          mda_budget_balance,
-          approved_by,
-          query_type,
-          mda_economic_code,
-          mda_code,
-        },
-      },
-    )
-    .then((result) => {
-      res.json({
-        success: true,
-        result,
-      })
+          res.json({
+            success: true,
+            result,
+          })
 
-      // console.log("result1", result)
-    })
-    .catch((err) => {
-      res.json({
-        success: false,
-        err,
-      })
+          // console.log("result1", result)
+        })
+        .catch((err) => {
+          console.log(err)
+          res.json({
+            success: false,
+            err,
+          })
+        })
+    },
+    (err) => {
       console.log(err)
-    })
+    },
+  )
 }
 
 exports.getMdaBankDetails = (req, res) => {
@@ -962,17 +1035,36 @@ exports.fetchApprovalImages = (req, res) => {
 }
 
 exports.getReports = (req, res) => {
-  const { query_type='', economic_code='', admin_code='', segment_code='', functional_code='', 
-    fund_code='', geo_code='', operation='', revenue_head='' } = req.query
+  const {
+    query_type = '',
+    economic_code = '',
+    admin_code = '',
+    segment_code = '',
+    functional_code = '',
+    fund_code = '',
+    geo_code = '',
+    operation = '',
+    revenue_head = '',
+  } = req.query
 
   db.sequelize
-    .query(`CALL get_reports(:query_type, :economic_code, :admin_code, :segment_code, :functional_code, 
-      :fund_code, :geo_code, :operation, :revenue_head)`, {
-      replacements: {
-        query_type, economic_code, admin_code, segment_code, functional_code, 
-    fund_code, geo_code, operation, revenue_head
+    .query(
+      `CALL get_reports(:query_type, :economic_code, :admin_code, :segment_code, :functional_code, 
+      :fund_code, :geo_code, :operation, :revenue_head)`,
+      {
+        replacements: {
+          query_type,
+          economic_code,
+          admin_code,
+          segment_code,
+          functional_code,
+          fund_code,
+          geo_code,
+          operation,
+          revenue_head,
+        },
       },
-    })
+    )
     .then((results) => {
       res.json({
         success: 'true',
@@ -983,4 +1075,38 @@ exports.getReports = (req, res) => {
       console.log(err)
       res.status(500).json({ err })
     })
+}
+
+function number_generator(
+  { query_type = '', prefix = '', description = '', code = '' },
+  callback = (f) => f,
+  error = (f) => f,
+) {
+  db.sequelize
+    .query('CALL number_generator(:query_type, :prefix, :description, :code)', {
+      replacements: {
+        query_type,
+        prefix,
+        description,
+        code,
+      },
+    })
+    .then(callback)
+    .catch(error)
+}
+
+exports.postNextCode = (req, res) => {
+  number_generator(req.body, (results) => {
+    res.json({ success: true, results })
+  }).catch((err) => {
+    res.status(500).json({ success: false, err })
+  })
+}
+
+exports.getNextCode = (req, res) => {
+  number_generator(req.query, (results) => {
+    res.json({ success: true, results })
+  }).catch((err) => {
+    res.status(500).json({ success: false, err })
+  })
 }
