@@ -297,7 +297,9 @@ exports.paymentScheduleArray = (req, res) => {
                   :approved_by,
                   :query_type,
                   :mda_economic_code,
-                  :mda_code, :approval_no, :filter
+                  :mda_code, 
+                  :approval_no, 
+                  :filter
                 )`,
                 {
                   replacements: {
@@ -850,7 +852,7 @@ exports.approvalCollection = (req, res) => {
     collection_date = '',
     approval_date = '',
     mda_name = '',
-    mda_description = '',
+    description = '',
     approved_amount = '',
     mda_economic_code = '',
     approved_by = '',
@@ -885,7 +887,7 @@ exports.approvalCollection = (req, res) => {
               collection_date,
               approval_date,
               mda_name,
-              mda_description,
+              mda_description:description,
               approved_amount,
               approved_by,
               query_type,
@@ -1094,6 +1096,7 @@ function number_generator(
     .then(callback)
     .catch(error)
 }
+
 
 exports.postNextCode = (req, res) => {
   number_generator(req.body, (results) => {
