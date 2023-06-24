@@ -861,7 +861,7 @@ exports.approvalCollection = (req, res) => {
   } = req.body.form
 
   number_generator(
-    { query_type: 'select', prefix: 'app' },
+    { query_type: 'select', prefix: 'app', description: 'approval' },
     (resp) => {
       let nextcode = resp && resp.length ? resp[0].next_code : Date.now()
       let yearcode = moment().format('YY')
@@ -902,7 +902,7 @@ exports.approvalCollection = (req, res) => {
           if (query_type === 'insert') {
             number_generator({
               query_type: 'update',
-              prefix: 'app',
+              prefix: 'app', description: 'approval',
               code: nextcode,
             })
           }
