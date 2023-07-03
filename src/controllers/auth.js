@@ -5,17 +5,17 @@ import jwt from 'jsonwebtoken'
  exports.SignUp = (req, res) => {
     let form = req.body.form
     console.log(req.body)
-    const {  username, password, fullname, role, accessTo} = req.body;
+    const {  username=null, password=null, fullname=null,email=null, role='user', accessTo=null, bvn=null,company_name=null,rc=null,tin=null,account_type=null,phone=null,state=null,lga=null,address=null} = req.body;
 
     db.sequelize
     .query(`SELECT  max(id) + 1 as id from sign_up `)
     .then((result) => {
     let maxId = result[0][0].id;
     //   console.log(maxId);
-  
-    db.sequelize.query(`SELECT * from sign_up
+    db.sequelize.query(`SELECT * from users
      where username="${username}"`)
     .then(resp => {
+      console.log(resp[0]);
       if(resp[0].length) {
         console.log('user exist')
         return res.status(400).json({ success: false, msg: 'username already registered' })
@@ -25,18 +25,36 @@ import jwt from 'jsonwebtoken'
             if(err) throw err;
             let newPass = hash;
 
-            db.sequelize.query(
-              `INSERT INTO sign_up (id, username, password,fullname, role, accessTo ) VALUES 
-              ("${maxId}", "${username}","${newPass}","${fullname}","${role}","${accessTo}")`)
-              .then((results) => {
+            db.sequelize.query('CALL user_coounts(:query_type, NULL, :firstname, :lastname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo)', {
+              replacements: {
+                query_type: 'insert',
+                firstname:fullname.split(' ')[0],
+                lastname:fullname.split(' ')[1],
+                username,
+                email,
+                password:newPass,
+                role,
+                bvn,
+                tin,
+                company_name,
+                rc,
+                account_type,
+                phone,
+                state,
+                lga,
+                address,
+                accessTo,
+              },
+            })
+              .then((userResp) => {
                 db.sequelize.query(`SELECT * from sign_up 
                   where username="${username}"`)
-                .then(result => {
+                .then(resultR => {
                 //   res.json({
                 //   status: "success",
                 //   result : result[]
                 // });
-                let user = result[0][0];
+                let user = resultR[0];
             console.log(user)
 
             let payload = {
