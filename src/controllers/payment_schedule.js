@@ -1,13 +1,13 @@
 const moment = require('moment')
 const { uuid } = require('uuidv4')
 const db = require('../models')
-
+const today = moment().format('YYYY-MM-DD')
 exports.paymentSchedule = (req, res) => {
-  console.log('kello')
-  console.log('body', req.body)
+  // console.log('kello')
+  // console.log('body', req.body)
   const {
     query_type = '',
-    date = '',
+    date = today,
     batch_no = '',
     treasury_account_name = '',
     treasury_account_no = '',
@@ -21,7 +21,7 @@ exports.paymentSchedule = (req, res) => {
     mda_description = '',
     mda_budget_balance = '',
     mda_economic_code = '',
-    amount = '',
+    amount = 0,
     description = '',
     attachment = '',
     budget = '',
@@ -35,6 +35,9 @@ exports.paymentSchedule = (req, res) => {
     payment_type = '',
     budget_year = '',
     type = '',
+    limit = 10,
+    offset = 0,
+    search = '',
   } = req.body
 
   db.sequelize
@@ -68,7 +71,7 @@ exports.paymentSchedule = (req, res) => {
     :arabic_date,
     :payment_type, 
     :budget_year,
-    :type
+    :type,:limit,:offset,:search
       )`,
 
       {
@@ -102,6 +105,9 @@ exports.paymentSchedule = (req, res) => {
           payment_type,
           budget_year,
           type,
+          limit,
+          offset,
+          search,
         },
       },
     )
@@ -148,7 +154,7 @@ const fetchCode = (
     })
 }
 
-exports.fetchCode_batchIncrement = fetchCode;
+exports.fetchCode_batchIncrement = fetchCode
 
 exports.updateBudgetCode = (req, res) => {
   const { description, query_type } = req.body
@@ -231,12 +237,12 @@ exports.paymentScheduleArray = (req, res) => {
             :cheque_number,
             :narration,
             :arabic_date,
-            :payment_type, :budget_year, :type
+            :payment_type, :budget_year, :type,:limit,:offset,:search
           )`,
             {
               replacements: {
                 query_type: item.query_type ? item.query_type : query_type,
-                date: item.date ? item.date : '',
+                date: item.date ? item.date : today,
                 batch_no: item.batch_no ? item.batch_no : batch_code1,
                 treasury_account_name: item.treasury_account_name
                   ? item.treasury_account_name
@@ -282,6 +288,9 @@ exports.paymentScheduleArray = (req, res) => {
                 payment_type: item.payment_type ? item.payment_type : '',
                 budget_year: item.budget_year ? item.budget_year : '',
                 type: item.type ? item.type : '',
+                limit: item.limit ? item.limit : 1,
+                offset: item.offset ? item.offset : 1,
+                search: item.search ? item.search : '',
               },
             },
           )
@@ -416,7 +425,7 @@ function saveBudget(
     parent_code,
     child_code,
     description,
-    amount,
+    amount = 0.1,
     remarks,
     query_type,
     id,
@@ -521,7 +530,7 @@ exports.updateBudget = (req, res) => {
     // mda_parent_code,
     // mda_child_code,
     description = '',
-    amount = '',
+    amount = 0.1,
     id = '',
     post_budget_amount = '',
     remarks = '',
@@ -804,14 +813,14 @@ exports.get_batch_list = (req, res) => {
 exports.postChequeDetails = (req, res) => {
   console.log(req.body)
   const {
-    date = '',
+    date = today,
     batch_number = '',
     cheque_number = '',
     total_amount = '',
     query_type = '',
     status = '',
   } = req.body.form
-  const {type=''} = req.body
+  const { type = '' } = req.body
 
   db.sequelize
     .query(
@@ -831,7 +840,8 @@ exports.postChequeDetails = (req, res) => {
           cheque_number,
           total_amount,
           status,
-          query_type, type
+          query_type,
+          type,
         },
       },
     )
@@ -844,13 +854,29 @@ exports.postChequeDetails = (req, res) => {
     })
 }
 
+exports.getApprovalAttachment = (req, res) => {
+  const { approval_no } = req.query
+
+  db.sequelize
+    .query(
+      `SELECT * FROM approval_collection_images WHERE approval_no="${approval_no}"`,
+    )
+    .then((results) => {
+      res.json({ success: 'true', results: results[0] })
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).json({ err })
+    })
+}
+
 exports.approvalCollection = (req, res) => {
   console.log('kello')
   console.log('body', req.body)
   const {
     query_type = '',
-    collection_date = '',
-    approval_date = '',
+    collection_date = today,
+    approval_date = today,
     mda_name = '',
     description = '',
     approved_amount = '',
@@ -865,7 +891,7 @@ exports.approvalCollection = (req, res) => {
     (resp) => {
       let nextcode = resp && resp.length ? resp[0].next_code : Date.now()
       let yearcode = moment().format('YY')
-      let monthcode = moment().format("MM")
+      let monthcode = moment().format('MM')
       let approval_no = `${yearcode}${monthcode}${nextcode}`
       console.log('success', approval_no)
 
@@ -887,7 +913,7 @@ exports.approvalCollection = (req, res) => {
               collection_date,
               approval_date,
               mda_name,
-              mda_description:description,
+              mda_description: description,
               approved_amount,
               approved_by,
               query_type,
@@ -902,7 +928,8 @@ exports.approvalCollection = (req, res) => {
           if (query_type === 'insert') {
             number_generator({
               query_type: 'update',
-              prefix: 'app', description: 'approval',
+              prefix: 'app',
+              description: 'approval',
               code: nextcode,
             })
           }
@@ -1096,7 +1123,6 @@ function number_generator(
     .then(callback)
     .catch(error)
 }
-
 
 exports.postNextCode = (req, res) => {
   number_generator(req.body, (results) => {

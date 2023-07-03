@@ -19,7 +19,8 @@ import {
   batchUpload,
   getReports,
   getNextCode,
-  postNextCode
+  postNextCode,
+  getApprovalAttachment
 } from '../controllers/payment_schedule'
 
 module.exports = (app) => {
@@ -46,4 +47,6 @@ module.exports = (app) => {
 
   app.get('/number-generator', getNextCode)
   app.post('/number-generator', postNextCode)
+
+  app.get('/fetch-approval-images', getApprovalAttachment)
 }
