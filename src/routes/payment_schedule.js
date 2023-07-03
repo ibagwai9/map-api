@@ -20,7 +20,9 @@ import {
   getReports,
   getNextCode,
   postNextCode,
-  getApprovalAttachment
+  getApprovalAttachment,
+  deleteApproveCol,
+  getApproveCol
 } from '../controllers/payment_schedule'
 
 module.exports = (app) => {
@@ -42,6 +44,8 @@ module.exports = (app) => {
   app.get('/get_mdabank_details', getMdaBankDetails)
   app.post('/fetch_approval_images', fetchApprovalImages)
   app.post('/post_images', upload.array('files'), fileUploader)
+  app.delete('/delete-approve-collection',deleteApproveCol)
+  app.get('/get-approve-col',getApproveCol)
 
   app.get('/get-reports', getReports)
 
