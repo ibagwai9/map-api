@@ -71,7 +71,7 @@ exports.paymentSchedule = (req, res) => {
     :arabic_date,
     :payment_type, 
     :budget_year,
-    :type,:limit,:offset,:search
+    :type,:limit,:offset,:search,'',''
       )`,
 
       {
@@ -238,10 +238,12 @@ exports.paymentScheduleArray = (req, res) => {
             :cheque_number,
             :narration,
             :arabic_date,
-            :payment_type, :budget_year, :type,:limit,:offset,:search
+            :payment_type, :budget_year, :type,:limit,:offset,:search,:approval_no,:imageId
           )`,
             {
               replacements: {
+                approval_no: item.approval_no ,
+                imageId:item.imageId?item.imageId:'',
                 query_type: item.query_type ? item.query_type : query_type,
                 date: item.date ? item.date : today,
                 batch_no: item.batch_no ? item.batch_no : batch_code1,
@@ -310,7 +312,7 @@ exports.paymentScheduleArray = (req, res) => {
                   :mda_code, 
                   :approval_no, 
                   :filter,
-                  :id
+                  :id,''
                 )`,
                 {
                   replacements: {
@@ -887,7 +889,7 @@ exports.getApprovalAttachment = (req, res) => {
 
   db.sequelize
     .query(
-      `SELECT * FROM approval_collection_images WHERE approval_no="${approval_no}"`
+      `SELECT * FROM approval_collection_images WHERE imageId="${approval_no}"`
     )
     .then((results) => {
       res.json({ success: "true", results: results[0] });
@@ -912,7 +914,8 @@ exports.approvalCollection = (req, res) => {
     approved_by = "",
     mda_code = "",
     filter = "",
-    id=''
+    id='',
+    imageId =''
   } = req.body.form;
 
   number_generator(
@@ -935,7 +938,7 @@ exports.approvalCollection = (req, res) => {
         :approved_by,
         :query_type,
         :mda_economic_code,
-        :mda_code, :approval_no, :filter,:id
+        :mda_code, :approval_no, :filter,:id,:imageId
       )`,
           {
             replacements: {
@@ -950,7 +953,8 @@ exports.approvalCollection = (req, res) => {
               mda_code,
               approval_no,
               filter,
-              id
+              id,
+              imageId
             },
           }
         )
@@ -1032,7 +1036,7 @@ exports.fileUploader = (req, res) => {
   const files = req.files;
   // const {user, event_name} = req.body
   console.log("jk", JSON.parse(req.body.form));
-  const { mda_name, mda_code, mda_economic_code, approved_by, approval } =
+  const { mda_name, mda_code, mda_economic_code, approved_by, approval,imageId='' } =
     JSON.parse(req.body.form);
 
   files.forEach((item) => {
@@ -1040,9 +1044,9 @@ exports.fileUploader = (req, res) => {
     db.sequelize
       .query(
         `INSERT INTO approval_collection_images ( image_url, mda_name, economic_code,
-    approved_by, approval, mda_code    
+    approved_by, approval, mda_code ,imageId   
  ) VALUES 
-      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}")`
+      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}","${imageId}")`
       )
       .catch((err) => {
         console.log(err);
