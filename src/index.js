@@ -8,6 +8,7 @@ const path = require("path");
 var upload = multer({ dest: "uploads/" });
 
 const app = express();
+app.use(express.static(path.join(__dirname)));
 
 app.use(bodyParser.json({ limit: "50mb" }));
 
