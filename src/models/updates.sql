@@ -1773,3 +1773,93 @@ BEGIN
         
     END IF;
 END $$
+
+DELIMITER ;
+
+CREATE TABLE `kigra_payment_list` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `description` varchar(200) NOT NULL,
+  `mda_parent_code` varchar(20) NOT NULL,
+  `mda_code` varchar(20) NOT NULL,
+  `item_code` varchar(20) NOT NULL,
+  `amount` numeric(10,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DELIMETER $$
+CREATE PROCEDURE `kigra_payment_list`(
+    IN query_type VARCHAR(20)
+    IN in_id INT,
+    IN in_description VARCHAR(200),
+    IN in_mda_parent_code VARCHAR(20),
+    IN in_mda_code VARCHAR(20),
+    IN in_item_code VARCHAR(20),
+    IN in_amount DECIMAL(10, 2)
+)
+BEGIN
+    -- Create (Insert) operation
+    IF query_type = 'create' THEN
+        INSERT INTO kigra_payment_list (description, mda_parent_code, mda_code, item_code, amount)
+        VALUES (p_description, in_mda_parent_code, in_mda_code, in_item_code, in_amount);
+        
+        SELECT LAST_INSERT_ID() AS new_id;
+        
+    -- Read (Select) operation
+    ELSEIF query_type = 'select' THEN
+        IF in_id > 0 THEN
+            SELECT * FROM kigra_payment_list WHERE id = in_id;
+        ELSE 
+            SELECT * FROM kigra_payment_list;
+        END IF;
+    -- Update operation
+    ELSEIF query_type = 'update' THEN
+        UPDATE kigra_payment_list
+        SET description = in_description,
+            mda_parent_code = in_mda_parent_code,
+            mda_code = in_mda_code,
+            item_code = in_item_code,
+            amount = in_amount
+        WHERE id = in_id;
+        
+        SELECT 'Payment list item updated successfully.';
+        
+    -- Delete operation
+    ELSEIF query_type = 'delete' THEN
+        DELETE FROM kigra_payment_list WHERE id = in_id;
+        
+        SELECT 'Payment list item deleted successfully.';
+        
+    -- Invalid operation
+    ELSE
+        SELECT 'Invalid operation.';
+        
+    END IF;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP PROCEDURE  IF EXISTS  `kigra_taxes`;
+DELIMITER $$
+CREATE PROCEDURE    `kigra_taxes` (
+  IN  `query_type` varchar(51),
+  IN  `id` INT,
+  IN  `tax_code` varchar(51),
+  IN  `tax_parent_code` varchar(8),
+  IN  `descripion` varchar(65),
+  IN  `tax_fee` varchar(10)
+)
+BEGIN
+  IF query_type='create' THEN    
+    INSERT INTO `taxes` (`tax_code`, `tax_parent_code`, `descripion`, `tax_fee`) VALUES
+    (in_tax_code,in_tax_parent_code,in_descripion,in_tax_fee) ;
+  ELSEIF  query_type = 'select-main' THEN 
+      SELECT * FROM `taxes` WHERE tax_code IS NOT NULL AND tax_parent_code ='' AND descripion !='';
+    ELSEIF query_type = 'select' AND in_tax_code IS NOT NULL THEN
+      SELECT * FROM `taxes` WHERE tax_parent_code =in_tax_parent_code ='' AND descripion !='';
+    END IF;
+  END IF; 
+END $$
+
+

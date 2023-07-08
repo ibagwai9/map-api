@@ -89,3 +89,92 @@ export function postAccChart (req, res){
   }
   )
 }
+
+
+const kigraPaymentList=  (data, success=f=>f, error=f=>f) => {
+  const { query_type=null,id=null,description=null,mda_parent_code=null,mda_code=null,item_code=null,amount=null } = data;
+
+  db.sequelize
+    .query(`CALL kigra_payment_list(:query_type,:id,:description,:mda_parent_code,:mda_code,:item_code,:amount)`, {
+      replacements: {
+        query_type,
+        id,
+        description,
+        mda_parent_code,
+        mda_code,
+        item_code,
+        amount        
+      },
+    })
+    .then((result) => {
+       success(result)
+    })
+    .catch((err) => {
+     error(err)
+    });
+}
+
+export const getKigraPaymentList = (req, res)=>{
+  kigraPaymentList(req.query, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+export const postKigraPaymentList = (req, res)=>{
+  kigraPaymentList(req.body, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+
+export function kigraTaxes  (data, success=f=>f, error=f=>f){
+  const { query_type=null,id=null,description=null,parent_code=null,tax_code=null,tax_fee=null } = data;
+
+  db.sequelize
+    .query(`CALL kigra_taxes(:query_type,:id,:parent_code,:tax_code,:description,:tax_fee)`, {
+      replacements: {
+        query_type,
+        id,
+        description,
+        parent_code,
+        tax_code,
+        tax_fee        
+      },
+    })
+    .then((result) => {
+       success(result)
+    })
+    .catch((err) => {
+     error(err)
+    });
+}
+
+export const postKigrTaxes = (req, res)=>{
+  kigraPaymentList(req.query, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+export const getKigrTaxes = (req, res)=>{
+  kigraPaymentList(req.body, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+
