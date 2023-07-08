@@ -18,7 +18,7 @@ exports.tsa_code = (req, res) => {
     })
     .catch((err) => {
       console.log(err);
-      error(err);
+      res.status(500).json(err);
     });
 };
 

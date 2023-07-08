@@ -6,7 +6,7 @@
     "clean": "rm -rf build && mkdir build",
     "dev": "nodemon --exec babel-node src/index.js",
     "build-server": "babel -d ./build ./src -s",
-    "build": "npm run clean && npm run build-server",
+    "build": "  npm run clean && npm run build-server && mkdir -p ./build/uploads",
     "start": "node ./build/index.js",
     "debug": "node --debug ./build/index.js"
   },

@@ -1615,11 +1615,20 @@ VALUES
 ('23060105', '230000000', 'DEPRECIATION CHARGE - FURNITURE & FITTINGS', '', '', '', '', '');
 
 
-ALTER TABLE `payments` ADD PRIMARY KEY(`Payment_id`);
-
-ALTER TABLE `payments` CHANGE `Payment_id` `Payment_id` INT(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `payments` CHANGE `Payment_id` `payment_id` INT(11) NOT NULL AUTO_INCREMENT, CHANGE `KigraId` `kigra_id` INT(11) NOT NULL, CHANGE `Description_of_payment` `description` VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL, CHANGE `Payee_name` `payee_name` VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL, CHANGE `MDA` `mda` VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL, CHANGE `Amount` `amount` INT(11) NOT NULL;
-ALTER TABLE `payments` ADD `tax_id` VARCHAR(15) NULL DEFAULT NULL AFTER `payee_name`;
+CREATE TABLE `kigra_payments` (
+  `payment_id` int(11) NOT NULL AUTO_INCREMENT,
+  `kigra_id` int(11) NOT NULL,
+  `item_code` varchar(20) DEFAULT NULL,
+  `description` varchar(200) NOT NULL,
+  `payee_name` varchar(200) NOT NULL,
+  `tax_id` varchar(15) DEFAULT NULL,
+  `mda` varchar(200) NOT NULL,
+  `revenue_code` varchar(20) NOT NULL,
+  `amount` int(11) NOT NULL,
+  `reciept_no` varchar(20) NOT NULL,
+  `mda_code` varchar(20) NOT NULL,
+  PRIMARY KEY (`payment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 DROP TABLE `users`;
 CREATE TABLE `users` (
