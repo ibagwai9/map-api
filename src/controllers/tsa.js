@@ -47,3 +47,68 @@ export function kigra_get_account_list(req, res) {
       });
     });
 }
+
+function transactionFuc(data, callback, error) {
+  const {
+    query_type = null,
+    receipt_no = "",
+    descr = "",
+    ministry_name = "",
+    acct_code = "",
+    payee_name = "",
+    mode_of_payment = "",
+    payee_id = "",
+    payment_status = "",
+    amount = 0.0,
+    trans_date,
+    facility_id = "",
+  } = data;
+
+  db.sequelize
+    .query(
+      `CALL transaction(:query_type,:receipt_no,:descr,:ministry_name,:acct_code,:payee_name,:mode_of_payment,:payee_id,:payment_status,:amount,:trans_date,:facility_id)`,
+      {
+        replacements: {
+          query_type,
+          receipt_no,
+          descr,
+          ministry_name,
+          acct_code,
+          payee_name,
+          mode_of_payment,
+          payee_id,
+          payment_status,
+          amount,
+          trans_date,
+          facility_id,
+        },
+      }
+    )
+    .then((result) => {
+      callback(result);
+    })
+    .catch((err) => {
+      error(err);
+    });
+}
+
+export function postTransaction(req, res) {
+  const { data } = req.body;
+  data.forEach((element) => {
+    transactionFuc(
+      element,
+      (d) => {
+        console.log(d);
+      },
+      (err) => {
+        res.json({
+          success: false,
+          err,
+        });
+      }
+    );
+  });
+  res.json({
+    success: true,
+  });
+}
