@@ -1685,6 +1685,7 @@ BEGIN
         DELETE FROM users WHERE id = in_id;
     END IF;
 END  $$
+DELIMITER;
 
 DROP PROCEDURE `ngf_account_chart`;
 DELIMITER $$
@@ -1708,3 +1709,67 @@ CREATE PROCEDURE `ngf_account_chart`(IN `in_query_type` VARCHAR(400), IN `in_par
         END IF 
     END 
 $$
+
+DELIMITER ;
+DROP  PROCEDURE IF EXISTS `kigra_payments`;
+
+DELIMETER $$
+CREATE PROCEDURE `kigra_payments`(
+    IN query_type VARCHAR(20),
+    IN in_payment_id INT,
+    IN in_kigra_id INT,
+    IN in_item_code VARCHAR(20),
+    IN in_description VARCHAR(200),
+    IN in_payee_name VARCHAR(200),
+    IN in_tax_id VARCHAR(15),
+    IN in_mda VARCHAR(200),
+    IN in_revenue_code VARCHAR(20),
+    IN in_amount INT,
+    IN in_reciept_no VARCHAR(20),
+    IN in_mda_code VARCHAR(20)
+)
+BEGIN
+    -- Create (Insert) operation
+    IF query_type = 'create' THEN
+        INSERT INTO kigra_payments (kigra_id, item_code, description, payee_name, tax_id, mda, revenue_code, amount, reciept_no, mda_code)
+        VALUES (p_kigra_id, in_item_code, in_description, in_payee_name, in_tax_id, in_mda, in_revenue_code, in_amount, in_reciept_no, in_mda_code);
+        
+        SELECT LAST_INSERT_ID() AS new_payment_id;
+        
+    -- Read (Select) operation
+    ELSEIF query_type = 'select' THEN
+      IF in_payment_id > 0 THEN
+        SELECT * FROM kigra_payments WHERE payment_id = in_payment_id;
+
+      ELSE
+          SELECT * FROM kigra_payments;
+      END IF;
+    -- Update operation
+    ELSEIF query_type = 'update' THEN
+        UPDATE kigra_payments
+        SET kigra_id = in_kigra_id,
+            item_code = in_item_code,
+            description = in_description,
+            payee_name = in_payee_name,
+            tax_id = in_tax_id,
+            mda = in_mda,
+            revenue_code = in_revenue_code,
+            amount = in_amount,
+            reciept_no = in_reciept_no,
+            mda_code = in_mda_code
+        WHERE payment_id = in_payment_id;
+        
+        SELECT 'Payment updated successfully.';
+        
+    -- Delete operation
+    ELSEIF query_type = 'delete' THEN
+        DELETE FROM kigra_payments WHERE payment_id = in_payment_id;
+        
+        SELECT 'Payment deleted successfully.';
+        
+    -- Invalid operation
+    ELSE
+        SELECT 'Invalid operation.';
+        
+    END IF;
+END $$
