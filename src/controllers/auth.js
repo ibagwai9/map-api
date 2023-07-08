@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken'
     const {  username=null, password=null, fullname=null,email=null, role='user', accessTo=null, bvn=null,company_name=null,rc=null,tin=null,account_type=null,phone=null,state=null,lga=null,address=null} = req.body;
 
     db.sequelize
-    .query(`SELECT  max(id) + 1 as id from sign_up `)
+    .query(`SELECT  max(id) + 1 as id from users `)
     .then((result) => {
     let maxId = result[0][0].id;
     //   console.log(maxId);
@@ -25,11 +25,10 @@ import jwt from 'jsonwebtoken'
             if(err) throw err;
             let newPass = hash;
 
-            db.sequelize.query('CALL user_coounts(:query_type, NULL, :firstname, :lastname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo)', {
+            db.sequelize.query('CALL user_accounts(:query_type, NULL, :fullname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo)', {
               replacements: {
                 query_type: 'insert',
-                firstname:fullname.split(' ')[0],
-                lastname:fullname.split(' ')[1],
+                fullname,
                 username,
                 email,
                 password:newPass,
@@ -47,7 +46,7 @@ import jwt from 'jsonwebtoken'
               },
             })
               .then((userResp) => {
-                db.sequelize.query(`SELECT * from sign_up 
+                db.sequelize.query(`SELECT * from users 
                   where username="${username}"`)
                 .then(resultR => {
                 //   res.json({
@@ -99,7 +98,7 @@ import jwt from 'jsonwebtoken'
 //AND role = "${role}"
 
 	db.sequelize.query(`SELECT * from 
-		sign_up WHERE username =  "${username}" `)
+		users WHERE username =  "${username}" `)
 		.then((result) => {
 			if(!result[0].length){
 				res.status(400).json({
@@ -173,7 +172,7 @@ exports.verifyToken = (req, res) => {
 
     const { username } = decoded;
 
-    db.sequelize.query(`SELECT *  from sign_up 
+    db.sequelize.query(`SELECT *  from users 
       where username="${username}"`)
     .then(result => {
       res.json({ success: true, user: result[0]})
@@ -187,7 +186,7 @@ exports.verifyToken = (req, res) => {
 
 exports.getUsers = (req, res) => {
   const { role='' } = req.query
-    db.sequelize.query(`SELECT * from sign_up 
+    db.sequelize.query(`SELECT * from users 
       where role="${role}"`)
     .then(result => {
       res.json({ success: true, users: result[0]})
