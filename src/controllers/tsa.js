@@ -18,7 +18,7 @@ exports.tsa_code = (req, res) => {
     })
     .catch((err) => {
       console.log(err);
-      error(err);
+      res.status(500).json(err);
     });
 };
 
@@ -48,67 +48,44 @@ export function kigra_get_account_list(req, res) {
     });
 }
 
-function transactionFuc(data, callback, error) {
-  const {
-    query_type = null,
-    receipt_no = "",
-    descr = "",
-    ministry_name = "",
-    acct_code = "",
-    payee_name = "",
-    mode_of_payment = "",
-    payee_id = "",
-    payment_status = "",
-    amount = 0.0,
-    trans_date,
-    facility_id = "",
-  } = data;
+const kigra_account_chart =  (data, success=f=>f, error=f=>f) => {
+  const { query_type = null, head = null, sub_head = null, description=null, remarks=null, type=null } = data;
 
   db.sequelize
-    .query(
-      `CALL transaction(:query_type,:receipt_no,:descr,:ministry_name,:acct_code,:payee_name,:mode_of_payment,:payee_id,:payment_status,:amount,:trans_date,:facility_id)`,
-      {
-        replacements: {
-          query_type,
-          receipt_no,
-          descr,
-          ministry_name,
-          acct_code,
-          payee_name,
-          mode_of_payment,
-          payee_id,
-          payment_status,
-          amount,
-          trans_date,
-          facility_id,
-        },
-      }
-    )
+    .query(`CALL account_chart(:query_type ,:head,:sub_head,:description,:remarks,:type)`, {
+      replacements: {
+        query_type,
+        head,
+        sub_head,
+        description,
+        remarks,
+        type
+      },
+    })
     .then((result) => {
-      callback(result);
+       success(result)
     })
     .catch((err) => {
-      error(err);
+     error(err)
     });
 }
 
-export function postTransaction(req, res) {
-  const { data } = req.body;
-  data.forEach((element) => {
-    transactionFuc(
-      element,
-      (d) => {
-        console.log(d);
-      },
-      (err) => {
-        res.json({
-          success: false,
-          err,
-        });
-      }
-    );
-  });
-  res.json({
-    success: true,
-  });
+export function getAccChart (req, res){
+  kigra_account_chart(req.query, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+export function postAccChart (req, res){
+  kigra_account_chart(req.body, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
 }

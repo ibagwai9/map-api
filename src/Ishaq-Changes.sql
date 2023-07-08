@@ -1,0 +1,1 @@
+ const {  username=null, password=null, fullname=null,email=null, role='user', accessTo=null, bvn=null,company_name=null,rc=null,tin=null,account_type=null,phone=null,state=null,lga=null,address=null} = req.body;

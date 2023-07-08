@@ -15,8 +15,7 @@ const create = (req, res) => {
   console.log(req.body);
   const { errors, isValid } = validateRegisterForm(req.body);
   let { 
-    firstname, 
-    lastname, 
+    name,
     username, 
     role,
     email, 
@@ -32,8 +31,7 @@ const create = (req, res) => {
       return res.status(400).json({ email: 'Email already exists!' });
     } else {
       let newUser = { 
-        firstname, 
-        lastname, 
+        name,
         username, 
         role,
         email, 

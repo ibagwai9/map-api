@@ -14,8 +14,9 @@ opts.secretOrKey = 'secret';
 module.exports = passport => {
   passport.use(
     new JwtStrategy(opts, (jwt_payload, done) => {
-      models.sequelize.query(`SELECT * from  sign_up WHERE id = "${jwt_payload.id}"`)
+      models.sequelize.query(`SELECT * from  users WHERE id = "${jwt_payload.id}"`)
       .then((user) => {
+        console.log(user[0]);
         if(user[0].length){
           return done(null, user);
         }

@@ -71,7 +71,7 @@ exports.paymentSchedule = (req, res) => {
     :arabic_date,
     :payment_type, 
     :budget_year,
-    :type,:limit,:offset,:search
+    :type,:limit,:offset,:search,'',''
       )`,
 
       {
@@ -192,6 +192,7 @@ exports.paymentScheduleArray = (req, res) => {
     status = "",
     query_type = "",
     cheque_number = "",
+    id='',
     arabic_date = "",
   } = req.body;
   // const batch_no = uuid()
@@ -237,10 +238,12 @@ exports.paymentScheduleArray = (req, res) => {
             :cheque_number,
             :narration,
             :arabic_date,
-            :payment_type, :budget_year, :type,:limit,:offset,:search
+            :payment_type, :budget_year, :type,:limit,:offset,:search,:approval_no,:imageId
           )`,
             {
               replacements: {
+                approval_no: item.approval_no ,
+                imageId:item.imageId?item.imageId:'',
                 query_type: item.query_type ? item.query_type : query_type,
                 date: item.date ? item.date : today,
                 batch_no: item.batch_no ? item.batch_no : batch_code1,
@@ -308,7 +311,8 @@ exports.paymentScheduleArray = (req, res) => {
                   :mda_economic_code,
                   :mda_code, 
                   :approval_no, 
-                  :filter
+                  :filter,
+                  :id,''
                 )`,
                 {
                   replacements: {
@@ -323,6 +327,7 @@ exports.paymentScheduleArray = (req, res) => {
                     mda_code: "",
                     approval_no: item.approval_no,
                     filter: "",
+                    id:''
                   },
                 }
               );
@@ -425,7 +430,7 @@ function saveBudget(
     parent_code,
     child_code,
     description,
-    amount=0.1,
+    amount = 0.1,
     remarks,
     query_type,
     id,
@@ -707,6 +712,36 @@ exports.mda_bank_details = (req, res) => {
     .catch((err) => console.log(err));
 };
 
+exports.deleteApproveCol = (req, res) => {
+  const { id } = req.body;
+  console.log(req.body);
+  db.sequelize
+    .query(`call delete_approval_collection(:id)`, {
+      replacements: {
+        id,
+      },
+    })
+    .then((result) => {
+      res.json({ result, success: true });
+    })
+    .catch((err) => console.log(err));
+};
+
+exports.getApproveCol = (req, res) => {
+  const { id } = req.query;
+  console.log(req.query);
+  db.sequelize
+    .query(`call get_approval_col(:id)`, {
+      replacements: {
+        id,
+      },
+    })
+    .then((result) => {
+      res.json({ result, success: true });
+    })
+    .catch((err) => console.log(err));
+};
+
 exports.select_mda_bank_details = (req, res) => {
   const {
     query_type = "",
@@ -849,6 +884,22 @@ exports.postChequeDetails = (req, res) => {
     });
 };
 
+exports.getApprovalAttachment = (req, res) => {
+  const { approval_no } = req.query;
+
+  db.sequelize
+    .query(
+      `SELECT * FROM approval_collection_images WHERE imageId="${approval_no}"`
+    )
+    .then((results) => {
+      res.json({ success: "true", results: results[0] });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ err });
+    });
+};
+
 exports.approvalCollection = (req, res) => {
   console.log("kello");
   console.log("body", req.body);
@@ -863,10 +914,12 @@ exports.approvalCollection = (req, res) => {
     approved_by = "",
     mda_code = "",
     filter = "",
+    id='',
+    imageId =''
   } = req.body.form;
 
   number_generator(
-    { query_type: "select", prefix: "app" },
+    { query_type: "select", prefix: "app", description: "approval" },
     (resp) => {
       let nextcode = resp && resp.length ? resp[0].next_code : Date.now();
       let yearcode = moment().format("YY");
@@ -885,7 +938,7 @@ exports.approvalCollection = (req, res) => {
         :approved_by,
         :query_type,
         :mda_economic_code,
-        :mda_code, :approval_no, :filter
+        :mda_code, :approval_no, :filter,:id,:imageId
       )`,
           {
             replacements: {
@@ -900,6 +953,8 @@ exports.approvalCollection = (req, res) => {
               mda_code,
               approval_no,
               filter,
+              id,
+              imageId
             },
           }
         )
@@ -908,6 +963,7 @@ exports.approvalCollection = (req, res) => {
             number_generator({
               query_type: "update",
               prefix: "app",
+              description: "approval",
               code: nextcode,
             });
           }
@@ -980,7 +1036,7 @@ exports.fileUploader = (req, res) => {
   const files = req.files;
   // const {user, event_name} = req.body
   console.log("jk", JSON.parse(req.body.form));
-  const { mda_name, mda_code, mda_economic_code, approved_by, approval } =
+  const { mda_name, mda_code, mda_economic_code, approved_by, approval,imageId='' } =
     JSON.parse(req.body.form);
 
   files.forEach((item) => {
@@ -988,9 +1044,9 @@ exports.fileUploader = (req, res) => {
     db.sequelize
       .query(
         `INSERT INTO approval_collection_images ( image_url, mda_name, economic_code,
-    approved_by, approval, mda_code    
+    approved_by, approval, mda_code ,imageId   
  ) VALUES 
-      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}")`
+      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}","${imageId}")`
       )
       .catch((err) => {
         console.log(err);
