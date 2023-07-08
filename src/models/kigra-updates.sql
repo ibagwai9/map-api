@@ -1863,3 +1863,46 @@ BEGIN
 END $$
 
 
+
+
+CREATE TABLE `taxes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `tax_code` varchar(51) DEFAULT NULL,
+  `tax_parent_code` varchar(8) DEFAULT NULL,
+  `description` varchar(65) DEFAULT NULL,
+  `tax_fee` varchar(10) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+
+INSERT INTO `taxes` (`id`, `tax_code`, `tax_parent_code`, `description`, `tax_fee`) VALUES
+(1, '120101', '', 'PERSONAL TAX (PAYE) - GENERAL', '6000'),
+(2, '12010101', '120101', 'Pay-as-You Earn- Public State', '6000'),
+(3, '12010104', '120101', 'PAYE Public - Local Govts.', '6000'),
+(4, '12010105', '120101', 'PAYE Federal Govt. Establishments', '6000'),
+(5, '12010106', '120101', 'PAYE -Organised Private Sector', '6000'),
+(6, '12010107', '120101', 'PAYE Informal Sector', '6000'),
+(7, '112010110', '', 'Tax Audit / Back Duty Recovery', '6000'),
+(8, 'Direct Assessment (Self-Employed)', '', '', '6000'),
+(9, '12010500', '', 'Direct Assessment', '6000'),
+(10, '12010501', '12010500', 'Direct Assessment on Affluent Affluent', '6000'),
+(11, '12010502', '12010500', 'Direct Assessment on Mix-Income', '6000'),
+(12, '12010503', '12010500', 'Direct Assessment on Expatriates', '6000'),
+(13, '12010504', '12010500', 'Direct Assessment on Informal Sector', '6000'),
+(14, '2. Withholding Tax (individuals only)', '', '', '6000'),
+(15, '12010400', '', 'Withholding Tax - GENERAL', '6000'),
+(16, '12010401', '12010400', 'Withholding Tax on Dividend', '6000'),
+(17, '12010402', '12010400', 'Withholding Tax on Rent', '6000'),
+(18, '12010403', '12010400', 'Withholding Tax on Bank Interest', '6000'),
+(19, '12010404', '12010400', 'Withholding Tax on Directors Fees', '6000'),
+(20, '12010405', '12010400', 'Withholding Tax on Contracts', '6000'),
+(21, '12010406', '12010400', 'Withholding Tax on Professional fees', '6000'),
+(22, '12010407', '12010400', 'Withholding Tax on Management Fees', '6000'),
+(23, '12010408', '12010400', 'Other Withholding Tax', '6000'),
+(24, '3. Capital Gains Tax (individuals only) - General |', '', '', '6000'),
+(25, '120003', '', 'Sale of Physical Assets ( Plant, Machinery & Equipment)', '6000'),
+(26, '120103', '', 'Sale of Technical Knowhow (Technology Process or Design )', '6000'),
+(27, '120203', '', 'Sale of Intellectual Property (Copy Right, Trade Marks & Patents)', '6000'),
+(28, '12010602', '', '5tamp Duties on Instruments executed by individuals,', '6000'),
+(29, '12010603', '', 'Development Levy', '6000'),
+(30, '12020455', '', 'Entertainment levy', '6000'),
+(31, '12020455', '', 'Social Services and Economic Levy', '6000');
