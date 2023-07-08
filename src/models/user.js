@@ -2,8 +2,7 @@ export default (sequelize, DataTypes) => {
   const User = sequelize.define(
     'User',
     {
-      firstname: DataTypes.STRING,
-      lastname: DataTypes.STRING,
+      name: DataTypes.STRING,
       username: DataTypes.STRING,
       email: DataTypes.STRING,
       password: DataTypes.STRING,
