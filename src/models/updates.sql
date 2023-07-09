@@ -1,4 +1,28 @@
+-- new Update
+ALTER TABLE `users` ADD `taxID` VARCHAR(20) NOT NULL AFTER `email`;
+INSERT INTO `number_generator`(`prefix`, `description`, `next_code`) VALUES ('TID','taxID',1)
 
+DROP PROCEDURE `user_accounts`; 
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(40), IN `in_tin` VARCHAR(30), IN `in_company_name` VARCHAR(60), IN `in_rc` VARCHAR(30), IN `in_account_type` VARCHAR(30), IN `in_phone` VARCHAR(15), IN `in_state` VARCHAR(30), IN `in_lga` VARCHAR(60), IN `in_address` VARCHAR(111), IN `in_accessTo` VARCHAR(111), IN `in_taxID` VARCHAR(20))
+BEGIN
+    IF in_query_type = 'insert' THEN
+        INSERT INTO users (name, username, email, password, role, bvn, tin, company_name, rc, account_type, phone, state, lga, address, accessTo, taxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_bvn, in_tin, in_company_name, in_rc, in_account_type, in_phone, in_state, in_lga, in_address, in_accessTo, in_taxID);
+    ELSEIF in_query_type = 'update' THEN
+        UPDATE users
+        SET name = in_name, username = in_username, email = in_email, password = in_password, role = in_role, bvn = in_bvn, tin = in_tin, company_name = in_company_name, rc = in_rc, account_type = in_account_type, phone = in_phone, state = in_state, lga = in_lga, address = in_address, accessTo = in_accessTo
+        WHERE id = in_id;
+    ELSEIF in_query_type = 'delete' THEN
+        DELETE FROM users WHERE id = in_id;
+    END IF;
+END$$
+DELIMITER ;
+
+ALTER TABLE `users` CHANGE `bvn` `bvn` VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `tin` `tin` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `company_name` `company_name` VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `rc` `rc` VARCHAR(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `account_type` `account_type` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `phone` `phone` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `state` `state` VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `lga` `lga` VARCHAR(60) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `address` `address` VARCHAR(111) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `accessTo` `accessTo` VARCHAR(111) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
+
+
+_______________________________________________________________
 
 CREATE TABLE `account_chart` (
   `head` varchar(20) NOT NULL,
