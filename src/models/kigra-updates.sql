@@ -1,4 +1,48 @@
 -- new Update
+CREATE TABLE `transaction_history` (
+  `transaction_id` varchar(100) NOT NULL,
+  `description` varchar(100) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `amount` int(100) NOT NULL,
+  `status` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `transaction_history`
+--
+
+INSERT INTO `transaction_history` (`transaction_id`, `description`, `date`, `amount`, `status`) VALUES
+('1', 'Bits-mylikita', '2023-07-09 09:54:53', 10000, 'success'),
+('1', 'save the wild', '2023-07-09 09:54:53', 100, 'success');
+COMMIT;
+
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `ManageTransaction`(IN `transaction_id` VARCHAR(100), IN `description` VARCHAR(255), IN `date` DATE, IN `amount` VARCHAR(50), IN `status` VARCHAR(100), IN `query_type` VARCHAR(100))
+BEGIN
+   IF query_type='insert' THEN
+    INSERT INTO `transaction_history` (`transaction_id`, `description`, `amount`, `status`)
+    VALUES (transaction_id, description, amount, status);
+
+ ELSEIF query_type='update' THEN
+    
+    UPDATE `transaction_history`
+    SET `description` = description, `date` = date, `amount` = amount, `status` = status
+    WHERE `transaction_id` = transaction_id;
+
+    ELSEIF query_type='delete' THEN
+    DELETE FROM `transaction_history`
+    WHERE `transaction_id` = transaction_id;
+
+ ELSEIF query_type='select' THEN
+    SELECT *
+    FROM `transaction_history`
+    WHERE `transaction_id` = transaction_id;
+    
+     ELSEIF query_type='users' THEN   SELECT * FROM users;
+    end IF;
+END$$
+DELIMITER ;
 ALTER TABLE `users` ADD `taxID` VARCHAR(20) NOT NULL AFTER `email`;
 INSERT INTO `number_generator`(`prefix`, `description`, `next_code`) VALUES ('TID','taxID',1)
 
