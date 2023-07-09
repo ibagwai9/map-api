@@ -89,3 +89,47 @@ export function postAccChart (req, res){
   }
   )
 }
+
+export function kigraTaxes  (data, success=f=>f, error=f=>f){
+  const { query_type=null,id=null,description=null,parent_code=null,tax_code=null,tax_fee=null } = data;
+
+  db.sequelize
+    .query(`CALL kigra_taxes(:query_type,:id,:parent_code,:tax_code,:description,:tax_fee)`, {
+      replacements: {
+        query_type,
+        id,
+        description,
+        parent_code,
+        tax_code,
+        tax_fee        
+      },
+    })
+    .then((result) => {
+       success(result)
+    })
+    .catch((err) => {
+     error(err)
+    });
+}
+
+export const postKigrTaxes = (req, res)=>{
+  kigraTaxes(req.query, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+export const getKigrTaxes = (req, res)=>{
+  kigraTaxes(req.query, (resp)=>{
+    res.json({success:true, result:resp})
+  },
+  (err)=>{
+    res.status(500).json({success:false, error:err})
+  }
+  )
+}
+
+
