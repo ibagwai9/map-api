@@ -113,7 +113,7 @@ export function kigraTaxes  (data, success=f=>f, error=f=>f){
 }
 
 export const postKigrTaxes = (req, res)=>{
-  kigraTaxes(req.query, (resp)=>{
+  kigraTaxes(req.body, (resp)=>{
     res.json({success:true, result:resp})
   },
   (err)=>{
