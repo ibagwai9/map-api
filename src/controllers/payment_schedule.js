@@ -1135,7 +1135,7 @@ exports.getReports = (req, res) => {
     });
 };
 
-function number_generator(
+export function number_generator(
   { query_type = "", prefix = "", description = "", code = "" },
   callback = (f) => f,
   error = (f) => f
