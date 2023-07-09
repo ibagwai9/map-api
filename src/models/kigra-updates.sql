@@ -1906,3 +1906,26 @@ INSERT INTO `taxes` (`id`, `tax_code`, `tax_parent_code`, `description`, `tax_fe
 (29, '12010603', '', 'Development Levy', '6000'),
 (30, '12020455', '', 'Entertainment levy', '6000'),
 (31, '12020455', '', 'Social Services and Economic Levy', '6000');
+
+
+-- 09/07/2023
+
+DROP PROCEDURE `kigra_taxes`;
+DELIMITER $$
+CREATE  PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(51), IN `in_id` INT, IN `in_tax_code` VARCHAR(51), IN `in_tax_parent_code` VARCHAR(8), IN `in_description` VARCHAR(65), IN `in_tax_fee` VARCHAR(10)) NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER BEGIN
+  IF query_type='create' THEN    
+    INSERT INTO `taxes` (`tax_code`, `tax_parent_code`, `description`, `tax_fee`) VALUES
+    (in_tax_code,in_tax_parent_code,in_description,in_tax_fee) ;
+ 
+    ELSEIF query_type = 'select-main'  THEN
+      SELECT * FROM `taxes` WHERE tax_code REGEXP '[^0-9]'  AND description IS NULL;
+   ELSEIF query_type = 'select-sub'  THEN
+      SELECT * FROM `taxes` WHERE tax_parent_code REGEXP '^[0-9]+$'  AND description IS NOT NULL;
+   ELSEIF query_type = 'select' AND in_tax_code IS NOT NULL OR in_tax_parent_code IS NOT NULL THEN
+      IF in_tax_parent_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_parent_code =in_tax_parent_code AND  description IS NOT NULL;
+ELSEIF in_tax_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_code =in_tax_code;
+END IF;
+END IF;
+END $$
