@@ -44,6 +44,7 @@ require("./routes/user.js")(app);
 require("./routes/pv_collection.js")(app);
 require("./routes/payment_schedule.js")(app);
 require("./routes/tsa.js")(app);
+require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
 
 //create a server
