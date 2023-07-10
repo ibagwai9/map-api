@@ -12,7 +12,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "babel-cli": "^6.26.0",
     "babel-node": "^0.0.1-security",
     "babel-preset-env": "1.7.0",
     "bcryptjs": "^2.4.3",
@@ -36,9 +35,9 @@
     "validator": "^10.11.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.22.5",
-    "@babel/core": "^7.22.5",
-    "@babel/node": "^7.22.5",
+    "@babel/cli": "^7.22.6",
+    "@babel/core": "^7.22.8",
+    "@babel/node": "^7.22.6",
     "@babel/preset-env": "^7.22.5",
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-import": "^2.17.2",
