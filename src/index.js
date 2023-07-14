@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname)));
 
 app.use(bodyParser.json({ limit: "50mb" }));
 
-let port = process.env.PORT || 3589;
+let port = process.env.PORT || 35899;
 
 // set the view engine to ejs
 app.set("view engine", "ejs");
@@ -46,6 +46,10 @@ require("./routes/payment_schedule.js")(app);
 require("./routes/tsa.js")(app);
 require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
+require("./routes/Sector")(app);
+// require("./routes/organization")(app);
+// require("./routes/segment")(app);
+// require("./routes/budget")(app);
 
 //create a server
 var server = app.listen(port, function () {
