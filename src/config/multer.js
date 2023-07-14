@@ -7,7 +7,7 @@ import multer   from 'multer'
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'build/uploads')
+    cb(null, 'src/uploads')
     // cb(null, '/config')
   },
 
