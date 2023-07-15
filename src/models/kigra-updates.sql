@@ -18,7 +18,7 @@ COMMIT;
 
 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `ManageTransaction`(IN `transaction_id` VARCHAR(100), IN `description` VARCHAR(255), IN `date` DATE, IN `amount` VARCHAR(50), IN `status` VARCHAR(100), IN `query_type` VARCHAR(100))
+CREATE PROCEDURE `ManageTransaction`(IN `transaction_id` VARCHAR(100), IN `description` VARCHAR(255), IN `date` DATE, IN `amount` VARCHAR(50), IN `status` VARCHAR(100), IN `query_type` VARCHAR(100))
 BEGIN
    IF query_type='insert' THEN
     INSERT INTO `transaction_history` (`transaction_id`, `description`, `amount`, `status`)
@@ -48,7 +48,7 @@ INSERT INTO `number_generator`(`prefix`, `description`, `next_code`) VALUES ('TI
 
 DROP PROCEDURE `user_accounts`; 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(40), IN `in_tin` VARCHAR(30), IN `in_company_name` VARCHAR(60), IN `in_rc` VARCHAR(30), IN `in_account_type` VARCHAR(30), IN `in_phone` VARCHAR(15), IN `in_state` VARCHAR(30), IN `in_lga` VARCHAR(60), IN `in_address` VARCHAR(111), IN `in_accessTo` VARCHAR(111), IN `in_taxID` VARCHAR(20))
+CREATE PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(40), IN `in_tin` VARCHAR(30), IN `in_company_name` VARCHAR(60), IN `in_rc` VARCHAR(30), IN `in_account_type` VARCHAR(30), IN `in_phone` VARCHAR(15), IN `in_state` VARCHAR(30), IN `in_lga` VARCHAR(60), IN `in_address` VARCHAR(111), IN `in_accessTo` VARCHAR(111), IN `in_taxID` VARCHAR(20))
 BEGIN
     IF in_query_type = 'insert' THEN
         INSERT INTO users (name, username, email, password, role, bvn, tin, company_name, rc, account_type, phone, state, lga, address, accessTo, taxID)
@@ -1997,3 +1997,42 @@ SELECT * FROM `taxes` WHERE tax_code =in_tax_code;
 END IF;
 END IF;
 END $$
+
+
+-- 15/07/2023
+
+DROP PROCEDURE IF EXISTS `user_accounts`;
+DELIMITER $$
+CREATE PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_company_name` VARCHAR(11), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(11), IN `in_phone` VARCHAR(11), IN `in_state` VARCHAR(11), IN `in_lga` VARCHAR(11), IN `in_address` VARCHAR(11), IN `in_accessTo` VARCHAR(11)) NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER BEGIN
+	CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
+
+    IF in_query_type = 'insert' THEN
+        INSERT INTO users (name, username, email, password, role, bvn, tin, company_name, rc, account_type, phone, state, lga, address, accessTo, TaxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_bvn, in_tin, in_company_name, in_rc, in_account_type, in_phone, in_state, in_lga, in_address, in_accessTo, @TaxID);
+        
+        CALL in_number_generator('update', NULL, 'application_number', @Tax_ID,@void);
+
+    ELSEIF in_query_type = 'update' THEN
+        UPDATE users
+        SET name = in_name, username = in_username, email = in_email, password = in_password, role = in_role, bvn = in_bvn, tin = in_tin, company_name = in_company_name, rc = in_rc, account_type = in_account_type, phone = in_phone, state = in_state, lga = in_lga, address = in_address, accessTo = in_accessTo
+        WHERE id = in_id;
+    ELSEIF in_query_type = 'delete' THEN
+        DELETE FROM users WHERE id = in_id;
+    END IF;
+END $$
+
+DROP PROCEDURE IF EXISTS `in_number_generator`;
+DELIMITER $$
+CREATE PROCEDURE `in_number_generator`(IN `query_type` VARCHAR(50), IN `in_prefix` VARCHAR(100), IN `in_description` VARCHAR(100), IN `in_code` VARCHAR(50), OUT `out_code` VARCHAR(20))
+BEGIN
+DECLARE gen_code VARCHAR(10);
+  IF query_type = 'select' THEN
+    SELECT next_code + 1 INTO gen_code FROM number_generator WHERE description = in_description;
+    SET out_code = gen_code;
+  ELSEIF query_type = 'update' THEN
+    UPDATE number_generator SET `next_code` = in_code WHERE description = in_description;
+    SET out_code = in_code;
+  END IF;
+END$$
+DELIMITER ;
+
