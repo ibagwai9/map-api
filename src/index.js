@@ -1,6 +1,5 @@
 import express from "express";
 import passport from "passport";
-import bodyParser from "body-parser";
 import cors from "cors";
 import models from "./models";
 import multer from "multer";
@@ -10,12 +9,9 @@ var upload = multer({ dest: "uploads/" });
 const app = express();
 app.use(express.static(path.join(__dirname)));
 
-app.use(bodyParser.json({ limit: "50mb" }));
+app.use(express.json({ limit: "50mb" }));
 
 let port = process.env.PORT || 35899;
-
-// set the view engine to ejs
-app.set("view engine", "ejs");
 
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));

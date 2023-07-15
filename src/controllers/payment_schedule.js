@@ -1168,3 +1168,18 @@ exports.getNextCode = (req, res) => {
     res.status(500).json({ success: false, err });
   });
 };
+
+
+exports.reportDashboard = (req,res) => {
+  const  { query_type, fromDate, toDate } = req.query;
+
+  db.sequelize.query('CALL ag_dashboard(:query_type, :fromDate, :toDate)', {
+    replacements: { query_type, fromDate, toDate }
+  }).then(results => {
+    res.json({ success: true, results })
+  })
+    .catch(error => {
+      console.log(error)
+      res.status(500).json({ success:false, error })
+    });
+}
