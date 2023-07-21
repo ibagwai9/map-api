@@ -404,9 +404,7 @@ INSERT INTO `taxes` (`id`, `tax_code`, `tax_parent_code`, `title`, `economic_cod
  (519, '12010504', '12010504', 'Timber Dealers, Tire and Processors, Producers and Manufacturers', '12010504', 'Timber Dealers, Tire and Processors, Producers and Manufacturers', '10,000.00', 'NON TAX'),
  (520, '12010504', '12010504', 'Timber Dealers, Tire and Processors, Producers and Manufacturers', '12010504', 'Timber Dealers, Tire and Processors, Producers and Manufacturers', '30,000.00', 'NON TAX'),
  (521, '12010504', '12010504', 'Allother trades/services covered by the law but not listed above', '12010504', 'Allother trades/services covered by the law but not listed above', '4,000.00', 'NON TAX'),
- (522, '12010504', '12010504', 'Allother trades/services covered by the law but not listed above', '12010504', 'Allother trades/services covered by the law but not listed above', '10,000.00', 'NON TAX'),
- (523, '12010504', '12010504', 'Allother trades/services covered by the law but not listed above', '12010504', 'Allother trades/services covered by the law but not listed above', '20,000.00', 'NON TAX');;
-
+ 
 DROP PROCEDURE IF EXISTS  `kigra_taxes`;
 
  DELIMITER $$
