@@ -94,7 +94,7 @@ export function kigraTaxes  (data, success=f=>f, error=f=>f){
   const { query_type=null,id=null,description=null,parent_code=null,tax_code=null,tax_fee=null,sector=null} = data;
 
   db.sequelize
-    .query(`CALL kigra_taxes(:query_type,:id,:parent_code,:tax_code,:description,:tax_fee,:sector)`, {
+    .query(`CALL kigra_taxes(:query_type,:id,:tax_code,:parent_code,:description,:tax_fee,:sector)`, {
       replacements: {
         query_type,
         id,
