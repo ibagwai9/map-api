@@ -207,7 +207,7 @@ exports.verifyToken = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
-  console.log(authToken);
+  console.log(authToken, 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL');
 
   jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
