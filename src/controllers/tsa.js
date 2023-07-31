@@ -91,17 +91,18 @@ export function postAccChart (req, res){
 }
 
 export function kigraTaxes  (data, success=f=>f, error=f=>f){
-  const { query_type=null,id=null,description=null,parent_code=null,tax_code=null,tax_fee=null } = data;
+  const { query_type=null,id=null,description=null,parent_code=null,tax_code=null,tax_fee=null,sector=null} = data;
 
   db.sequelize
-    .query(`CALL kigra_taxes(:query_type,:id,:parent_code,:tax_code,:description,:tax_fee)`, {
+    .query(`CALL kigra_taxes(:query_type,:id,:tax_code,:parent_code,:description,:tax_fee,:sector)`, {
       replacements: {
         query_type,
         id,
         description,
         parent_code,
         tax_code,
-        tax_fee        
+        tax_fee,
+        sector       
       },
     })
     .then((result) => {
@@ -113,7 +114,7 @@ export function kigraTaxes  (data, success=f=>f, error=f=>f){
 }
 
 export const postKigrTaxes = (req, res)=>{
-  kigraTaxes(req.query, (resp)=>{
+  kigraTaxes(req.body, (resp)=>{
     res.json({success:true, result:resp})
   },
   (err)=>{

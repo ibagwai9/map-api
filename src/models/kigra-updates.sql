@@ -1,10 +1,54 @@
 -- new Update
+CREATE TABLE `transaction_history` (
+  `transaction_id` varchar(100) NOT NULL,
+  `description` varchar(100) NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `amount` int(100) NOT NULL,
+  `status` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `transaction_history`
+--
+
+INSERT INTO `transaction_history` (`transaction_id`, `description`, `date`, `amount`, `status`) VALUES
+('1', 'Bits-mylikita', '2023-07-09 09:54:53', 10000, 'success'),
+('1', 'save the wild', '2023-07-09 09:54:53', 100, 'success');
+COMMIT;
+
+
+DELIMITER $$
+CREATE PROCEDURE `ManageTransaction`(IN `transaction_id` VARCHAR(100), IN `description` VARCHAR(255), IN `date` DATE, IN `amount` VARCHAR(50), IN `status` VARCHAR(100), IN `query_type` VARCHAR(100))
+BEGIN
+   IF query_type='insert' THEN
+    INSERT INTO `transaction_history` (`transaction_id`, `description`, `amount`, `status`)
+    VALUES (transaction_id, description, amount, status);
+
+ ELSEIF query_type='update' THEN
+    
+    UPDATE `transaction_history`
+    SET `description` = description, `date` = date, `amount` = amount, `status` = status
+    WHERE `transaction_id` = transaction_id;
+
+    ELSEIF query_type='delete' THEN
+    DELETE FROM `transaction_history`
+    WHERE `transaction_id` = transaction_id;
+
+ ELSEIF query_type='select' THEN
+    SELECT *
+    FROM `transaction_history`
+    WHERE `transaction_id` = transaction_id;
+    
+     ELSEIF query_type='users' THEN   SELECT * FROM users;
+    end IF;
+END$$
+DELIMITER ;
 ALTER TABLE `users` ADD `taxID` VARCHAR(20) NOT NULL AFTER `email`;
 INSERT INTO `number_generator`(`prefix`, `description`, `next_code`) VALUES ('TID','taxID',1)
 
 DROP PROCEDURE `user_accounts`; 
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(40), IN `in_tin` VARCHAR(30), IN `in_company_name` VARCHAR(60), IN `in_rc` VARCHAR(30), IN `in_account_type` VARCHAR(30), IN `in_phone` VARCHAR(15), IN `in_state` VARCHAR(30), IN `in_lga` VARCHAR(60), IN `in_address` VARCHAR(111), IN `in_accessTo` VARCHAR(111), IN `in_taxID` VARCHAR(20))
+CREATE PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(40), IN `in_tin` VARCHAR(30), IN `in_company_name` VARCHAR(60), IN `in_rc` VARCHAR(30), IN `in_account_type` VARCHAR(30), IN `in_phone` VARCHAR(15), IN `in_state` VARCHAR(30), IN `in_lga` VARCHAR(60), IN `in_address` VARCHAR(111), IN `in_accessTo` VARCHAR(111), IN `in_taxID` VARCHAR(20))
 BEGIN
     IF in_query_type = 'insert' THEN
         INSERT INTO users (name, username, email, password, role, bvn, tin, company_name, rc, account_type, phone, state, lga, address, accessTo, taxID)
@@ -1930,3 +1974,65 @@ INSERT INTO `taxes` (`id`, `tax_code`, `tax_parent_code`, `description`, `tax_fe
 (29, '12010603', '', 'Development Levy', '6000'),
 (30, '12020455', '', 'Entertainment levy', '6000'),
 (31, '12020455', '', 'Social Services and Economic Levy', '6000');
+
+
+-- 09/07/2023
+
+DROP PROCEDURE `kigra_taxes`;
+DELIMITER $$
+CREATE  PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(51), IN `in_id` INT, IN `in_tax_code` VARCHAR(51), IN `in_tax_parent_code` VARCHAR(8), IN `in_description` VARCHAR(65), IN `in_tax_fee` VARCHAR(10)) NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER BEGIN
+  IF query_type='create' THEN    
+    INSERT INTO `taxes` (`tax_code`, `tax_parent_code`, `description`, `tax_fee`) VALUES
+    (in_tax_code,in_tax_parent_code,in_description,in_tax_fee) ;
+ 
+    ELSEIF query_type = 'select-main'  THEN
+      SELECT * FROM `taxes` WHERE tax_code REGEXP '[^0-9]'  AND description IS NULL;
+   ELSEIF query_type = 'select-sub'  THEN
+      SELECT * FROM `taxes` WHERE tax_parent_code REGEXP '^[0-9]+$'  AND description IS NOT NULL;
+   ELSEIF query_type = 'select' AND in_tax_code IS NOT NULL OR in_tax_parent_code IS NOT NULL THEN
+      IF in_tax_parent_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_parent_code =in_tax_parent_code AND  description IS NOT NULL;
+ELSEIF in_tax_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_code =in_tax_code;
+END IF;
+END IF;
+END $$
+
+
+-- 15/07/2023
+
+DROP PROCEDURE IF EXISTS `user_accounts`;
+DELIMITER $$
+CREATE PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` INT, IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_company_name` VARCHAR(11), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(11), IN `in_phone` VARCHAR(11), IN `in_state` VARCHAR(11), IN `in_lga` VARCHAR(11), IN `in_address` VARCHAR(11), IN `in_accessTo` VARCHAR(11)) NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER BEGIN
+	CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
+
+    IF in_query_type = 'insert' THEN
+        INSERT INTO users (name, username, email, password, role, bvn, tin, company_name, rc, account_type, phone, state, lga, address, accessTo, TaxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_bvn, in_tin, in_company_name, in_rc, in_account_type, in_phone, in_state, in_lga, in_address, in_accessTo, @TaxID);
+        
+        CALL in_number_generator('update', NULL, 'application_number', @Tax_ID,@void);
+
+    ELSEIF in_query_type = 'update' THEN
+        UPDATE users
+        SET name = in_name, username = in_username, email = in_email, password = in_password, role = in_role, bvn = in_bvn, tin = in_tin, company_name = in_company_name, rc = in_rc, account_type = in_account_type, phone = in_phone, state = in_state, lga = in_lga, address = in_address, accessTo = in_accessTo
+        WHERE id = in_id;
+    ELSEIF in_query_type = 'delete' THEN
+        DELETE FROM users WHERE id = in_id;
+    END IF;
+END $$
+
+DROP PROCEDURE IF EXISTS `in_number_generator`;
+DELIMITER $$
+CREATE PROCEDURE `in_number_generator`(IN `query_type` VARCHAR(50), IN `in_prefix` VARCHAR(100), IN `in_description` VARCHAR(100), IN `in_code` VARCHAR(50), OUT `out_code` VARCHAR(20))
+BEGIN
+DECLARE gen_code VARCHAR(10);
+  IF query_type = 'select' THEN
+    SELECT next_code + 1 INTO gen_code FROM number_generator WHERE description = in_description;
+    SET out_code = gen_code;
+  ELSEIF query_type = 'update' THEN
+    UPDATE number_generator SET `next_code` = in_code WHERE description = in_description;
+    SET out_code = in_code;
+  END IF;
+END$$
+DELIMITER ;
+

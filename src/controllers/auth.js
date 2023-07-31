@@ -1,10 +1,8 @@
 import db from "../models";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { number_generator } from "./payment_schedule";
 
 exports.SignUp = (req, res) => {
-  let form = req.body.form;
   console.log(req.body);
   const {
     username = null,
@@ -44,14 +42,10 @@ exports.SignUp = (req, res) => {
             bcrypt.hash(password, salt, (err, hash) => {
               if (err) throw err;
               let newPass = hash;
-              number_generator(
-                { query_type: "select", description: "taxID" },
-                (code) => {
-                  console.log(code[0]?.next_code, "TAXID>>>>>");
-                  const taxID = code[0].next_code;
+              
                   db.sequelize
                     .query(
-                      "CALL user_accounts(:query_type, NULL, :fullname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo,:taxID)",
+                      "CALL user_accounts(:query_type, NULL, :fullname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo)",
                       {
                         replacements: {
                           query_type: "insert",
@@ -69,8 +63,7 @@ exports.SignUp = (req, res) => {
                           state,
                           lga,
                           address,
-                          accessTo,
-                          taxID,
+                          accessTo
                         },
                       }
                     )
@@ -84,7 +77,7 @@ exports.SignUp = (req, res) => {
                           //   status: "success",
                           //   result : result[]
                           // });
-                          let user = resultR[0];
+                          let user = resultR[0][0];
                           console.log(user);
 
                           let payload = {
@@ -104,17 +97,9 @@ exports.SignUp = (req, res) => {
                                 msg: "Successfully logged in",
                                 token,
                                 user,
-                                taxID,
+                                taxID:user.taxID,
                               });
-                              number_generator(
-                                {
-                                  query_type: "update",
-                                  description: "taxID",
-                                  code: taxID,
-                                },
-                                (r) => console.log(r),
-                                (er) => console.log(er)
-                              );
+                             
                             }
                           );
                         });
@@ -127,7 +112,6 @@ exports.SignUp = (req, res) => {
                 (_er) => console.log(_er)
               );
             });
-          });
         }
       });
   });
@@ -202,6 +186,171 @@ exports.SignIn = (req, res) => {
       }
     });
 };
+
+exports.TreasuryAppSignUp =(req, res) => {
+  let form = req.body.form
+  console.log(req.body)
+  const {  username, password, fullname, role, accessTo} = req.body;
+
+  db.sequelize
+  .query(`SELECT  max(id) + 1 as id from sign_up `)
+  .then((result) => {
+  let maxId = result[0][0].id;
+  //   console.log(maxId);
+
+  db.sequelize.query(`SELECT * from sign_up
+   where username="${username}"`)
+  .then(resp => {
+    if(resp[0].length) {
+      console.log('user exist')
+      return res.status(400).json({ success: false, msg: 'username already registered' })
+    } else {
+      bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(password, salt, (err, hash) => {
+          if(err) throw err;
+          let newPass = hash;
+
+          db.sequelize.query(
+            `INSERT INTO sign_up (id, username, password,fullname, role, accessTo ) VALUES 
+            ("${maxId}", "${username}","${newPass}","${fullname}","${role}","${accessTo}")`)
+            .then((results) => {
+              db.sequelize.query(`SELECT * from sign_up 
+                where username="${username}"`)
+              .then(result => {
+              //   res.json({
+              //   status: "success",
+              //   result : result[]
+              // });
+              let user = result[0][0];
+          console.log(user)
+
+          let payload = {
+            username: user.username,
+          }
+          jwt.sign(payload, "secret", {
+            expiresIn: "1d"
+          }, 
+          (err, token) => {
+            if(err) throw err;
+            
+            res.json({
+              success: true,
+              msg: 'Successfully logged in',
+              token,
+              user
+            })
+          })
+              })
+              
+            })
+            .catch((err) => {
+              console.log(err);
+              res.status(500).json({ status: "failed", err });
+            })
+        })
+      })
+    }
+  })
+
+  })
+} 
+
+
+exports.TreasuryAppSignIn = (req, res) => {
+	const {
+	username,
+    password,
+    role
+} = req.body
+
+//AND role = "${role}"
+
+	db.sequelize.query(`SELECT * from 
+		sign_up WHERE username =  "${username}" `)
+		.then((result) => {
+			if(!result[0].length){
+				res.status(400).json({
+          success : false,
+					msg : "user does not exits",
+					
+				})
+				console.log("user does not exits")
+			}
+      else{
+      console.log(result[0][0].username)
+
+      let originalPassword = result[0][0].password;
+
+      bcrypt
+        .compare(password, originalPassword)
+        .then(isMatch => {
+          if(isMatch) {
+            console.log('matched!')
+            let user = result[0][0];
+            console.log(user)
+
+            let payload = {
+              username: user.username,
+            }
+
+            jwt.sign(payload, "secret", {
+              expiresIn: "1d"
+            }, 
+            (err, token) => {
+              if(err) throw err;
+              
+              res.json({
+                success: true,
+                msg: 'Successfully logged in',
+                token,
+                user
+              })
+            })
+          } else {
+            return res.status(400).json({ success: false, msg: 'Password not correct'})
+          }
+        })
+
+			// else{
+			// 	res.json({
+			// 		response : "Welcome back",
+			// 		status : 200,
+			// 		username : username,
+			// 		result
+			// 	})
+			// 	console.log("success")
+			// }
+    }
+		})
+}
+		
+
+exports.verifyTokenTreasuryApp = (req, res) => {
+  // const {verifyToken} = req.params
+  const authToken = req.headers["authorization"];
+  const token = authToken.split(" ")[1]
+  console.log(authToken)
+
+  jwt.verify(token, 'secret', (err, decoded) => {
+    if(err) {
+      return res.json({ success: false, msg: 'Failed to authenticate token', 
+        err })
+    }
+
+    const { username } = decoded;
+
+    db.sequelize.query(`SELECT *  from sign_up 
+      where username="${username}"`)
+    .then(result => {
+      res.json({ success: true, user: result[0]})
+    }).catch((err) => {
+        console.log(err);
+        res.status(500).json({ status: "failed", err });
+      })    
+    
+  })
+}
+  
 
 exports.verifyToken = (req, res) => {
   // const {verifyToken} = req.params

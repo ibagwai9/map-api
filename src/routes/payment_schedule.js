@@ -22,7 +22,8 @@ import {
   postNextCode,
   getApprovalAttachment,
   deleteApproveCol,
-  getApproveCol
+  getApproveCol,
+  reportDashboard
 } from '../controllers/payment_schedule'
 
 module.exports = (app) => {
@@ -53,4 +54,8 @@ module.exports = (app) => {
   app.post('/number-generator', postNextCode)
 
   app.get('/fetch-approval-images', getApprovalAttachment)
+
+
+  // REPORTS
+  app.get('/reports/budget-report-ag', reportDashboard)
 }
