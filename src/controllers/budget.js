@@ -71,13 +71,30 @@ export const PostBudget = (req, res) => {
 };
 
 export const budgetCeiling = (req, res) => {
+  const {
+    head = null,
+    subhead = null,
+    description = null,
+    type = null,
+    amt = 0,
+    total_amt = 0,
+  } = req.query;
   const { query_type = "" } = req.query;
   db.sequelize
-    .query(`call budget_ceiling(:query_type)`, {
-      replacements: {
-        query_type,
-      },
-    })
+    .query(
+      `call budget_ceiling(:query_type,:head, :subhead, :description, :type, :amt, :total_amt)`,
+      {
+        replacements: {
+          query_type,
+          head,
+          subhead,
+          description,
+          type,
+          amt,
+          total_amt,
+        },
+      }
+    )
     .then((results) => {
       res.json({ success: true, results });
     })
