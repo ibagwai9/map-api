@@ -1,10 +1,8 @@
 import db from "../models";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { number_generator } from "./payment_schedule";
 
 exports.SignUp = (req, res) => {
-  let form = req.body.form;
   console.log(req.body);
   const {
     username = null,
@@ -44,14 +42,10 @@ exports.SignUp = (req, res) => {
             bcrypt.hash(password, salt, (err, hash) => {
               if (err) throw err;
               let newPass = hash;
-              number_generator(
-                { query_type: "select", description: "taxID" },
-                (code) => {
-                  // console.log(code[0].next_code, "TAXID");
-                  const taxID = code[0].next_code;
+              
                   db.sequelize
                     .query(
-                      "CALL user_accounts(:query_type, NULL, :fullname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo,:taxID)",
+                      "CALL user_accounts(:query_type, NULL, :fullname, :username, :email, :password, :role, :bvn, :tin, :company_name, :rc, :account_type, :phone, :state, :lga, :address, :accessTo)",
                       {
                         replacements: {
                           query_type: "insert",
@@ -69,8 +63,7 @@ exports.SignUp = (req, res) => {
                           state,
                           lga,
                           address,
-                          accessTo,
-                          taxID,
+                          accessTo
                         },
                       }
                     )
@@ -84,7 +77,7 @@ exports.SignUp = (req, res) => {
                           //   status: "success",
                           //   result : result[]
                           // });
-                          let user = resultR[0];
+                          let user = resultR[0][0];
                           console.log(user);
 
                           let payload = {
@@ -104,17 +97,9 @@ exports.SignUp = (req, res) => {
                                 msg: "Successfully logged in",
                                 token,
                                 user,
-                                taxID,
+                                taxID:user.taxID,
                               });
-                              number_generator(
-                                {
-                                  query_type: "update",
-                                  description: "taxID",
-                                  code: taxID,
-                                },
-                                (r) => console.log(r),
-                                (er) => console.log(er)
-                              );
+                             
                             }
                           );
                         });
@@ -127,7 +112,6 @@ exports.SignUp = (req, res) => {
                 (_er) => console.log(_er)
               );
             });
-          });
         }
       });
   });
@@ -372,7 +356,7 @@ exports.verifyToken = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
-  console.log(authToken);
+  console.log(authToken, 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL');
 
   jwt.verify(token, "secret", (err, decoded) => {
     if (err) {

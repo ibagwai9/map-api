@@ -1,6 +1,5 @@
 import express from "express";
 import passport from "passport";
-import bodyParser from "body-parser";
 import cors from "cors";
 import models from "./models";
 import multer from "multer";
@@ -10,12 +9,9 @@ var upload = multer({ dest: "uploads/" });
 const app = express();
 app.use(express.static(path.join(__dirname)));
 
-app.use(bodyParser.json({ limit: "50mb" }));
+app.use(express.json({ limit: "50mb" }));
 
 let port = process.env.PORT || 3589;
-
-// set the view engine to ejs
-app.set("view engine", "ejs");
 
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
@@ -47,6 +43,8 @@ require("./routes/tsa.js")(app);
 require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
 require("./routes/Sector")(app);
+require("./routes/interswitch.js")(app);
+require("./routes/budget.js")(app);
 // require("./routes/organization")(app);
 // require("./routes/segment")(app);
 // require("./routes/budget")(app);
