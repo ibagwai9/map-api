@@ -1036,7 +1036,7 @@ exports.fileUploader = (req, res) => {
   const files = req.files;
   // const {user, event_name} = req.body
   console.log("jk", JSON.parse(req.body.form));
-  const { mda_name, mda_code, mda_economic_code, approved_by, approval,imageId='' } =
+  const { mda_name, mda_code, mda_economic_code, approved_by, approval,imageId='', narration='' } =
     JSON.parse(req.body.form);
 
   files.forEach((item) => {

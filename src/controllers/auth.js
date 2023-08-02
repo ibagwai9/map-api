@@ -404,8 +404,8 @@ exports.getUsers = (req, res) => {
   const { role = "" } = req.query;
   db.sequelize
     .query(
-      `SELECT * from users 
-      where role="${role}"`
+      `SELECT * from sign_up 
+      # where role="${role}"`
     )
     .then((result) => {
       res.json({ success: true, users: result[0] });

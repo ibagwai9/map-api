@@ -1,3 +1,4 @@
+
 import passport from 'passport';
 import config from '../config/config';
 import { allowOnly } from '../services/routesHelper';
@@ -16,10 +17,12 @@ module.exports = (app) => {
   //retrieve all users
   app.get(
     '/api/users', 
-    passport.authenticate('jwt', { 
-      session: false 
-    }),
-    allowOnly(config.accessLevels.admin, findAllUsers)
+    // passport.authenticate('jwt', { 
+    //   session: false 
+    // }),
+    // allowOnly(config.accessLevels.admin, 
+      findAllUsers
+      // )
   );
 
   // retrieve user by id

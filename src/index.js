@@ -12,7 +12,7 @@ app.use(express.static(path.join(__dirname)));
 
 app.use(bodyParser.json({ limit: "50mb" }));
 
-let port = process.env.PORT || 35899;
+let port = process.env.PORT || 3589;
 
 // set the view engine to ejs
 app.set("view engine", "ejs");
