@@ -22,4 +22,6 @@ END IF;
 END$$
 DELIMITER ;
 
-ALTER TABLE `budget_ceiling` CHANGE `created_at` `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+-------
+
+ALTER TABLE `budget_ceiling` CHANGE `subhead` `subhead` VARCHAR(50) NULL, CHANGE `type` `type` VARCHAR(50) NULL, CHANGE `description` `description` VARCHAR(100) NULL, CHANGE `created_at` `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;

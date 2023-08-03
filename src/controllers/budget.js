@@ -107,9 +107,9 @@ export const budgetCeiling = (req, res) => {
 
 export const insertBudgetCeiling = (req, res) => {
   const query_type = "insert";
-  // console.log(req.body);
+  const { data, pvalue } = req.body;
 
-  req.body.forEach((item) => {
+  data.forEach((item) => {
     db.sequelize
       .query(
         `call budget_ceiling(:query_type,:head, :subhead, :description, :type, :amt, :total_amt)`,
@@ -117,15 +117,17 @@ export const insertBudgetCeiling = (req, res) => {
           replacements: {
             query_type,
             head: item.head,
-            subhead: item.subhead,
+            subhead: item.sub_head,
             description: item.description,
-            type: item.type,
+            type: pvalue,
             amt: item.amount,
             total_amt: item.total_amt,
           },
         }
       )
-      .then((results) => {})
+      .then((res) => {
+        console.log(res);
+      })
       .catch((err) => {
         console.log(err);
         res.status(500).json({ success: false, err });
