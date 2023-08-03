@@ -107,7 +107,7 @@ export const budgetCeiling = (req, res) => {
 
 export const insertBudgetCeiling = (req, res) => {
   const { data = [] } = req.query;
-  const { query_type = "" } = req.query;
+  const query_type = "insert";
   console.log(req.body);
 
   data.forEach((item) => {
