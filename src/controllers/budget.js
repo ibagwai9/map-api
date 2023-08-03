@@ -80,6 +80,7 @@ export const budgetCeiling = (req, res) => {
     total_amt = 0,
   } = req.query;
   const { query_type = "" } = req.query;
+  console.log(req.body);
   db.sequelize
     .query(
       `call budget_ceiling(:query_type,:head, :subhead, :description, :type, :amt, :total_amt)`,

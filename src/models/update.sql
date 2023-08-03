@@ -21,3 +21,5 @@ INSERT INTO `budget_ceiling`(head, subhead, description, type, amt, total_amt) V
 END IF;
 END$$
 DELIMITER ;
+
+ALTER TABLE `budget_ceiling` CHANGE `created_at` `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
