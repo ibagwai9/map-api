@@ -1,0 +1,1 @@
+ALTER TABLE `users`  ADD `department` VARCHAR(100) NOT NULL  AFTER `mda`;
