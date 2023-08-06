@@ -356,7 +356,7 @@ exports.verifyToken = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
-  console.log(authToken);
+  console.log(authToken, 'LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL');
 
   jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
@@ -388,8 +388,8 @@ exports.getUsers = (req, res) => {
   const { role = "" } = req.query;
   db.sequelize
     .query(
-      `SELECT * from users 
-      where role="${role}"`
+      `SELECT * from sign_up 
+      # where role="${role}"`
     )
     .then((result) => {
       res.json({ success: true, users: result[0] });

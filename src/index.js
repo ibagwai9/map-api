@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname)));
 
 app.use(express.json({ limit: "50mb" }));
 
-let port = process.env.PORT || 35899;
+let port = process.env.PORT || 3589;
 
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
@@ -46,6 +46,7 @@ require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
 require("./routes/Sector")(app);
 require("./routes/interswitch.js")(app);
+require("./routes/budget.js")(app);
 // require("./routes/organization")(app);
 // require("./routes/segment")(app);
 // require("./routes/budget")(app);

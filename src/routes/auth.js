@@ -1,4 +1,12 @@
-import { SignIn, SignUp, verifyToken, getUsers, TreasuryAppSignIn, TreasuryAppSignUp, verifyTokenTreasuryApp } from '../controllers/auth'
+import {
+  SignIn,
+  SignUp,
+  verifyToken,
+  getUsers,
+  TreasuryAppSignIn,
+  TreasuryAppSignUp,
+  verifyTokenTreasuryApp,
+} from '../controllers/auth'
 
 module.exports = (app) => {
   app.post('/sign_in', SignIn)
