@@ -95,7 +95,7 @@ exports.SignUp = (req, res) => {
                               res.json({
                                 success: true,
                                 msg: "Successfully logged in",
-                                token,
+                                token:'Bearer ' + token,
                                 user,
                                 taxID:user.taxID,
                               });
@@ -162,7 +162,7 @@ exports.SignIn = (req, res) => {
                 res.json({
                   success: true,
                   msg: "Successfully logged in",
-                  token,
+                  token:'Bearer ' + token,
                   user,
                 });
               }
@@ -236,7 +236,7 @@ exports.TreasuryAppSignUp =(req, res) => {
             res.json({
               success: true,
               msg: 'Successfully logged in',
-              token,
+              token:'Bearer ' + token,
               user
             })
           })
@@ -302,7 +302,7 @@ exports.TreasuryAppSignIn = (req, res) => {
               res.json({
                 success: true,
                 msg: 'Successfully logged in',
-                token,
+                token:'Bearer ' + token,
                 user
               })
             })

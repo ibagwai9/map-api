@@ -134,3 +134,22 @@ export const getKigrTaxes = (req, res)=>{
 }
 
 
+export const getLGARevenues = (req, res)=>{
+  db.sequelize.query("SELECT * FROM `lga_revenues` WHERE tax_fee !=''; ")
+  .then(resp=>{
+    res.json({success:true, result:resp[0]})
+  })
+  .catch(error=>{
+    res.status(500).json({success:false, error:'Unable to fetch lga revenues'}) 
+  })
+}
+
+export const getLGAs = (req, res)=>{
+  db.sequelize.query("SELECT * FROM `lgas` WHERE state LIKE 'Kano%' ")
+  .then(resp=>{
+    res.json({success:true, result:resp[0]})
+  })
+  .catch(error=>{
+    res.status(500).json({success:false, error:'Unable to fetch Lga list'}) 
+  })
+}

@@ -36,6 +36,8 @@ require("./config/passport")(passport);
 //default route
 app.get("/", (req, res) => res.send("Hello my World, it gonna be good day"));
 
+
+require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);
 require("./routes/pv_collection.js")(app);
 require("./routes/payment_schedule.js")(app);
@@ -47,7 +49,6 @@ require("./routes/interswitch.js")(app);
 // require("./routes/organization")(app);
 // require("./routes/segment")(app);
 // require("./routes/budget")(app);
-
 //create a server
 var server = app.listen(port, function () {
   var host = server.address().address;

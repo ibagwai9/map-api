@@ -1,4 +1,6 @@
-var config = module.exports;
+const passport = require("passport");
+
+var config = {};
 
 const userRoles = config.userRoles = {
     guest: 1,       
@@ -13,3 +15,9 @@ config.accessLevels = {
     admin: userRoles.admin | userRoles.superAdmin,                                    
     superAdmin: userRoles.superAdmin,                                                 
 }
+
+config.requireAuth =  passport.authenticate('jwt', {
+    session: false,
+  });
+
+  module.exports = config;
