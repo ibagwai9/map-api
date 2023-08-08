@@ -14,7 +14,6 @@ const callHandleTaxTransaction = async (params) => {
 
 // This can only serve create invoice or payment and nothing else
 export const postTrx = async (req, res) => {
-  try {
     const {
       user_id = null,
       agent_id = null,
@@ -25,6 +24,7 @@ export const postTrx = async (req, res) => {
     } = req.body;
 
     // Helper function to call the tax transaction asynchronously
+    
     const callHandleTaxTransactionAsync = async (tax) => {
       const {
         description,
@@ -54,6 +54,8 @@ export const postTrx = async (req, res) => {
       return await callHandleTaxTransaction(params);
     };
 
+  try {
+
     // Execute all tax transactions asynchronously using Promise.all
     const results = await Promise.all(tax_list.map(callHandleTaxTransactionAsync));
 
@@ -69,15 +71,17 @@ export const postTrx = async (req, res) => {
 
 export const getTrx = async (req, res) => {
     const {
-      query_type,
-      user_id,
-      agent_id,
-      sector_id,
-      description,
-      transaction_date,
-      transaction_type,
-      status,
-      reference_number,
+      query_type=null,
+      user_id=null,
+      agent_id=null,
+      sector_id=null,
+      description=null,
+      transaction_date=null,
+      transaction_type=null,
+      reference_number=null,
+      rev_code=null,
+      org_code=null,
+      status=null,
     } = req.query;
   
     // Define the input parameters for the stored procedure
@@ -92,13 +96,15 @@ export const getTrx = async (req, res) => {
       transaction_date,
       transaction_type,
       status,
+      org_code,
+      rev_code,
       reference_number,
     };
   
     try {
-      const results = await callHandleTaxTransaction(params);
+      const data = await callHandleTaxTransaction(params);
       // Return the output parameters in the response
-      return res.status(200).json({ success: true, data: results[0] });
+      return res.status(200).json({ success: true, data: data });
     } catch (err) {
       console.error('Error executing stored procedure:', err);
       return res.status(500).json({ success: false, message: 'Error executing stored procedure' });
