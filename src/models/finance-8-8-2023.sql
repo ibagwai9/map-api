@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 06, 2023 at 06:44 PM
+-- Generation Time: Aug 08, 2023 at 09:42 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -330,7 +330,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_tsa_account` (IN `in_query_type
 	END IF;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction` (IN `p_query_type` ENUM('insert_payment','insert_invoice','check_balance','verify_payment'), IN `p_user_id` INT, IN `p_agent_id` INT, IN `p_org_code` VARCHAR(20), IN `p_rev_code` VARCHAR(20), IN `p_description` VARCHAR(200), IN `p_cr` DECIMAL(10,2), IN `p_dr` DECIMAL(10,2), IN `p_transaction_date` DATE, IN `p_transaction_type` ENUM('payment','invoice'), IN `p_status` VARCHAR(20), IN `p_reference_number` VARCHAR(50))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction` (IN `p_query_type` ENUM('view_payment','insert_payment','insert_invoice','check_balance','verify_payment','view_payer_ledger'), IN `p_user_id` INT, IN `p_agent_id` INT, IN `p_org_code` VARCHAR(20), IN `p_rev_code` VARCHAR(20), IN `p_description` VARCHAR(200), IN `p_cr` DECIMAL(10,2), IN `p_dr` DECIMAL(10,2), IN `p_transaction_date` DATE, IN `p_transaction_type` ENUM('payment','invoice'), IN `p_status` VARCHAR(20), IN `p_reference_number` VARCHAR(50))   BEGIN
   IF p_query_type = 'insert_payment' THEN
     -- Insert a payment transaction
     INSERT INTO tax_transactions (
@@ -354,7 +354,9 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction` (IN `p_query_
       p_status,
       p_reference_number
     );
-
+ELSEIF  p_query_type = 'view_payment' THEN
+SELECT * from tax_transactions x WHERE x.reference_number = p_reference_number;
+   
   ELSEIF p_query_type = 'insert_invoice' THEN
     -- Insert an invoice transaction
     INSERT INTO tax_transactions (
@@ -384,7 +386,18 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction` (IN `p_query_
     SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
     FROM tax_transactions
     WHERE user_id = p_user_id;
-   ELSE
+   ELSEIF p_query_type = 'view_payer_ledger' THEN
+SELECT 
+    y.*,
+    (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+FROM 
+    tax_transactions y 
+WHERE 
+    y.transaction_type = 'invoice'
+    AND y.user_id = p_user_id  
+GROUP BY 
+    y.reference_number;
+ELSE
     -- Invalid query_type
     SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Invalid query_type';
@@ -16093,7 +16106,10 @@ INSERT INTO `tax_transactions` (`transaction_id`, `user_id`, `org_code`, `rev_co
 (15, 2, 12020132, '', 'Vehicle registration', 1000.00, 0.00, '2023-08-06', 'payment', 'success', '20230806050719620', '2023-08-06 16:07:19', '2023-08-06 16:07:19'),
 (16, 2, 12020132, '', 'Booklet/ EVRs', 1250.00, 0.00, '2023-08-06', 'payment', 'success', '20230806050719620', '2023-08-06 16:07:19', '2023-08-06 16:07:19'),
 (17, 2, 12020132, '', 'Vehicle license', 650.00, 0.00, '2023-08-06', 'payment', 'success', '20230806050719620', '2023-08-06 16:07:19', '2023-08-06 16:07:19'),
-(18, 2, 0, '', 'Cost of number plate,Vehicle registration,Vehicle license,Booklet/ EVRs', 0.00, 5400.00, '2023-08-06', 'invoice', 'success', '20230806050719620', '2023-08-06 16:07:19', '2023-08-06 16:07:19');
+(18, 2, 0, '', 'Cost of number plate,Vehicle registration,Vehicle license,Booklet/ EVRs', 0.00, 5400.00, '2023-08-06', 'invoice', 'success', '20230806050719620', '2023-08-06 16:07:19', '2023-08-06 16:07:19'),
+(19, 2, 98323289, '', 'Container/Temporary Shop Large', 24000.00, 0.00, '2023-08-07', 'payment', 'success', '20230807022405038', '2023-08-07 13:24:05', '2023-08-07 13:24:05'),
+(20, 2, 98323289, '', 'Workshop Permits for Artisans Large', 24000.00, 0.00, '2023-08-07', 'payment', 'success', '20230807022405038', '2023-08-07 13:24:05', '2023-08-07 13:24:05'),
+(21, 2, 98323289, '', 'Container/Temporary Shop Large,Workshop Permits for Artisans Large', 0.00, 48000.00, '2023-08-07', 'invoice', 'success', '20230807022405038', '2023-08-07 13:24:05', '2023-08-07 13:24:05');
 
 -- --------------------------------------------------------
 
@@ -21046,7 +21062,7 @@ ALTER TABLE `state_health_facilities`
 -- AUTO_INCREMENT for table `tax_transactions`
 --
 ALTER TABLE `tax_transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `users`
