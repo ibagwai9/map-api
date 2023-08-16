@@ -8,7 +8,9 @@ export default (sequelize, DataTypes) => {
       password: DataTypes.STRING,
       role: DataTypes.STRING,
     },
-    {}
+    {
+      tableName:'users'
+    }
   );
 
   User.associate = function(models) {
