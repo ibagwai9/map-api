@@ -88,7 +88,7 @@ const login = (req, res) => {
     replacements:{email}
   })
   .then(users => {
-    console.log({users:users[0][0].email})
+    // console.log({users:users[0][0].email})
     //check for user
     if (!users.length) {
       errors.email = 'User not found!';

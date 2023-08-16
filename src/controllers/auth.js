@@ -103,17 +103,48 @@ exports.SignUp = (req, res) => {
                             })
                           },
                         )
-                      })
-                  })
-                  .catch((err) => {
-                    console.log(err)
-                    res.status(500).json({ status: 'failed', err })
-                  })
-              },
-              (_er) => console.log(_er),
-            )
-          })
-        }
+                        .then((resultR) => {
+                          //   res.json({
+                          //   status: "success",
+                          //   result : result[]
+                          // });
+                          let user = resultR[0][0];
+                          console.log(user);
+
+                          let payload = {
+                            username: user.username,
+                          };
+                          jwt.sign(
+                            payload,
+                            "secret",
+                            {
+                              expiresIn: "1d",
+                            },
+                            (err, token) => {
+                              if (err) throw err;
+
+                              res.json({
+                                success: true,
+                                msg: "Successfully logged in",
+                                token:'Bearer ' + token,
+                                user,
+                                taxID:user.taxID,
+                              });
+                             
+                            }
+                          );
+                        });
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      res.status(500).json({ status: "failed", err });
+                    });
+                },
+                (_er) => console.log(_er)
+              );
+            });
+        })
+      }
       })
   })
 }
@@ -161,8 +192,8 @@ exports.SignIn = (req, res) => {
 
                 res.json({
                   success: true,
-                  msg: 'Successfully logged in',
-                  token,
+                  msg: "Successfully logged in",
+                  token:'Bearer ' + token,
                   user,
                 })
               },

@@ -72,14 +72,15 @@ export const PostBudget = (req, res) => {
 
 export const budgetCeiling = (req, res) => {
   const {
-    head = null,
-    subhead = null,
-    description = null,
-    type = null,
+    head = "",
+    subhead = "",
+    description = "",
+    type = "",
     amt = 0,
     total_amt = 0,
   } = req.query;
   const { query_type = "" } = req.query;
+  console.log(req.body);
   db.sequelize
     .query(
       `call budget_ceiling(:query_type,:head, :subhead, :description, :type, :amt, :total_amt)`,
@@ -102,4 +103,28 @@ export const budgetCeiling = (req, res) => {
       console.log(err);
       res.status(500).json({ success: false, err });
     });
+};
+
+export const insertBudgetCeiling = (req, res) => {
+  const query_type = "insert";
+  const { data, pvalue } = req.body;
+
+  data.forEach((item) => {
+    db.sequelize.query(
+      `call budget_ceiling(:query_type,:head, :subhead, :description, :type, :amt, :total_amt)`,
+      {
+        replacements: {
+          query_type,
+          head: item.head,
+          subhead: item.sub_head,
+          description: item.description,
+          type: pvalue,
+          amt: item.amount,
+          total_amt: item.total_amt,
+        },
+      }
+    );
+  });
+
+  res.json({ success: true, message: "Successfully sent" });
 };

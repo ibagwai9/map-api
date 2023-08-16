@@ -3,7 +3,9 @@ import {
    kigra_get_account_list,
    getAccChart,
    getKigrTaxes,
-   postKigrTaxes
+   postKigrTaxes,
+   getLGAs,
+   getLGARevenues
 } from "../controllers/tsa";
 
 module.exports = (app) => {
@@ -17,5 +19,8 @@ module.exports = (app) => {
    getKigrTaxes)
   app.post('/kigra-taxes',
    postKigrTaxes)
+   app.get('/get/lga-list', getLGAs)
+   app.get('/get/lga-revenues', getLGARevenues)
+   
   
 };
