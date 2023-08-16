@@ -37,17 +37,23 @@ CREATE TABLE `tax_transactions` (
 DROP   PROCEDURE IF EXISTS `HandleTaxTransaction`;
 
 DELIMITER $$
-CREATE  PROCEDURE `HandleTaxTransaction`(
-  IN `p_query_type` ENUM('view_payment','insert_payment','insert_invoice','check_balance','verify_payment','view_payer_ledger'), 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction`(
+  IN `p_query_type` ENUM('view_payment', 'insert_payment', 'insert_invoice', 'check_balance', 'view_payer_ledger', 'approve_payment'), 
   IN `p_user_id` INT, 
   IN `p_agent_id` INT, 
-  IN `p_org_code` VARCHAR(20), 
+  IN `p_org_code` INT, 
   IN `p_rev_code` VARCHAR(20), 
-  IN `p_description` VARCHAR(200), 
+  IN `p_description` VARCHAR(300), 
+  IN `p_nin_id` INT, 
+  IN `p_org_name` VARCHAR(300), 
+  IN `p_paid_by` VARCHAR(50), 
+  IN `p_confirmed_by` VARCHAR(50), 
+  IN `p_payer_acct_no` VARCHAR(10), 
+  IN `p_payer_bank_name` INT, 
   IN `p_cr` DECIMAL(10,2), 
   IN `p_dr` DECIMAL(10,2), 
   IN `p_transaction_date` DATE, 
-  IN `p_transaction_type` ENUM('payment','invoice'), 
+  IN `p_transaction_type` ENUM('payment', 'invoice'), 
   IN `p_status` VARCHAR(20), 
   IN `p_reference_number` VARCHAR(50))
 BEGIN
@@ -56,7 +62,15 @@ BEGIN
     INSERT INTO tax_transactions (
       user_id,
       org_code,
+      rev_code,
       description,
+      nin_id,
+      agent_id,
+      org_name,
+      paid_by,
+      confirmed_by,
+      payer_acct_no,
+      payer_bank_name,
       cr,
       dr,
       transaction_date,
@@ -66,7 +80,15 @@ BEGIN
     ) VALUES (
       p_user_id,
       p_org_code,
+      p_rev_code,
       p_description,
+      p_nin_id,
+      p_agent_id,
+      p_org_name,
+      p_paid_by,
+      p_confirmed_by,
+      p_payer_acct_no,
+      p_payer_bank_name,
       p_cr,
       p_dr,
       p_transaction_date,
@@ -74,15 +96,23 @@ BEGIN
       p_status,
       p_reference_number
     );
-ELSEIF  p_query_type = 'view_payment' THEN
-SELECT * from tax_transactions x WHERE x.reference_number = p_reference_number;
-   
+  ELSEIF p_query_type = 'view_payment' THEN
+    -- View payment transaction
+    SELECT * FROM tax_transactions WHERE reference_number = p_reference_number;
   ELSEIF p_query_type = 'insert_invoice' THEN
     -- Insert an invoice transaction
     INSERT INTO tax_transactions (
       user_id,
       org_code,
+      rev_code,
       description,
+      nin_id,
+      agent_id,
+      org_name,
+      paid_by,
+      confirmed_by,
+      payer_acct_no,
+      payer_bank_name,
       cr,
       dr,
       transaction_date,
@@ -92,7 +122,15 @@ SELECT * from tax_transactions x WHERE x.reference_number = p_reference_number;
     ) VALUES (
       p_user_id,
       p_org_code,
+      p_rev_code,
       p_description,
+      p_nin_id,
+      p_agent_id,
+      p_org_name,
+      p_paid_by,
+      p_confirmed_by,
+      p_payer_acct_no,
+      p_payer_bank_name,
       p_cr,
       p_dr,
       p_transaction_date,
@@ -100,27 +138,33 @@ SELECT * from tax_transactions x WHERE x.reference_number = p_reference_number;
       p_status,
       p_reference_number
     );
-
   ELSEIF p_query_type = 'check_balance' THEN
     -- Query user's balance based on their user_id
     SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
     FROM tax_transactions
     WHERE user_id = p_user_id;
-   ELSEIF p_query_type = 'view_payer_ledger' THEN
-SELECT 
-    y.*,
-    (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
-FROM 
-    tax_transactions y 
-WHERE 
-    y.transaction_type = 'invoice'
-    AND y.user_id = p_user_id  
-GROUP BY 
-    y.reference_number;
-ELSE
+  ELSEIF p_query_type = 'view_payer_ledger' THEN
+    -- View payer's ledger for invoice transactions
+    SELECT 
+      y.*,
+      (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+    FROM 
+      tax_transactions y 
+    WHERE 
+      y.transaction_type = 'invoice'
+      AND y.user_id = p_user_id  
+    GROUP BY 
+      y.reference_number;
+  ELSEIF p_query_type = 'approve_payment' THEN
+    -- Approve a payment transaction
+    UPDATE tax_transactions
+    SET status = 'approved', confirmed_by = p_confirmed_by, confirmed_on = NOW()
+    WHERE reference_number = p_reference_number AND status = 'pending';
+  ELSE
     -- Invalid query_type
     SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Invalid query_type';
   END IF;
 END$$
+DELIMITER ;
 DELIMITER ;
