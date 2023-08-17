@@ -1,35 +1,35 @@
 import db from '../models'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import jwt, { decode } from 'jsonwebtoken'
 
 exports.SignUp = (req, res) => {
   console.log(req.body)
   const {
-    username = null,
-    password = null,
-    fullname = null,
-    email = null,
+    username = '',
+    password = '',
+    fullname = '',
+    email = '',
     role = 'user',
-    accessTo = null,
-    bvn = null,
-    company_name = null,
-    rc = null,
-    tin = null,
-    account_type = null,
-    phone = null,
-    state = null,
-    lga = null,
-    address = null,
-    department = null,
+    accessTo = '',
+    bvn = '',
+    company_name = '',
+    rc = '',
+    tin = '',
+    account_type = '',
+    phone = '',
+    state = '',
+    lga = '',
+    address = '',
+    department = '',
   } = req.body
 
-  db.sequelize.query(`SELECT  max(id) + 1 as id from users `).then((result) => {
+  db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
     let maxId = result[0][0].id
     //   console.log(maxId);
     db.sequelize
       .query(
         `SELECT * from users
-     where username="${username}"`,
+     where email="${email}"`,
       )
       .then((resp) => {
         console.log(resp[0])
@@ -37,7 +37,7 @@ exports.SignUp = (req, res) => {
           console.log('user exist')
           return res
             .status(400)
-            .json({ success: false, msg: 'username already registered' })
+            .json({ success: false, msg: 'email already registered' })
         } else {
           bcrypt.genSalt(10, (err, salt) => {
             bcrypt.hash(
@@ -73,7 +73,7 @@ exports.SignUp = (req, res) => {
                   )
                   .then((userResp) => {
                     db.sequelize
-                      .query(`SELECT * from users where username="${username}"`)
+                      .query(`SELECT * from users where email="${email}"`)
                       .then((resultR) => {
                         //   res.json({
                         //   status: "success",
@@ -84,6 +84,7 @@ exports.SignUp = (req, res) => {
 
                         let payload = {
                           username: user.username,
+                          email: user.email,
                         }
                         jwt.sign(
                           payload,
@@ -103,41 +104,41 @@ exports.SignUp = (req, res) => {
                             })
                           },
                         )
-                        .then((resultR) => {
-                          //   res.json({
-                          //   status: "success",
-                          //   result : result[]
-                          // });
-                          let user = resultR[0][0];
-                          console.log(user);
+                        // .then((resultR) => {
+                        //   //   res.json({
+                        //   //   status: "success",
+                        //   //   result : result[]
+                        //   // });
+                        //   let user = resultR[0][0];
+                        //   console.log(user);
 
-                          let payload = {
-                            username: user.username,
-                          };
-                          jwt.sign(
-                            payload,
-                            "secret",
-                            {
-                              expiresIn: "1d",
-                            },
-                            (err, token) => {
-                              if (err) throw err;
+                        //   let payload = {
+                        //     email: user.email,
+                        //   };
+                        //   jwt.sign(
+                        //     payload,
+                        //     "secret",
+                        //     {
+                        //       expiresIn: "1d",
+                        //     },
+                        //     (err, token) => {
+                        //       if (err) throw err;
 
-                              res.json({
-                                success: true,
-                                msg: "Successfully logged in",
-                                token:'Bearer ' + token,
-                                user,
-                                taxID:user.taxID,
-                              });
+                        //       res.json({
+                        //         success: true,
+                        //         msg: "Successfully logged in",
+                        //         token:'Bearer ' + token,
+                        //         user,
+                        //         taxID:user.taxID,
+                        //       });
                              
-                            }
-                          );
-                        });
+                        //     }
+                        //   );
+                        // });
                     })
                     .catch((err) => {
                       console.log(err);
-                      res.status(500).json({ status: "failed", err });
+                      res.status(500).json({ success: false, msg: err });
                     });
                 },
                 (_er) => console.log(_er)
@@ -179,6 +180,7 @@ exports.SignIn = (req, res) => {
 
             let payload = {
               username: user.username,
+              email: user.email
             }
 
             jwt.sign(
@@ -510,12 +512,14 @@ exports.verifyToken = (req, res) => {
       })
     }
 
-    const { username } = decoded
+    const { email } = decoded
+
+    console.log(decoded)
 
     db.sequelize
       .query(
         `SELECT *  from users 
-      where username="${username}"`,
+      where email="${email}"`,
       )
       .then((result) => {
         res.json({ success: true, user: result[0] })
