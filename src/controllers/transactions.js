@@ -7,7 +7,7 @@ export const getInvoiceDetails = async (userId, refNo) => {
         JOIN users b on a.user_id=b.id 
         where 
         #a.user_id="${userId}" and 
-        a.reference_number="${refNo}" AND a.transaction_type='invoice'`,
+        a.reference_number="${userId}" AND a.transaction_type='invoice'`,
     )
     return reqData[0]
   } catch (error) {
