@@ -5,7 +5,9 @@ export const getInvoiceDetails = async (userId, refNo) => {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id, a.reference_number, a.dr, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
-        where a.user_id="${userId}" and a.reference_number="${refNo}" AND a.transaction_type='invoice'`,
+        where 
+        #a.user_id="${userId}" and 
+        a.reference_number="${refNo}" AND a.transaction_type='invoice'`,
     )
     return reqData[0]
   } catch (error) {
