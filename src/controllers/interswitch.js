@@ -61,17 +61,17 @@ const handleInvoice = (req, res) => {
 
   // parseString(sampleRequest, function (err, reqJson) {
   console.log(reqJson, 'cccccccccccc')
-  getInvoiceDetails(
-    reqJson.customerinformationrequest.custreference[0],
-    reqJson.customerinformationrequest.paymentitemcode[0],
-  )
-    .then((results) => {
-      if (results && results.length) {
-        console.log(results)
-        let firstName = results[0].name
-        // let lastName = results[0].name.split(" ")[1]
-        let responseData = `
-    <CustomerInformationResponse>
+  if (reqJson.customerinformationrequest.merchantreference[0] === '6405') {
+    getInvoiceDetails(
+      reqJson.customerinformationrequest.custreference[0],
+      reqJson.customerinformationrequest.paymentitemcode[0],
+    )
+      .then((results) => {
+        if (results && results.length) {
+          console.log(results)
+          let firstName = results[0].name
+          // let lastName = results[0].name.split(" ")[1]
+          let responseData = `<CustomerInformationResponse>
         <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
         <Customers>
             <Customer>
@@ -84,23 +84,78 @@ const handleInvoice = (req, res) => {
                 <Phone></Phone>
                 <ThirdPartyCode></ThirdPartyCode>
                 <Amount>${results[0].dr}</Amount>
+                <PaymentItems>
+                  <Item>
+                      <ProductName>${results[0].description}</ProductName>
+                      <ProductCode>01</ProductCode>
+                      <Quantity>1</Quantity>
+                      <Price>${results[0].dr}</Price>
+                      <Subtotal>${results[0].dr}</Subtotal>
+                      <Tax>0</Tax>
+                      <Total>${results[0].dr}</Total>
+                  </Item>
+              </PaymentItems>
             </Customer>
         </Customers>
     </CustomerInformationResponse>`
 
-        res.send(responseData)
-      } else {
-        res.json({
-          status: 'Success',
-          invoice: {},
-          message: 'Payment reference not found!',
-        })
-      }
-    })
-    .catch((error) => {
-      console.log(error)
-      res.status(500).json({ status: 'Error', message: 'An error occurred' })
-    })
+          res.send(responseData)
+        } else {
+          res.send(`<CustomerInformationResponse>
+        <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+        <Customers>
+            <Customer>
+                <Status>1</Status>
+                <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+                <CustomerReferenceAlternate></CustomerReferenceAlternate>
+                <FirstName></FirstName>
+                <LastName></LastName>
+                <Email></Email>
+                <Phone></Phone>
+                <ThirdPartyCode></ThirdPartyCode>
+                <Amount>0</Amount>
+            </Customer>
+        </Customers>
+    </CustomerInformationResponse>`)
+        }
+      })
+      .catch((error) => {
+        console.log(error)
+        res.send(`<CustomerInformationResponse>
+        <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+        <Customers>
+            <Customer>
+                <Status>1</Status>
+                <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+                <CustomerReferenceAlternate></CustomerReferenceAlternate>
+                <FirstName></FirstName>
+                <LastName></LastName>
+                <Email></Email>
+                <Phone></Phone>
+                <ThirdPartyCode></ThirdPartyCode>
+                <Amount>0</Amount>
+            </Customer>
+        </Customers>
+    </CustomerInformationResponse>`)
+      })
+  } else {
+    res.send(`<CustomerInformationResponse>
+      <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+      <Customers>
+          <Customer>
+              <Status>1</Status>
+              <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+              <CustomerReferenceAlternate></CustomerReferenceAlternate>
+              <FirstName></FirstName>
+              <LastName></LastName>
+              <Email></Email>
+              <Phone></Phone>
+              <ThirdPartyCode></ThirdPartyCode>
+              <Amount>0</Amount>
+          </Customer>
+      </Customers>
+  </CustomerInformationResponse>`)
+  }
   // })
 }
 
