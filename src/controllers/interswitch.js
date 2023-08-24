@@ -48,7 +48,7 @@ const getTransaction = async (req, res) => {
   }
 }
 
-const handleInvoiceValidation = (reqJson) => {
+const handleInvoiceValidation = (reqJson, res) => {
   if (reqJson.customerinformationrequest.merchantreference[0] === '6405') {
     getInvoiceDetails(
       reqJson.customerinformationrequest.custreference[0],
@@ -169,7 +169,7 @@ const handleInvoice = (req, res) => {
   // console.log(JSON.stringify(reqJson))
 
   if (reqJson.customerinformationrequest) {
-    handleInvoiceValidation(reqJson)
+    handleInvoiceValidation(reqJson, res)
   } else if (reqJson.paymentnotificationrequest) {
     const asyncRequestList = []
     // const paymentList =
@@ -198,8 +198,8 @@ const handleInvoice = (req, res) => {
                 const logId = pp.paymentlogid[0]
                 const paymentDate = pp.paymentdate[0]
                 const dateSettled = pp.settlementdate[0]
-                const branchName = pp.branchname[0]
-                const bankname = pp.bankname[0]
+                // const branchName = pp.branchname[0]
+                // const bankname = pp.bankname[0]
                 const isReversal = pp.isreversal[0]
                 const amountPaid = pp.amount[0]
 
