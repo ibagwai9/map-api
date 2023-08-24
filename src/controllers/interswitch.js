@@ -3,6 +3,7 @@ const axios = require('axios')
 const crypto = require('crypto')
 var parseString = require('xml2js').parseString
 const { getInvoiceDetails } = require('./transactions')
+const db = require('../models')
 
 const merchantMacKey =
   'E187B1191265B18338B5DEBAF9F38FEC37B170FF582D4666DAB1F098304D5EE7F3BE15540461FE92F1D40332FDBBA34579034EE2AC78B1A1B8D9A321974025C4'
@@ -47,20 +48,7 @@ const getTransaction = async (req, res) => {
   }
 }
 
-const handleInvoice = (req, res) => {
-  // let sampleRequest = `<customerinformationrequest>
-  //     <ServiceUsername></ServiceUsername>
-  //     <ServicePassword></ServicePassword>
-  //     <MerchantReference>6405</MerchantReference>
-  //     <CustReference>12</CustReference>
-  //     <PaymentItemCode>20230822023219864</PaymentItemCode>
-  //     <ThirdPartyCode></ThirdPartyCode>
-  //   </customerinformationrequest>`
-
-  const reqJson = req.body
-
-  // parseString(sampleRequest, function (err, reqJson) {
-  console.log(reqJson, 'cccccccccccc')
+const handleInvoiceValidation = (reqJson) => {
   if (reqJson.customerinformationrequest.merchantreference[0] === '6405') {
     getInvoiceDetails(
       reqJson.customerinformationrequest.custreference[0],
@@ -99,8 +87,10 @@ const handleInvoice = (req, res) => {
         </Customers>
     </CustomerInformationResponse>`
 
+          res.set('Content-Type', 'text/xml')
           res.send(responseData)
         } else {
+          res.set('Content-Type', 'text/xml')
           res.send(`<CustomerInformationResponse>
         <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
         <Customers>
@@ -121,6 +111,7 @@ const handleInvoice = (req, res) => {
       })
       .catch((error) => {
         console.log(error)
+        res.set('Content-Type', 'text/xml')
         res.send(`<CustomerInformationResponse>
         <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
         <Customers>
@@ -139,6 +130,7 @@ const handleInvoice = (req, res) => {
     </CustomerInformationResponse>`)
       })
   } else {
+    res.set('Content-Type', 'text/xml')
     res.send(`<CustomerInformationResponse>
       <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
       <Customers>
@@ -156,6 +148,160 @@ const handleInvoice = (req, res) => {
       </Customers>
   </CustomerInformationResponse>`)
   }
+}
+
+// const proc
+
+const handleInvoice = (req, res) => {
+  // let sampleRequest = `<customerinformationrequest>
+  //     <ServiceUsername></ServiceUsername>
+  //     <ServicePassword></ServicePassword>
+  //     <MerchantReference>6405</MerchantReference>
+  //     <CustReference>12</CustReference>
+  //     <PaymentItemCode>20230822023219864</PaymentItemCode>
+  //     <ThirdPartyCode></ThirdPartyCode>
+  //   </customerinformationrequest>`
+
+  const reqJson = req.body
+
+  // parseString(sampleRequest, function (err, reqJson) {
+  // console.log(reqJson, 'cccccccccccc')
+  // console.log(JSON.stringify(reqJson))
+
+  if (reqJson.customerinformationrequest) {
+    handleInvoiceValidation(reqJson)
+  } else if (reqJson.paymentnotificationrequest) {
+    const asyncRequestList = []
+    // const paymentList =
+    const referenceNo =
+      reqJson.paymentnotificationrequest.payments.length &&
+      reqJson.paymentnotificationrequest.payments[0].payment.length
+        ? reqJson.paymentnotificationrequest.payments[0].payment[0]
+            .custreference
+        : null
+    // console.log(referenceNo)
+    // console.log(reqJson.paymentnotificationrequest.payments[0].payment[0].custreference)
+    if (referenceNo) {
+      db.sequelize
+        .query(
+          `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}"`,
+        )
+        .then((resp) => {
+          if (resp && resp.length && resp[0].length) {
+            console.log(resp)
+            reqJson.paymentnotificationrequest.payments.forEach((p) => {
+              p.payment.forEach((pp) => {
+                // console.log(pp)
+                // const invoiceId = pp.custreference[0]
+                const interswitchRef = pp.paymentreference[0]
+                const modeOfPayment = pp.paymentmethod[0]
+                const logId = pp.paymentlogid[0]
+                const paymentDate = pp.paymentdate[0]
+                const dateSettled = pp.settlementdate[0]
+                const branchName = pp.branchname[0]
+                const bankname = pp.bankname[0]
+                const isReversal = pp.isreversal[0]
+                const amountPaid = pp.amount[0]
+
+                if (isReversal === 'False') {
+                  asyncRequestList.push(
+                    db.sequelize.query(`UPDATE tax_transactions 
+                SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
+                paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
+                paymentAmount="${amountPaid}"
+                WHERE reference_number="${referenceNo}"`),
+                  )
+                } else {
+                  asyncRequestList.push(
+                    db.sequelize.query(`UPDATE tax_transactions 
+                    SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
+                  paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
+                  paymentAmount="${amountPaid}"
+                  WHERE reference_number="${referenceNo}"`),
+                  )
+                }
+                // pp.paymentitems.forEach((ppaymentItem) => {
+                //   ppaymentItem.forEach((pppp) => {})
+                // })
+              })
+            })
+
+            Promise.all(asyncRequestList)
+              .then((ok) => {
+                console.log('ok', ok)
+                let logId =
+                  reqJson?.paymentnotificationrequest?.payments[0][0]
+                    ?.paymentlogid || Date.now()
+                res.set('Content-Type', 'text/xml')
+                res.send(`
+          <PaymentNotificationResponse>
+              <Payments>
+                  <Payment>
+                      <PaymentLogId>${logId}</PaymentLogId>
+                      <Status>0</Status>
+                  </Payment>
+              </Payments>
+          </PaymentNotificationResponse>`)
+              })
+              .catch((err) => {
+                console.log(err)
+
+                res.set('Content-Type', 'text/xml')
+                res.send(`
+          <PaymentNotificationResponse>
+              <Payments>
+                  <Payment>
+                      <PaymentLogId>0</PaymentLogId>
+                      <Status>1</Status>
+                  </Payment>
+              </Payments>
+          </PaymentNotificationResponse>`)
+              })
+
+            // res.send(reqJson)
+          } else {
+            res.set('Content-Type', 'text/xml')
+            res.send(`
+      <PaymentNotificationResponse>
+          <Payments>
+              <Payment>
+                  <PaymentLogId>0</PaymentLogId>
+                  <Status>1</Status>
+                  <StatusMessage>Customer Reference not found</StatusMessage>
+              </Payment>
+          </Payments>
+      </PaymentNotificationResponse>`)
+          }
+        })
+    } else {
+      res.set('Content-Type', 'text/xml')
+      res.send(`
+      <PaymentNotificationResponse>
+          <Payments>
+              <Payment>
+                  <PaymentLogId>0</PaymentLogId>
+                  <Status>1</Status>
+                  <StatusMessage>Please provide a valid Customer Reference</StatusMessage>
+              </Payment>
+          </Payments>
+      </PaymentNotificationResponse>`)
+    }
+  } else {
+    res.set('Content-Type', 'text/xml')
+    res.send(`<Response>
+      <MerchantReference>NA</MerchantReference>
+      <Customers>
+          <Customer>
+              <Status>1</Status>
+              <CustReference>NA</CustReference>
+              <CustomerReferenceAlternate></CustomerReferenceAlternate>
+              <ThirdPartyCode></ThirdPartyCode>
+              <Amount>0</Amount>
+          </Customer>
+      </Customers>
+  </Response>`)
+  }
+
   // })
 }
 
