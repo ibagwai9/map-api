@@ -1,0 +1,610 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "tsa-suite.brainstorm.ng/api documentation",
+    "version": "1.0.0",
+    "description": "API documentation for the TSA Suite server"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3589",
+      "description": "Localhost server on port 3589"
+    },
+    {
+      "url": "https://tsa-suite.brainstorm.ng/api",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/sign_up": {
+      "post": {
+        "summary": "Create a new user",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "description": "User information",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/sign_in": {
+      "post": {
+        "summary": "User login",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "description": "Login credentials",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "Username of the user",
+                    "example": "user@gmail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "User's password",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Unauthorized. Invalid credentials"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/verify-token": {
+      "get": {
+        "summary": "Verify Authorization token",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "verifyUserToken",
+        "responses": {
+          "200": {
+            "description": "User Object"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get all users",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/{user_id}": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "ID of the user to be followed",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Get user by ID",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/update": {
+      "put": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Update user profile",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "description": "Updated user profile information",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User profile updated successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/forgot-password": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Request password reset",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "description": "User's phone number",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset request successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/verify-otp": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Verify OTP",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "description": "User's phone number and OTP",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPVerificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verification successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/reset-password": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Reset Password",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "description": "User's phone number and new password",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/profiles/{user_id}/view": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "View profiles view by ID(UUID)",
+        "tags": [
+          "Profiles"
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "description": "ID of the user to be followed",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "description": "Enter the token with the `Bearer: ` prefix, e.g. `Bearer abcde12345`"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User ID (Integer) Auto",
+            "example": "4172000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the user",
+            "example": "Halifa Nagudu"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the user",
+            "example": "nagudu"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the user",
+            "example": "nagudu@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User's password"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the user",
+            "example": "admin"
+          },
+          "bvn": {
+            "type": "string",
+            "description": "Bank Verification Number",
+            "example": "12345678901"
+          },
+          "tin": {
+            "type": "string",
+            "description": "Taxpayer Identification Number",
+            "example": "1234567890"
+          },
+          "taxID": {
+            "type": "string",
+            "description": "Tax Identification Number",
+            "example": "TIN123"
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Name of the company",
+            "example": "ABC LTD."
+          },
+          "rc": {
+            "type": "string",
+            "description": "Company's Registration Certificate",
+            "example": "RC12345"
+          },
+          "account_type": {
+            "type": "string",
+            "description": "Type of the account",
+            "example": "savings"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number of the user",
+            "example": "+1234567890"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the user",
+            "example": "Kano"
+          },
+          "lga": {
+            "type": "string",
+            "description": "Local Government Area",
+            "example": "Los Angeles"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the user",
+            "example": "123 Fagge B"
+          },
+          "accessTo": {
+            "type": "string",
+            "description": "Access permissions",
+            "example": "user"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was created",
+            "example": "2023-08-24T12:34:56Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the user was last updated",
+            "example": "2023-08-24T12:34:56Z"
+          }
+        }
+      }
+      ,      
+      "UserProfileUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the user",
+            "example": "John Doe"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the user",
+            "example": "johndoe"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address of the user",
+            "example": "johndoe@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User's password"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the user",
+            "example": "admin"
+          },
+          "bvn": {
+            "type": "string",
+            "description": "Bank Verification Number",
+            "example": "12345678901"
+          },
+          "tin": {
+            "type": "string",
+            "description": "Taxpayer Identification Number",
+            "example": "1234567890"
+          },
+          "taxID": {
+            "type": "string",
+            "description": "Tax Identification Number",
+            "example": "TIN123"
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Name of the company",
+            "example": "ABC Inc."
+          },
+          "rc": {
+            "type": "string",
+            "description": "Company's Registration Certificate",
+            "example": "RC12345"
+          },
+          "account_type": {
+            "type": "string",
+            "description": "Type of the account",
+            "example": "savings"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number of the user",
+            "example": "+1234567890"
+          },
+          "state": {
+            "type": "string",
+            "description": "State of the user",
+            "example": "California"
+          },
+          "lga": {
+            "type": "string",
+            "description": "Local Government Area",
+            "example": "Los Angeles"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the user",
+            "example": "123 Main St"
+          },
+          "accessTo": {
+            "type": "string",
+            "description": "Access permissions",
+            "example": "full"
+          }
+        }
+      }
+      ,
+      "PasswordResetRequest": {
+        "type": "object",
+        "properties": {
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number of the user",
+            "example": "+1234567890"
+          }
+        }
+      },
+      "OTPVerificationRequest": {
+        "type": "object",
+        "properties": {
+          "otp": {
+            "type": "string",
+            "description": "OTP (One-Time Password) received by the user",
+            "example": "123456"
+          }
+        }
+      }
+    }
+  }
+}

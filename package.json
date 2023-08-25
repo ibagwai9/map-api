@@ -23,7 +23,7 @@
     "express": "^4.16.4",
     "forever-monitor": "^1.7.1",
     "jsonwebtoken": "^8.5.1",
-    "moment": "^2.29.3",
+    "moment": "^2.29.4",
     "multer": "^1.4.3",
     "mysql2": "^1.6.5",
     "nodemon": "^2.0.13",
@@ -32,6 +32,7 @@
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
     "sequelize": "^5.7.1",
+    "swagger-ui-express": "^5.0.0",
     "uuidv4": "^6.2.12",
     "validator": "^10.11.0"
   },

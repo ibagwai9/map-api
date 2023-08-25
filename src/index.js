@@ -3,6 +3,9 @@ import passport from "passport";
 import cors from "cors";
 import models from "./models";
 import multer from "multer";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./swagger-doc.json";
+
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
 
@@ -17,7 +20,13 @@ let port = process.env.PORT || 3589;
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-//app.use(express.static(__dirname + upload));
+app.use(express.static(__dirname + upload));
+
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, { explorer: true })
+);
 
 app.use(cors());
 
@@ -35,7 +44,6 @@ require("./config/passport")(passport);
 
 //default route
 app.get("/", (req, res) => res.send("Hello my World, it gonna be good day"));
-
 
 require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);
