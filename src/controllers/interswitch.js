@@ -184,67 +184,83 @@ const handleInvoice = (req, res) => {
     if (referenceNo) {
       const amountPaid =
         reqJson.paymentnotificationrequest.payments[0].payment[0].amount[0]
-        const logId = reqJson.paymentnotificationrequest.payments[0].payment[0].paymentlogid[0]
-        console.log(amountPaid)
+      const logId =
+        reqJson.paymentnotificationrequest.payments[0].payment[0]
+          .paymentlogid[0]
+      console.log(amountPaid)
       if (
         amountPaid &&
         amountPaid !== '0' &&
         amountPaid !== '0.00' &&
         amountPaid !== 0 &&
-        amountPaid !== 0.00
+        amountPaid !== 0.0
       ) {
         db.sequelize
           .query(
-            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status="saved"`,
+            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status="saved" AND transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              // console.log(resp)
-              reqJson.paymentnotificationrequest.payments.forEach((p) => {
-                p.payment.forEach((pp) => {
-                  // console.log(pp)
-                  // const invoiceId = pp.custreference[0]
-                  const interswitchRef = pp.paymentreference[0]
-                  const modeOfPayment = pp.paymentmethod[0]
-                  
-                  const paymentDate = pp.paymentdate[0]
-                  const dateSettled = pp.settlementdate[0]
-                  // const branchName = pp.branchname[0]
-                  // const bankname = pp.bankname[0]
-                  const isReversal = pp.isreversal[0]
-                  // const amountPaid = pp.amount[0]
+              console.log({amountPaid, dr: resp[0][0].dr})
+              if (resp[0][0].dr !== amountPaid) {
+                res.set('Content-Type', 'text/xml')
+                res.send(`
+                <PaymentNotificationResponse>
+                    <Payments>
+                        <Payment>
+                            <PaymentLogId>${logId}</PaymentLogId>
+                            <Status>1</Status>
+                            <StatusMessage>The amount is not correct.</StatusMessage>
+                        </Payment>
+                    </Payments>
+                </PaymentNotificationResponse>`)
+              } else {
+                // console.log(resp)
+                reqJson.paymentnotificationrequest.payments.forEach((p) => {
+                  p.payment.forEach((pp) => {
+                    // console.log(pp)
+                    // const invoiceId = pp.custreference[0]
+                    const interswitchRef = pp.paymentreference[0]
+                    const modeOfPayment = pp.paymentmethod[0]
 
-                  if (isReversal === 'False') {
-                    asyncRequestList.push(
-                      db.sequelize.query(`UPDATE tax_transactions 
+                    const paymentDate = pp.paymentdate[0]
+                    const dateSettled = pp.settlementdate[0]
+                    // const branchName = pp.branchname[0]
+                    // const bankname = pp.bankname[0]
+                    const isReversal = pp.isreversal[0]
+                    // const amountPaid = pp.amount[0]
+
+                    if (isReversal === 'False') {
+                      asyncRequestList.push(
+                        db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number="${referenceNo}"`),
-                    )
-                  } else {
-                    asyncRequestList.push(
-                      db.sequelize.query(`UPDATE tax_transactions 
+                      )
+                    } else {
+                      asyncRequestList.push(
+                        db.sequelize.query(`UPDATE tax_transactions 
                     SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                   paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                   paymentAmount="${amountPaid}"
                   WHERE reference_number="${referenceNo}"`),
-                    )
-                  }
-                  // pp.paymentitems.forEach((ppaymentItem) => {
-                  //   ppaymentItem.forEach((pppp) => {})
-                  // })
+                      )
+                    }
+                    // pp.paymentitems.forEach((ppaymentItem) => {
+                    //   ppaymentItem.forEach((pppp) => {})
+                    // })
+                  })
                 })
-              })
 
-              Promise.all(asyncRequestList)
-                .then((ok) => {
-                  console.log('ok', ok)
-                  // let logId =
-                  //   reqJson?.paymentnotificationrequest?.payments[0][0]
-                  //     ?.paymentlogid || Date.now()
-                  res.set('Content-Type', 'text/xml')
-                  res.send(`
+                Promise.all(asyncRequestList)
+                  .then((ok) => {
+                    console.log('ok', ok)
+                    // let logId =
+                    //   reqJson?.paymentnotificationrequest?.payments[0][0]
+                    //     ?.paymentlogid || Date.now()
+                    res.set('Content-Type', 'text/xml')
+                    res.send(`
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
@@ -253,12 +269,12 @@ const handleInvoice = (req, res) => {
                   </Payment>
               </Payments>
           </PaymentNotificationResponse>`)
-                })
-                .catch((err) => {
-                  console.log(err)
+                  })
+                  .catch((err) => {
+                    console.log(err)
 
-                  res.set('Content-Type', 'text/xml')
-                  res.send(`
+                    res.set('Content-Type', 'text/xml')
+                    res.send(`
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
@@ -267,21 +283,22 @@ const handleInvoice = (req, res) => {
                   </Payment>
               </Payments>
           </PaymentNotificationResponse>`)
-                })
+                  })
 
-              // res.send(reqJson)
+                // res.send(reqJson)
+              }
             } else {
               res.set('Content-Type', 'text/xml')
               res.send(`
-      <PaymentNotificationResponse>
-          <Payments>
-              <Payment>
-                  <PaymentLogId>0</PaymentLogId>
-                  <Status>1</Status>
-                  <StatusMessage>Customer Reference not found or invalid</StatusMessage>
-              </Payment>
-          </Payments>
-      </PaymentNotificationResponse>`)
+                <PaymentNotificationResponse>
+                    <Payments>
+                        <Payment>
+                            <PaymentLogId>0</PaymentLogId>
+                            <Status>1</Status>
+                            <StatusMessage>Customer Reference not found or invalid</StatusMessage>
+                        </Payment>
+                    </Payments>
+                </PaymentNotificationResponse>`)
             }
           })
       } else {
