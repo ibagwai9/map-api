@@ -1,5 +1,20 @@
 const db = require("../models");
 
+export const getInvoiceDetails = async (userId, refNo) => {
+  try {
+    const reqData = await db.sequelize.query(
+      `SELECT a.user_id, a.reference_number, a.dr, a.description, b.name FROM tax_transactions a 
+        JOIN users b on a.user_id=b.id 
+        where 
+        #a.user_id="${userId}" and 
+        a.reference_number="${userId}" AND a.transaction_type='invoice'`
+    );
+    return reqData[0];
+  } catch (error) {
+    return error;
+  }
+};
+
 const callHandleTaxTransaction = async (params) => {
   try {
     const results = await db.sequelize.query(

@@ -21,6 +21,7 @@
     "ejs": "^2.6.1",
     "eslint": "^5.16.0",
     "express": "^4.16.4",
+    "express-xml-bodyparser": "^0.3.0",
     "forever-monitor": "^1.7.1",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.4",
@@ -34,7 +35,8 @@
     "sequelize": "^5.7.1",
     "swagger-ui-express": "^5.0.0",
     "uuidv4": "^6.2.12",
-    "validator": "^10.11.0"
+    "validator": "^10.11.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.22.9",

@@ -8,10 +8,11 @@ import swaggerDocument from "./swagger-doc.json";
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
+var xmlparser = require('express-xml-bodyparser');
 
 const app = express();
 app.use(express.static(path.join(__dirname)));
-
+app.use(xmlparser());
 app.use(express.json({ limit: "50mb" }));
 
 let port = process.env.PORT || 3589;
