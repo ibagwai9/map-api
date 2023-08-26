@@ -32,10 +32,10 @@ CREATE TABLE `tax_transactions` (
 );
 
 
-DROP PROCEDURE `HandleTaxTransaction`;
+DROP PROCEDURE IF EXISTS `HandleTaxTransaction`;
 
 DELIMITER $$
-CREATE PROCEDURE `HandleTaxTransaction`(IN `p_query_type` ENUM('view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), IN `p_user_id` VARCHAR(9), IN `p_agent_id` VARCHAR(9), IN `p_org_code` VARCHAR(30), IN `p_rev_code` VARCHAR(20), IN `p_description` VARCHAR(300), IN `p_nin_id` VARCHAR(12), IN `p_org_name` VARCHAR(300), IN `p_paid_by` VARCHAR(50), IN `p_confirmed_by` VARCHAR(50), IN `p_payer_acct_no` VARCHAR(10), IN `p_payer_bank_name` VARCHAR(50), IN `p_cr` DECIMAL(10,2), IN `p_dr` DECIMAL(10,2), IN `p_transaction_date` DATE, IN `p_transaction_type` ENUM('payment','invoice'), IN `p_status` VARCHAR(20), IN `p_reference_number` VARCHAR(50)) NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER BEGIN
+CREATE  PROCEDURE `HandleTaxTransaction`(IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), IN `p_user_id` VARCHAR(9), IN `p_agent_id` VARCHAR(9), IN `p_org_code` VARCHAR(50), IN `p_rev_code` VARCHAR(50), IN `p_description` VARCHAR(300), IN `p_nin_id` VARCHAR(12), IN `p_org_name` VARCHAR(300), IN `p_paid_by` VARCHAR(50), IN `p_confirmed_by` VARCHAR(50), IN `p_payer_acct_no` VARCHAR(10), IN `p_payer_bank_name` VARCHAR(50), IN `p_cr` DECIMAL(10,2), IN `p_dr` DECIMAL(10,2), IN `p_transaction_date` DATE, IN `p_transaction_type` ENUM('payment','invoice'), IN `p_status` VARCHAR(20), IN `p_reference_number` VARCHAR(50)) NOT DETERMINISTIC CONTAINS SQL SQL SECURITY DEFINER BEGIN
   IF p_query_type = 'insert_payment' THEN
     -- Insert a payment transaction
     INSERT INTO tax_transactions (
@@ -139,6 +139,8 @@ CREATE PROCEDURE `HandleTaxTransaction`(IN `p_query_type` ENUM('view_payment','i
     UPDATE tax_transactions
     SET status = 'approved', confirmed_by = p_confirmed_by, confirmed_on = NOW()
     WHERE reference_number = p_reference_number AND status = 'pending';
+ELSEIF p_query_type = 'view_invoice' THEN
+SELECT * FROM tax_transactions x WHERE x.reference_number = p_reference_number;
   ELSE
     -- Invalid query_type
     SIGNAL SQLSTATE '45000'
@@ -198,6 +200,52 @@ CREATE  PROCEDURE `user_accounts`(
     END IF;
 END $$
 
-UPDATE taxes SET tax_fee = REPLACE(tax_fee, ',', '');
-UPDATE taxes SET tax_fee = NULL WHERE tax_fee='';
-ALTER TABLE `taxes` CHANGE `tax_fee` `tax_fee` DECIMAL(10,2) DEFAULT NULL; 
+DROP PROCEDURE `kigra_taxes`;
+DELIMITER $$
+CREATE  PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(51), IN `in_id` INT, IN `in_tax_code` VARCHAR(51), IN `in_tax_parent_code` VARCHAR(50), IN `in_description` VARCHAR(65), IN `in_tax_fee` VARCHAR(10), IN `in_sector` VARCHAR(50))
+BEGIN
+  IF query_type='create' THEN    
+    INSERT INTO `taxes` (`tax_code`, `tax_parent_code`, `title`, `tax_fee`,`sector`) VALUES
+    (in_tax_code,in_tax_parent_code,in_description,in_tax_fee,in_sector) ;
+ 
+    ELSEIF query_type = 'select-all'  THEN
+SELECT * FROM `taxes` x WHERE x.sector=in_sector;
+
+
+    ELSEIF query_type = 'select-heads'  THEN
+SELECT * FROM `taxes` x WHERE   x.title!=''
+AND x.tax_fee IS NULL  AND x.sector=in_sector;
+    ELSEIF query_type = 'select-main'  THEN
+
+      SELECT * FROM `taxes` x WHERE   x.tax_parent_code !='' AND x.title='' AND x.sector=in_sector;
+   ELSEIF query_type = 'select-sub'  THEN
+
+      IF in_sector IS NOT NULL THEN
+  SELECT * FROM `taxes` x WHERE x.sector=in_sector AND x.tax_fee IS NOT NULL;
+ELSE
+      SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code;
+END IF;
+ELSEIF query_type = 'selected-sub'  THEN
+IF in_sector IS NOT NULL THEN
+  SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code AND x.sector=in_sector AND x.tax_fee IS NOT NULL AND x.tax_fee!='';
+ELSE
+      SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code;
+END IF;
+ELSEIF query_type = 'select' AND in_tax_code IS NOT NULL OR in_tax_parent_code IS NOT NULL THEN
+      IF in_tax_parent_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_parent_code =in_tax_parent_code AND  title IS NOT NULL;
+ELSEIF in_tax_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_code =in_tax_code;
+
+END IF;
+ELSEIF  query_type='select-mdas' THEN
+SELECT * FROM mdas_1;
+ELSEIF query_type='select-healthcares' THEN
+SELECT * FROM `state_health_facilities` WHERE ownership_code =1 LIMIT 50;
+ELSEIF query_type='select-high-institutions' THEN
+SELECT * FROM `educ_institutions`;
+END IF;
+END$$
+DELIMITER ;
+
+ALTER TABLE `users` ADD `nin` VARCHAR(12) NULL DEFAULT NULL AFTER `tin`;
