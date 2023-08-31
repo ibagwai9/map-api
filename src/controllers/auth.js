@@ -554,3 +554,45 @@ exports.getUsers = (req, res) => {
       res.status(500).json({ status: "failed", err });
     });
 };
+
+export const searchUser = (req, res) => {
+  const { query_type = "select-user", id = "" } = req.query;
+
+  db.sequelize
+    .query(
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :accessTo)",
+      {
+        replacements: {
+          query_type,
+          id,
+          org_name: "",
+          contact_name: "",
+          username: "",
+          email: "",
+          org_email: "",
+          password: "",
+          role: "",
+          bvn: "",
+          tin: "",
+          org_tin: "",
+          company_name: "",
+          rc: "",
+          account_type: "",
+          phone: "",
+          office_phone: "",
+          state: "",
+          lga: "",
+          address: "",
+          office_address: "",
+          accessTo: "",
+        },
+      }
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occured" });
+    });
+};
