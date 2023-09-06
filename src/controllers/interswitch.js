@@ -197,7 +197,7 @@ const handleInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status="saved" AND transaction_type='invoice'`,
+            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status IN ("PAID", "saved") AND transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
@@ -214,6 +214,31 @@ const handleInvoice = (req, res) => {
                         </Payment>
                     </Payments>
                 </PaymentNotificationResponse>`)
+              } else if (resp[0][0].status === 'PAID') {
+                if(logId === resp[0][0].logId) {
+                  res.set('Content-Type', 'text/xml')
+                  res.send(`
+                    <PaymentNotificationResponse>
+                        <Payments>
+                            <Payment>
+                                <PaymentLogId>${logId}</PaymentLogId>
+                                <Status>0</Status>
+                            </Payment>
+                        </Payments>
+                    </PaymentNotificationResponse>`)
+                } else {
+                  res.set('Content-Type', 'text/xml')
+              res.send(`
+                <PaymentNotificationResponse>
+                    <Payments>
+                        <Payment>
+                            <PaymentLogId>${logId}</PaymentLogId>
+                            <Status>1</Status>
+                            <StatusMessage>Invalid Customer Reference</StatusMessage>
+                        </Payment>
+                    </Payments>
+                </PaymentNotificationResponse>`)
+                }
               } else {
                 // console.log(resp)
                 reqJson.paymentnotificationrequest.payments.forEach((p) => {
@@ -287,6 +312,11 @@ const handleInvoice = (req, res) => {
 
                 // res.send(reqJson)
               }
+            
+            
+            
+            
+            
             } else {
               res.set('Content-Type', 'text/xml')
               res.send(`

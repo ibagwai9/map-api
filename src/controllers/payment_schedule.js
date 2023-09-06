@@ -971,6 +971,7 @@ exports.approvalCollection = (req, res) => {
           res.json({
             success: true,
             result,
+            approval_no
           });
 
           // console.log("result1", result)
@@ -1036,7 +1037,7 @@ exports.fileUploader = (req, res) => {
   const files = req.files;
   // const {user, event_name} = req.body
   console.log("jk", JSON.parse(req.body.form));
-  const { mda_name, mda_code, mda_economic_code, approved_by, approval,imageId='', narration='' } =
+  const { mda_name, mda_code, mda_economic_code, approved_by, approval,imageId='', narration='',approval_no='' } =
     JSON.parse(req.body.form);
 
   files.forEach((item) => {
@@ -1044,9 +1045,10 @@ exports.fileUploader = (req, res) => {
     db.sequelize
       .query(
         `INSERT INTO approval_collection_images ( image_url, mda_name, economic_code,
-    approved_by, approval, mda_code ,imageId   
- ) VALUES 
-      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  "${mda_code}","${imageId}")`
+            approved_by, approval, mda_code ,imageId, approval_no   
+        ) VALUES 
+      ( "${item.filename}", "${mda_name}", "${mda_economic_code}", "${approved_by}", "${approval}",  
+        "${mda_code}","${imageId}", "${approval_no}")`
       )
       .catch((err) => {
         console.log(err);

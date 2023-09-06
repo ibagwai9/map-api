@@ -3,8 +3,8 @@ import passport from "passport";
 import cors from "cors";
 import models from "./models";
 import multer from "multer";
-import swaggerUi from "swagger-ui-express";
-import swaggerDocument from "./swagger-doc.json";
+// import swaggerUi from "swagger-ui-express";
+// import swaggerDocument from "./swagger-doc.json";
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
@@ -20,14 +20,15 @@ let port = process.env.PORT || 3589;
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "src/uploads")));
 
 app.use(express.static(__dirname + upload));
 
-app.use(
-  "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDocument, { explorer: true })
-);
+// app.use(
+//   "/docs",
+//   swaggerUi.serve,
+//   swaggerUi.setup(swaggerDocument, { explorer: true })
+// );
 
 app.use(cors());
 
