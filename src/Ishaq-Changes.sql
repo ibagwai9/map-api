@@ -7,3 +7,5 @@ ALTER TABLE `presumptive_taxes` ADD `id` INT(6) NOT NULL AUTO_INCREMENT FIRST, A
 ALTER TABLE `presumptive_taxes` ADD UNIQUE(`title`);
 
 ALTER TABLE `taxes` CHANGE `title` `title` VARCHAR(150) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
+
+ALTER TABLE `tax_transactions` CHANGE `org_code` `org_code` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;

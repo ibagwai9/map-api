@@ -52,7 +52,7 @@ export const postTrx = async (req, res) => {
 
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
-    const { description, amount, rev_code, org_code, transaction_type } = tax;
+    const { description, amount, rev_code=null, org_code=null, transaction_type } = tax;
 
     const params = {
       query_type: `insert_${transaction_type}`,
