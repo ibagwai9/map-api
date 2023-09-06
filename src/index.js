@@ -1,10 +1,10 @@
-import express from "express";
-import passport from "passport";
-import cors from "cors";
-import models from "./models";
-import multer from "multer";
-// import swaggerUi from "swagger-ui-express";
-// import swaggerDocument from "./swagger-doc.json";
+const  express =  require("express");
+const  passport =  require("passport");
+const  cors =  require("cors");
+const  models =  require("./models");
+const  multer =  require("multer");
+const  swaggerUi =  require("swagger-ui-express");
+const  swaggerDocument =  require("./swagger-doc.json");
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
