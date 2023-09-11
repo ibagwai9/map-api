@@ -217,7 +217,7 @@ async function getQRCode(req, res) {
     console.log({ user: user.dataValues.id });
 
     // Create a payload string with the payer's information
-    const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'}: ${refno}\nUrl: ${url}`;
+    const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'} ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
