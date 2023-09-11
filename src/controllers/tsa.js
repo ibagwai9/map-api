@@ -1,8 +1,6 @@
 const { Promise } = require("sequelize");
 const db = require("../models");
 
-const UUIDV4 = require("uuid").v4;
-
 module.exports.tsa_code = (req, res) => {
   const { types = "FAAC" } = req.query;
   db.sequelize
