@@ -1,9 +1,10 @@
 const { json } = require("sequelize");
 const db = require("../models");
-const QRCode = require('qrcode');
-require('dotenv').config();
+const QRCode = require("qrcode");
+const moment = require("moment");
+require("dotenv").config();
 
- const getInvoiceDetails = async (userId, refNo) => {
+const getInvoiceDetails = async (userId, refNo) => {
   try {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id, a.reference_number, a.dr, a.description, b.name FROM tax_transactions a 
@@ -37,7 +38,7 @@ const callHandleTaxTransaction = async (replacements) => {
 };
 
 // This can serve create invoice or payment and nothing else
- const postTrx = async (req, res) => {
+const postTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
@@ -57,7 +58,13 @@ const callHandleTaxTransaction = async (replacements) => {
 
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
-    const { description, amount, rev_code=null, org_code=null, transaction_type } = tax;
+    const {
+      description,
+      amount,
+      rev_code = null,
+      org_code = null,
+      transaction_type,
+    } = tax;
 
     const params = {
       query_type: `insert_${transaction_type}`,
@@ -79,8 +86,8 @@ const callHandleTaxTransaction = async (replacements) => {
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
-    start_date,
-    end_date,
+      start_date,
+      end_date,
     };
 
     try {
@@ -122,7 +129,7 @@ const callHandleTaxTransaction = async (replacements) => {
 };
 
 // Update | Payment approval and others operations should use get
- const getTrx = async (req, res) => {
+const getTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
@@ -135,7 +142,7 @@ const callHandleTaxTransaction = async (replacements) => {
     paid_by = "",
     confirmed_by = "",
     payer_acct_no = "",
-    payer_bank_name = "", 
+    payer_bank_name = "",
     description = "",
     start_date = null,
     end_date = null,
@@ -143,7 +150,6 @@ const callHandleTaxTransaction = async (replacements) => {
     org_code = "",
     transaction_type = "invoice",
     query_type = "",
-
   } = req.query;
 
   const params = {
@@ -172,7 +178,7 @@ const callHandleTaxTransaction = async (replacements) => {
 
   try {
     const data = await callHandleTaxTransaction(params);
-    res.json({ success: true, data }) ;
+    res.json({ success: true, data });
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res
@@ -181,48 +187,58 @@ const callHandleTaxTransaction = async (replacements) => {
   }
 };
 
-async function  getQRCode (req, res){
+async function getQRCode(req, res) {
   // Get the reference number from the query parameter
 
   // Create the URL with the reference number parameter
-  const refno = req.query.ref_no || '';
+  const refno = req.query.ref_no || "";
   const url = `${process.env.PUBLIC_URL}/receipt?ref_no=${refno}`;
-  try{
-         const payment = await db.sequelize.query(`SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`);
+  try {
+    const payment = await db.sequelize.query(
+      `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
+    );
 
-          const transaction_date = payment[0]&& payment[0].length? payment[0][0].transaction_date : 'Invalid';
- 
-  const user  =  await db.User.findOne({where:{id:payment[0][0].user_id}})
+    const transaction_date =
+      payment[0] && payment[0].length
+        ? payment[0][0].transaction_date
+        : "Invalid";
 
-  const name = user.dataValues.name || 'Invslid';
-  const phoneNumber = user.dataValues.phone || 'Invalid';
-  console.log({user:user.dataValues.id});
+      const status =
+          payment[0] && payment[0].length
+            ? payment[0][0].status
+            : "Invalid";
 
-  // Create a payload string with the payer's information
-  const payload = `Date:${transaction_date}\nName: ${name}\nPhone: ${phoneNumber}\nReference: ${refno}\nUrl: ${url}`;
-QRCode.toDataURL(payload, (err, dataUrl) => {
-  if (err) {
-    // Handle error, e.g., return an error response
-    res.status(500).send('Error generating QR code');
-  } else {
-    // Set the response content type to PNG
-    res.set('Content-Type', 'image/png');
+    const user = await db.User.findOne({
+      where: { id: payment[0][0].user_id },
+    });
 
-    // Send the QR code data URL as the response
-    res.send(Buffer.from(dataUrl.split(',')[1], 'base64'));
+    const name = user.dataValues.name || "Invslid";
+    const phoneNumber = user.dataValues.phone || "Invalid";
+    console.log({ user: user.dataValues.id });
+
+    // Create a payload string with the payer's information
+    const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'}: ${refno}\nUrl: ${url}`;
+    QRCode.toDataURL(payload, (err, dataUrl) => {
+      if (err) {
+        // Handle error, e.g., return an error response
+        res.status(500).send("Error generating QR code");
+      } else {
+        // Set the response content type to PNG
+        res.set("Content-Type", "image/png");
+
+        // Send the QR code data URL as the response
+        res.send(Buffer.from(dataUrl.split(",")[1], "base64"));
+      }
+    });
+  } catch (e) {
+    console.log("Error:", e);
+    res.status(404).json({ success: false, msg: "Record not found" });
   }
-});
-
-} catch(e){
-  console.log('Error:',e);
-  res.status(404).json({success:false, msg:'Record not found'})
 }
 
-}
-
-module.exports ={
+module.exports = {
   getQRCode,
   getTrx,
   postTrx,
   getInvoiceDetails,
-}
+};
