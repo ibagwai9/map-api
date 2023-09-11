@@ -96,7 +96,7 @@ const postTrx = async (req, res) => {
       return { success: true, data: results };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
-      return { success: false, message: "Error executing stored procedure" };
+      return { success: false, message: "Error executing stored procedure: "+JSON.stringify(error) };
     }
   };
 
@@ -114,7 +114,7 @@ const postTrx = async (req, res) => {
     if (hasFailedTransaction) {
       return res.status(500).json({
         success: false,
-        message: "Error executing some stored procedures",
+        message: "Error executing some stored procedures: "+JSON.stringify(error) ,
       });
     }
 
@@ -124,7 +124,7 @@ const postTrx = async (req, res) => {
     console.error("Error executing stored procedure:", err);
     return res
       .status(500)
-      .json({ success: false, message: "Error executing stored procedures" });
+      .json({ success: false, message: "Error executing stored procedures:"+JSON.stringify(err)  });
   }
 };
 
@@ -183,7 +183,7 @@ const getTrx = async (req, res) => {
     console.error("Error executing stored procedure:", error);
     res
       .status(500)
-      .json({ success: false, message: "Error executing stored procedure" });
+      .json({ success: false, message: "Error executing stored procedure: "+JSON.stringify(error)  });
   }
 };
 
