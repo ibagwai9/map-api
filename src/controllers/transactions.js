@@ -33,7 +33,7 @@ const callHandleTaxTransaction = async (replacements) => {
     return results;
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    throw new Error("Error executing stored procedure");
+    throw new Error("Error executing stored procedure: "+JSON.stringify(err));
   }
 };
 
