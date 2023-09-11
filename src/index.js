@@ -43,7 +43,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 //default route
-app.get("/", (req, res) => res.send("Hello my World, it gonna be good day"));
+app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
 
 require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);
