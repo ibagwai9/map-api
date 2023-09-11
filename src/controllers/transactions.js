@@ -1,4 +1,7 @@
+const { json } = require("sequelize");
 const db = require("../models");
+const QRCode = require('qrcode');
+require('dotenv').config();
 
  const getInvoiceDetails = async (userId, refNo) => {
   try {
@@ -15,15 +18,15 @@ const db = require("../models");
   }
 };
 
-const callHandleTaxTransaction = async (params) => {
+const callHandleTaxTransaction = async (replacements) => {
   try {
     const results = await db.sequelize.query(
       `CALL HandleTaxTransaction(:query_type, :user_id, :agent_id,:org_code,
         :rev_code, :description, :nin_id, :org_name, :paid_by, :confirmed_by, 
         :payer_acct_no, :payer_bank_name, :cr, :dr, :transaction_date, 
-        :transaction_type, :status, :reference_number)`,
+        :transaction_type, :status, :reference_number, :start_date, :end_date)`,
       {
-        replacements: { ...params },
+        replacements,
       }
     );
     return results;
@@ -48,6 +51,8 @@ const callHandleTaxTransaction = async (params) => {
     confirmed_by = "",
     payer_acct_no = "",
     payer_bank_name = "",
+    start_date = null,
+    end_date = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -74,6 +79,8 @@ const callHandleTaxTransaction = async (params) => {
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
+    start_date,
+    end_date,
     };
 
     try {
@@ -128,13 +135,15 @@ const callHandleTaxTransaction = async (params) => {
     paid_by = "",
     confirmed_by = "",
     payer_acct_no = "",
-    payer_bank_name = "",
+    payer_bank_name = "", 
     description = "",
-    amount = "",
+    start_date = null,
+    end_date = null,
     rev_code = "",
     org_code = "",
     transaction_type = "invoice",
     query_type = "",
+
   } = req.query;
 
   const params = {
@@ -157,11 +166,13 @@ const callHandleTaxTransaction = async (params) => {
     payer_acct_no,
     payer_bank_name,
     query_type,
+    start_date,
+    end_date,
   };
 
   try {
     const data = await callHandleTaxTransaction(params);
-    res.json({ success: true, data });
+    res.json({ success: true, data }) ;
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res
@@ -170,7 +181,47 @@ const callHandleTaxTransaction = async (params) => {
   }
 };
 
+async function  getQRCode (req, res){
+  // Get the reference number from the query parameter
+
+  // Create the URL with the reference number parameter
+  const refno = req.query.ref_no || '';
+  const url = `${process.env.PUBLIC_URL}/receipt?ref_no=${refno}`;
+  try{
+         const payment = await db.sequelize.query(`SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`);
+
+          const transaction_date = payment[0]&& payment[0].length? payment[0][0].transaction_date : 'Invalid';
+ 
+  const user  =  await db.User.findOne({where:{id:payment[0][0].user_id}})
+
+  const name = user.dataValues.name || 'Invslid';
+  const phoneNumber = user.dataValues.phone || 'Invalid';
+  console.log({user:user.dataValues.id});
+
+  // Create a payload string with the payer's information
+  const payload = `Date:${transaction_date}\nName: ${name}\nPhone: ${phoneNumber}\nReference: ${refno}\nUrl: ${url}`;
+QRCode.toDataURL(payload, (err, dataUrl) => {
+  if (err) {
+    // Handle error, e.g., return an error response
+    res.status(500).send('Error generating QR code');
+  } else {
+    // Set the response content type to PNG
+    res.set('Content-Type', 'image/png');
+
+    // Send the QR code data URL as the response
+    res.send(Buffer.from(dataUrl.split(',')[1], 'base64'));
+  }
+});
+
+} catch(e){
+  console.log('Error:',e);
+  res.status(404).json({success:false, msg:'Record not found'})
+}
+
+}
+
 module.exports ={
+  getQRCode,
   getTrx,
   postTrx,
   getInvoiceDetails,
