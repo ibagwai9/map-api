@@ -1,8 +1,8 @@
-import { getTrx, postTrx } from "../controllers/transactions";
+const { getTrx, postTrx } =  require("../controllers/transactions");
 const {requireAuth} = require("../config/config.js")
 
   module.exports = (app) => {
-    app.post('/tansactions/execute', postTrx)
-    app.get('/tansactions/retrieve', getTrx)
+    app.post('/transactions/execute', postTrx)
+    app.get('/transactions/retrieve', getTrx)
   };
   

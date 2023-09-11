@@ -2,7 +2,7 @@ const moment = require("moment");
 const db = require("../models");
 const today = moment().format("YYYY-MM-DD");
 
-export const  postSegment = (req, res) => {
+module.exports =  postSegment = (req, res) => {
   const {
     segment_name="",segment_size ="",segmnt_type=""
   } = req.body;

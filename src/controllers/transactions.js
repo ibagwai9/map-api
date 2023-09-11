@@ -1,6 +1,6 @@
 const db = require("../models");
 
-export const getInvoiceDetails = async (userId, refNo) => {
+ const getInvoiceDetails = async (userId, refNo) => {
   try {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id, a.reference_number, a.dr, a.description, b.name FROM tax_transactions a 
@@ -34,7 +34,7 @@ const callHandleTaxTransaction = async (params) => {
 };
 
 // This can serve create invoice or payment and nothing else
-export const postTrx = async (req, res) => {
+ const postTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
@@ -115,7 +115,7 @@ export const postTrx = async (req, res) => {
 };
 
 // Update | Payment approval and others operations should use get
-export const getTrx = async (req, res) => {
+ const getTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
@@ -169,3 +169,9 @@ export const getTrx = async (req, res) => {
       .json({ success: false, message: "Error executing stored procedure" });
   }
 };
+
+module.exports ={
+  getTrx,
+  postTrx,
+  getInvoiceDetails,
+}

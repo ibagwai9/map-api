@@ -1,4 +1,4 @@
-const allowOnly = function(accessLevel, callback) {
+module.exports.allowOnly = function(accessLevel, callback) {
     function checkUserRole(req, res) {
         const { role } = req.user[0].dataValues;
         console.log(accessLevel)
@@ -13,5 +13,3 @@ const allowOnly = function(accessLevel, callback) {
 
     return checkUserRole;
 }
-
-export { allowOnly }

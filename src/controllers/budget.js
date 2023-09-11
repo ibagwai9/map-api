@@ -1,6 +1,6 @@
 const db = require("../models");
 
-export const PostBudget = (req, res) => {
+module.exports.PostBudget = (req, res) => {
   const { query_type = "" } = req.query;
   const arr = [];
   req.body.forEach((item) => {
@@ -70,7 +70,7 @@ export const PostBudget = (req, res) => {
     });
 };
 
-export const budgetCeiling = (req, res) => {
+module.exports.budgetCeiling = (req, res) => {
   const {
     head = "",
     subhead = "",
@@ -105,7 +105,7 @@ export const budgetCeiling = (req, res) => {
     });
 };
 
-export const insertBudgetCeiling = (req, res) => {
+module.exports.insertBudgetCeiling = (req, res) => {
   const query_type = "insert";
   const { data, pvalue } = req.body;
 

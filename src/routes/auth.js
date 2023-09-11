@@ -1,4 +1,4 @@
-import {
+const {
   SignIn,
   SignUp,
   verifyToken,
@@ -8,7 +8,7 @@ import {
   BudgetAppSignUp,
   verifyTokenTreasuryApp,
   searchUser,
-} from "../controllers/auth";
+}  = require ("../controllers/auth");
 
 module.exports = (app) => {
   app.post("/sign_in", SignIn);

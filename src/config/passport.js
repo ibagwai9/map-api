@@ -18,7 +18,7 @@ module.exports = passport => {
       .then((user) => {
         console.log(user[0]);
         if(user[0].length){
-          return done(null, user);
+          return done(null, user[0]);
         }
         return done(null, false);
       }).catch(err => console.log(err));

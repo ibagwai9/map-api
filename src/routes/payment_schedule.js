@@ -1,6 +1,6 @@
 const { upload } = require('../config/multer.js')
 
-import {
+const {
   paymentSchedule,
   paymentScheduleArray,
   updateBudget,
@@ -24,7 +24,7 @@ import {
   deleteApproveCol,
   getApproveCol,
   reportDashboard
-} from '../controllers/payment_schedule'
+} = require('../controllers/payment_schedule');
 
 module.exports = (app) => {
   app.post('/post_payment_schedule', paymentSchedule)

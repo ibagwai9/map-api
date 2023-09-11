@@ -2,7 +2,7 @@ const moment = require("moment");
 const db = require("../models");
 const today = moment().format("YYYY-MM-DD");
 
-export const postSector = (req, res) => {
+module.exports.postSector = (req, res) => {
   const {
     sector_code="",
     sector_name="",
@@ -31,7 +31,7 @@ export const postSector = (req, res) => {
     });
 };
 
-// export const GetSector = (req, res) => {
+// module.exports.GetSector = (req, res) => {
 //     const {
 //       sector_code,
 //       sector_name,

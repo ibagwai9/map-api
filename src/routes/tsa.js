@@ -1,4 +1,4 @@
-import { 
+const { 
   tsa_code,
    kigra_get_account_list,
    getAccChart,
@@ -6,7 +6,7 @@ import {
    postKigrTaxes,
    getLGAs,
    getLGARevenues
-} from "../controllers/tsa";
+} = require("../controllers/tsa");
 
 module.exports = (app) => {
   app.get("/tsa-code",
@@ -21,6 +21,4 @@ module.exports = (app) => {
    postKigrTaxes)
    app.get('/get/lga-list', getLGAs)
    app.get('/get/lga-revenues', getLGARevenues)
-   
-  
 };
