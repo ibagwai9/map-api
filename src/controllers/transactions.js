@@ -178,7 +178,10 @@ const getTrx = async (req, res) => {
 
   try {
     const data = await callHandleTaxTransaction(params);
-    res.json({ success: true, data });
+    const user = await db.User.findOne({
+      where: { id: data[0][0].user_id },
+    });
+    res.json({ success: true, data, user });
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res
