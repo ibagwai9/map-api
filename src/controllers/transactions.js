@@ -215,7 +215,7 @@ async function getQRCode(req, res) {
     const phoneNumber = user.dataValues.phone || "Invalid";
     console.log({ user: user.dataValues.id });
 
-  const url = `https://kirmas.kn.gov.ng/payment-${status==='saved'?'invoice':status==='Paid'?'receipt':'404'}?ref_no=${refno}`;
+  const url = `https://kirmas.kn.gov.ng/payment-${status==='saved'?'invoice':status=='Paid'?'receipt':'404'}?ref_no=${refno}`;
     // Create a payload string with the payer's information
     const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'} ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
