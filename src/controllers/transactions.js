@@ -192,7 +192,6 @@ async function getQRCode(req, res) {
 
   // Create the URL with the reference number parameter
   const refno = req.query.ref_no || "";
-  const url = `${process.env.PUBLIC_URL}/receipt?ref_no=${refno}`;
   try {
     const payment = await db.sequelize.query(
       `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
@@ -216,6 +215,7 @@ async function getQRCode(req, res) {
     const phoneNumber = user.dataValues.phone || "Invalid";
     console.log({ user: user.dataValues.id });
 
+  const url = `https://kirmas.kn.gov.ng/payment-${status==='saved'?'invoice':status==='Paid'?'receipt':'404'}?ref_no=${refno}`;
     // Create a payload string with the payer's information
     const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'} ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
