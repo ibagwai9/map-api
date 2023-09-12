@@ -136,7 +136,7 @@ const getTrx = async (req, res) => {
     sector_id = 1,
     status = "",
     transaction_date = null,
-    reference_number = "",
+    reference_number = null,
     nin_id = "",
     org_name = "",
     paid_by = "",
@@ -150,6 +150,7 @@ const getTrx = async (req, res) => {
     org_code = "",
     transaction_type = "invoice",
     query_type = "",
+    ref_no=null,
   } = req.query;
 
   const params = {
@@ -162,7 +163,7 @@ const getTrx = async (req, res) => {
     transaction_date,
     transaction_type,
     status,
-    reference_number,
+    reference_number:ref_no?ref_no:reference_number,
     rev_code,
     org_code,
     nin_id,
@@ -178,10 +179,7 @@ const getTrx = async (req, res) => {
 
   try {
     const data = await callHandleTaxTransaction(params);
-    const user = await db.User.findOne({
-      where: { id: data[0][0].user_id },
-    });
-    res.json({ success: true, data, user });
+    res.json({ success: true, data });
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res
