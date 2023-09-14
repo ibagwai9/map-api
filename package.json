@@ -7,9 +7,9 @@
     "dev": "nodemon --exec babel-node src/index.js",
     "build-server": "babel -d ./build ./src -s",
     "build": "  npm run clean && npm run build-server && mkdir -p ./build/uploads",
-    "start": "node ./build/index.js",
+    "start": "node ./src/index.js",
     "debug": "node --debug ./build/index.js"
-  },
+  },  
   "engines": {
     "node": "18.16.0"
   },
