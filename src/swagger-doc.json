@@ -385,6 +385,44 @@
           }
         }
       }
+    },
+    "/kigra-taxes": {
+      "post": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Post Request for tax items",
+        "tags": [
+          "Taxes"
+        ],
+        "requestBody": {
+          "description": "Tax items",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Taxes"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset request successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -397,6 +435,41 @@
       }
     },
     "schemas": {
+      "Taxes": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tax_code": {
+            "type": "string"
+          },
+          "tax_parent_code": {
+            "type": "string"
+          },
+          "economic_code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "tax_fee": {
+            "type": "number",
+            "format": "double"
+          },
+          "mda_name": {
+            "type": "string"
+          },
+          "mda_code": {
+            "type": "string"
+          },
+          "sector": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "tax_code", "title", "tax_fee", "mda_name"]
+      },
       "User": {
         "type": "object",
         "properties": {
@@ -583,8 +656,7 @@
             "example": "full"
           }
         }
-      }
-      ,
+      },
       "PasswordResetRequest": {
         "type": "object",
         "properties": {

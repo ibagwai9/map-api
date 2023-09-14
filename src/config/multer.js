@@ -1,6 +1,6 @@
 // var multer  = require('multer')
 // var upload = multer().single('avatar')
-import multer   from 'multer'
+const multer   = require('multer');
 // const cloudinary = require('cloudinary').v2;
 // const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
