@@ -109,8 +109,8 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
         replacements: {
           query_type,
           id,
-          title:title?title:description,
-          tax_parent_code:tax_parent_code?tax_parent_code:parent_code,
+          title:description?description:title,
+          tax_parent_code:parent_code?parent_code:tax_parent_code,
           tax_code,
           tax_fee,
           sector,
