@@ -386,7 +386,7 @@
         }
       }
     },
-    "/kigra-taxes": {
+    "/kigra-taxes/": {
       "post": {
         "security": [
           {
@@ -423,7 +423,137 @@
           }
         }
       }
-    }
+    },
+    "/kigra-taxes": {
+      "get": {
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Get Request for tax items",
+        "tags": [
+          "Taxes"
+        ],
+        "parameters": [ 
+          {
+            "name": "tax_code",
+            "in": "query",
+            "description": "Tax code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },{
+            "name": "tax_parent_code",
+            "in": "query",
+            "description": "Parent code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mda_code",
+            "in": "query",
+            "description": "MDA code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sector",
+            "in": "query",
+            "description": "Tax sector/category",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tax items retrieved successfully"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Tax items not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/get-payment-summary": {
+      "post": {
+        "summary": "Get Payments Summary",
+        "tags": ["Payments"],
+        "parameters": [
+          {
+            "name": "query_type",
+            "in": "formData",
+            "description": "Type of query ('cumulative' or 'mda_summary')",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "start_date",
+            "in": "formData",
+            "description": "Start date for the summary",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "end_date",
+            "in": "formData",
+            "description": "End date for the summary",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "mda_code",
+            "in": "formData",
+            "description": "MDA code (if query_type is 'mda_summary')",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment summary retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                },
+                "data": {
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }    
   },
   "components": {
     "securitySchemes": {

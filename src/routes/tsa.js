@@ -20,5 +20,6 @@ module.exports = (app) => {
   app.post('/kigra-taxes',
    postKigrTaxes)
    app.get('/get/lga-list', getLGAs)
+   // /get/lga-revenues is deprecated (Use /get/kigra-taxes)
    app.get('/get/lga-revenues', getLGARevenues)
 };

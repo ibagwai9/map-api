@@ -183,3 +183,4 @@ module.exports.getLGAs = (req, res)=>{
     res.status(500).json({success:false, error:'Unable to fetch Lga list'}) 
   })
 }
+

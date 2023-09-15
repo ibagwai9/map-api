@@ -237,9 +237,30 @@ async function getQRCode(req, res) {
   }
 }
 
+const getPaymentSummary = (req, res) => {
+  const { start_date, end_date, query_type, mda_code } = req.query;
+  db.sequelize
+    .query(`CALL GetPaymentsSummary( :query_type,:start_date, :end_date, :mda_code)`, {
+      replacements: {
+        start_date: start_date,
+        end_date: end_date,
+        query_type: query_type,
+        mda_code: mda_code,
+      },
+    })
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: 'Error occurred' });
+    });
+};
+
 module.exports = {
   getQRCode,
   getTrx,
   postTrx,
   getInvoiceDetails,
+  getPaymentSummary
 };
