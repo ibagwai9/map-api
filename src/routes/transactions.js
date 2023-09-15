@@ -11,5 +11,5 @@ const {requireAuth} = require("../config/config.js")
     app.post('/transactions/execute', postTrx)
     app.get('/transactions/retrieve', getTrx)
     app.get('/transactions/get-qr-code', getQRCode)
-    app.get('//get-payment-summary', getPaymentSummary)
+    app.get('/get-payment-summary', getPaymentSummary)
   };
