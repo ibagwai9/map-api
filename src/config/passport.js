@@ -1,5 +1,5 @@
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt'
-import models from '../models'
+const { Strategy, ExtractJwt } =  require('passport-jwt');
+const models =  require ('../models');
 
 
 const Users = models.User;
@@ -13,12 +13,12 @@ opts.secretOrKey = 'secret';
 // create jwt strategy
 module.exports = passport => {
   passport.use(
-    new JwtStrategy(opts, (jwt_payload, done) => {
+    new Strategy(opts, (jwt_payload, done) => {
       models.sequelize.query(`SELECT * from  users WHERE id = "${jwt_payload.id}"`)
       .then((user) => {
         console.log(user[0]);
         if(user[0].length){
-          return done(null, user);
+          return done(null, user[0]);
         }
         return done(null, false);
       }).catch(err => console.log(err));

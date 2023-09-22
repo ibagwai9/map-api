@@ -1,5 +1,5 @@
-import Validator from 'validator';
-import isEmpty from './isEmpty';
+const Validator = require('validator');
+const isEmpty = require('./isEmpty');
 
 function validateLoginForm(data) {
   let errors = {};
@@ -25,4 +25,4 @@ function validateLoginForm(data) {
   };
 };
 
-export default validateLoginForm
+module.exports = validateLoginForm

@@ -1,8 +1,8 @@
-import db from "../models";
-import bcrypt from "bcryptjs";
-import jwt, { decode } from "jsonwebtoken";
+const db = require("../models");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-exports.SignUp = (req, res) => {
+module.exports.SignUp = (req, res) => {
   console.log(req.body);
   const {
     username = "",
@@ -145,8 +145,10 @@ exports.SignUp = (req, res) => {
                         // });
                       })
                       .catch((err) => {
-                        console.log(err);
-                        res.status(500).json({ success: false, msg: err });
+                        console.error("Database error:", err);
+                        res
+                          .status(500)
+                          .json({ success: false, msg: "Database error", err });
                       });
                   },
                   (_er) => console.log(_er)
@@ -158,7 +160,7 @@ exports.SignUp = (req, res) => {
   });
 };
 
-exports.SignIn = (req, res) => {
+module.exports.SignIn = (req, res) => {
   const { username, password, role } = req.body;
 
   //AND role = "${role}"
@@ -228,7 +230,7 @@ exports.SignIn = (req, res) => {
     });
 };
 
-exports.BudgetAppSignUp = (req, res) => {
+module.exports.BudgetAppSignUp = (req, res) => {
   let form = req.body.form;
   console.log(req.body);
   const {
@@ -324,7 +326,7 @@ exports.BudgetAppSignUp = (req, res) => {
   });
 };
 
-exports.TreasuryAppSignUp = (req, res) => {
+module.exports.TreasuryAppSignUp = (req, res) => {
   let form = req.body.form;
   console.log(req.body);
   const { username, password, fullname, role, accessTo } = req.body;
@@ -404,7 +406,7 @@ exports.TreasuryAppSignUp = (req, res) => {
     });
 };
 
-exports.TreasuryAppSignIn = (req, res) => {
+module.exports.TreasuryAppSignIn = (req, res) => {
   const { username, password, role } = req.body;
 
   //AND role = "${role}"
@@ -473,7 +475,7 @@ exports.TreasuryAppSignIn = (req, res) => {
     });
 };
 
-exports.verifyTokenTreasuryApp = (req, res) => {
+module.exports.verifyTokenTreasuryApp = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
@@ -505,7 +507,7 @@ exports.verifyTokenTreasuryApp = (req, res) => {
   });
 };
 
-exports.verifyToken = (req, res) => {
+module.exports.verifyToken = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
@@ -539,7 +541,7 @@ exports.verifyToken = (req, res) => {
   });
 };
 
-exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res) => {
   const { role = "" } = req.query;
   db.sequelize
     .query(
@@ -552,5 +554,47 @@ exports.getUsers = (req, res) => {
     .catch((err) => {
       console.log(err);
       res.status(500).json({ status: "failed", err });
+    });
+};
+
+module.exports.searchUser = (req, res) => {
+  const { query_type = "select-user", id = "" } = req.query;
+
+  db.sequelize
+    .query(
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :accessTo)",
+      {
+        replacements: {
+          query_type,
+          id,
+          org_name: "",
+          contact_name: "",
+          username: "",
+          email: "",
+          org_email: "",
+          password: "",
+          role: "",
+          bvn: "",
+          tin: "",
+          org_tin: "",
+          company_name: "",
+          rc: "",
+          account_type: "",
+          phone: "",
+          office_phone: "",
+          state: "",
+          lga: "",
+          address: "",
+          office_address: "",
+          accessTo: "",
+        },
+      }
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occured" });
     });
 };

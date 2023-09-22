@@ -249,3 +249,6 @@ END$$
 DELIMITER ;
 
 ALTER TABLE `users` ADD `nin` VARCHAR(12) NULL DEFAULT NULL AFTER `tin`;
+
+UPDATE `taxes` SET `tax_parent_code` = 'Yusuf Maitama Sule University (YUMSUK)' WHERE `taxes`.`id` = 1210; 
+UPDATE `taxes` SET `tax_parent_code` = 'Yusuf Maitama Sule University (YUMSUK)' WHERE `taxes`.`id` = 1217;

@@ -1,10 +1,8 @@
-import express from "express";
-import passport from "passport";
-import cors from "cors";
-import models from "./models";
-import multer from "multer";
-import swaggerUi from "swagger-ui-express";
-import swaggerDocument from "./swagger-doc.json";
+const  express =  require("express");
+const  passport =  require("passport");
+const  cors =  require("cors");
+const  models =  require("./models");
+const  multer =  require("multer");
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
@@ -15,11 +13,15 @@ app.use(express.static(path.join(__dirname)));
 app.use(xmlparser());
 app.use(express.json({ limit: "50mb" }));
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger-doc.json");
+
 let port = process.env.PORT || 3589;
 
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "src/uploads")));
 
 app.use(express.static(__dirname + upload));
 
@@ -44,7 +46,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 //default route
-app.get("/", (req, res) => res.send("Hello my World, it gonna be good day"));
+app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
 
 require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);

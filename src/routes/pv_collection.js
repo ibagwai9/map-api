@@ -1,4 +1,4 @@
-import {
+const {
   pvCollection,
   tsaFundingArray,
   fecthTsaFunding,
@@ -14,7 +14,7 @@ import {
   getTaxes,
   contractorPaymentScheduleArray,
   getTaxSchedule,
-} from '../controllers/pv_collection'
+} = require('../controllers/pv_collection');
 
 module.exports = (app) => {
   app.post('/post_pv_collection', pvCollection)

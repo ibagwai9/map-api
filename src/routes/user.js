@@ -1,10 +1,10 @@
 
-import passport from 'passport';
-import config from '../config/config';
-import { allowOnly } from '../services/routesHelper';
-import { create, login, findAllUsers, 
+const passport = require('passport');
+const config = require('../config/config');
+const { allowOnly } = require('../services/routesHelper');
+const { create, login, findAllUsers, 
     findById, update, deleteUser,verifyAuth
-} from '../controllers/user';
+} = require('../controllers/user');
 
 module.exports = (app) => {
   // create a new user
