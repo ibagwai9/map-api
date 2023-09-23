@@ -56,6 +56,7 @@ require("./routes/tsa.js")(app);
 require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
 require("./routes/Sector")(app);
+require("./routes/segment")(app);
 require("./routes/interswitch.js")(app);
 require("./routes/budget.js")(app);
 // require("./routes/organization")(app);
