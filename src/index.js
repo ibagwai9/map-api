@@ -13,6 +13,9 @@ app.use(express.static(path.join(__dirname)));
 app.use(xmlparser());
 app.use(express.json({ limit: "50mb" }));
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger-doc.json");
+
 let port = process.env.PORT || 3589;
 
 // make express look in the public directory for assets (css/js/img)
@@ -22,11 +25,11 @@ app.use("/uploads", express.static(path.join(__dirname, "src/uploads")));
 
 app.use(express.static(__dirname + upload));
 
-// app.use(
-//   "/docs",
-//   swaggerUi.serve,
-//   swaggerUi.setup(swaggerDocument, { explorer: true })
-// );
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, { explorer: true })
+);
 
 app.use(cors());
 
@@ -43,7 +46,7 @@ app.use(passport.initialize());
 require("./config/passport")(passport);
 
 //default route
-app.get("/", (req, res) => res.send("Hello my World, it gonna be good day"));
+app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
 
 require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);

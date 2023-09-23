@@ -1,6 +1,10 @@
+const { json } = require("sequelize");
 const db = require("../models");
+const QRCode = require("qrcode");
+const moment = require("moment");
+require("dotenv").config();
 
-export const getInvoiceDetails = async (userId, refNo) => {
+const getInvoiceDetails = async (userId, refNo) => {
   try {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id, a.reference_number, a.dr, a.description, b.name FROM tax_transactions a 
@@ -15,26 +19,26 @@ export const getInvoiceDetails = async (userId, refNo) => {
   }
 };
 
-const callHandleTaxTransaction = async (params) => {
+const callHandleTaxTransaction = async (replacements) => {
   try {
     const results = await db.sequelize.query(
       `CALL HandleTaxTransaction(:query_type, :user_id, :agent_id,:org_code,
         :rev_code, :description, :nin_id, :org_name, :paid_by, :confirmed_by, 
         :payer_acct_no, :payer_bank_name, :cr, :dr, :transaction_date, 
-        :transaction_type, :status, :reference_number)`,
+        :transaction_type, :status, :reference_number, :start_date, :end_date)`,
       {
-        replacements: { ...params },
+        replacements,
       }
     );
     return results;
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    throw new Error("Error executing stored procedure");
+    throw new Error("Error executing stored procedure: "+JSON.stringify(err));
   }
 };
 
 // This can serve create invoice or payment and nothing else
-export const postTrx = async (req, res) => {
+const postTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
@@ -48,11 +52,19 @@ export const postTrx = async (req, res) => {
     confirmed_by = "",
     payer_acct_no = "",
     payer_bank_name = "",
+    start_date = null,
+    end_date = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
-    const { description, amount, rev_code=null, org_code=null, transaction_type } = tax;
+    const {
+      description,
+      amount,
+      rev_code = null,
+      org_code = null,
+      transaction_type,
+    } = tax;
 
     const params = {
       query_type: `insert_${transaction_type}`,
@@ -74,6 +86,8 @@ export const postTrx = async (req, res) => {
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
+      start_date,
+      end_date,
     };
 
     try {
@@ -82,7 +96,7 @@ export const postTrx = async (req, res) => {
       return { success: true, data: results };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
-      return { success: false, message: "Error executing stored procedure" };
+      return { success: false, message: "Error executing stored procedure: "+JSON.stringify(error) };
     }
   };
 
@@ -100,7 +114,7 @@ export const postTrx = async (req, res) => {
     if (hasFailedTransaction) {
       return res.status(500).json({
         success: false,
-        message: "Error executing some stored procedures",
+        message: "Error executing some stored procedures: "+JSON.stringify(error) ,
       });
     }
 
@@ -110,19 +124,19 @@ export const postTrx = async (req, res) => {
     console.error("Error executing stored procedure:", err);
     return res
       .status(500)
-      .json({ success: false, message: "Error executing stored procedures" });
+      .json({ success: false, message: "Error executing stored procedures:"+JSON.stringify(err)  });
   }
 };
 
 // Update | Payment approval and others operations should use get
-export const getTrx = async (req, res) => {
+const getTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
     sector_id = 1,
     status = "",
     transaction_date = null,
-    reference_number = "",
+    reference_number = null,
     nin_id = "",
     org_name = "",
     paid_by = "",
@@ -130,11 +144,13 @@ export const getTrx = async (req, res) => {
     payer_acct_no = "",
     payer_bank_name = "",
     description = "",
-    amount = "",
+    start_date = null,
+    end_date = null,
     rev_code = "",
     org_code = "",
     transaction_type = "invoice",
     query_type = "",
+    ref_no=null,
   } = req.query;
 
   const params = {
@@ -147,7 +163,7 @@ export const getTrx = async (req, res) => {
     transaction_date,
     transaction_type,
     status,
-    reference_number,
+    reference_number:ref_no?ref_no:reference_number,
     rev_code,
     org_code,
     nin_id,
@@ -157,6 +173,8 @@ export const getTrx = async (req, res) => {
     payer_acct_no,
     payer_bank_name,
     query_type,
+    start_date,
+    end_date,
   };
 
   try {
@@ -166,6 +184,83 @@ export const getTrx = async (req, res) => {
     console.error("Error executing stored procedure:", error);
     res
       .status(500)
-      .json({ success: false, message: "Error executing stored procedure" });
+      .json({ success: false, message: "Error executing stored procedure: "+JSON.stringify(error)  });
   }
+};
+
+async function getQRCode(req, res) {
+  // Get the reference number from the query parameter
+
+  // Create the URL with the reference number parameter
+  const refno = req.query.ref_no || "";
+  try {
+    const payment = await db.sequelize.query(
+      `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
+    );
+
+    const transaction_date =
+      payment[0] && payment[0].length
+        ? payment[0][0].transaction_date
+        : "Invalid";
+
+      const status =
+          payment[0] && payment[0].length
+            ? payment[0][0].status
+            : "Invalid";
+
+    const user = await db.User.findOne({
+      where: { id: payment[0][0].user_id },
+    });
+
+    const name = user.dataValues.name || "Invslid";
+    const phoneNumber = user.dataValues.phone || "Invalid";
+    console.log({ user: user.dataValues.id });
+
+  const url = `https://kirmas.kn.gov.ng/payment-${status==='saved'?'invoice':status=='Paid'?'receipt':'404'}?ref_no=${refno}`;
+    // Create a payload string with the payer's information
+    const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'} ID: ${refno}\nUrl: ${url}`;
+    QRCode.toDataURL(payload, (err, dataUrl) => {
+      if (err) {
+        // Handle error, e.g., return an error response
+        res.status(500).send("Error generating QR code");
+      } else {
+        // Set the response content type to PNG
+        res.set("Content-Type", "image/png");
+
+        // Send the QR code data URL as the response
+        res.send(Buffer.from(dataUrl.split(",")[1], "base64"));
+      }
+    });
+  } catch (e) {
+    console.log("Error:", e);
+    res.status(404).json({ success: false, msg: "Record not found" });
+  }
+}
+
+const getPaymentSummary = (req, res) => {
+  const { start_date, end_date, query_type, mda_code } = req.query;
+  db.sequelize
+    .query(`CALL GetPaymentsSummary( :query_type,:start_date, :end_date, :mda_code)`, {
+      replacements: {
+        start_date: start_date,
+        end_date: end_date,
+        query_type: query_type,
+        mda_code: mda_code,
+      },
+    })
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: 'Error occurred' });
+    });
+};
+
+module.exports = {
+  getQRCode,
+  getTrx,
+  postTrx,
+  getInvoiceDetails,
+  getPaymentSummary
 };

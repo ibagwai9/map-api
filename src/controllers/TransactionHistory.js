@@ -1,7 +1,7 @@
 
 const db = require("../models");
 
-export const TransactionHistory = (req,res)=>{
+module.exports.TransactionHistory = (req,res)=>{
     
     const {transaction_id='', description='', date='', amount='', status=''}=req.body;
     const {query_type=''}=req.query;

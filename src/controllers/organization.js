@@ -3,7 +3,7 @@ const db = require('../models')
 const today =moment().format("YYYY-MM-DD")
 
 
-export const postOrganization = (req,res) => {
+module.exports = postOrganization = (req,res) => {
 
     const {
         sector_name="",
