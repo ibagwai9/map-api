@@ -8,6 +8,7 @@ const {
   BudgetAppSignUp,
   verifyTokenTreasuryApp,
   searchUser,
+  getAdmins
 }  = require ("../controllers/auth");
 
 module.exports = (app) => {
@@ -22,4 +23,5 @@ module.exports = (app) => {
   app.get("/users", getUsers);
   app.get("/verify-token", verifyToken);
   app.get("/users/serach", searchUser);
+  app.get('/users/get-admins', getAdmins);
 };
