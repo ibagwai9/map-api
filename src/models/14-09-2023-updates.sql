@@ -84,7 +84,7 @@ TRUNCATE `taxes`;
 
 ALTER TABLE `taxes` ADD `uom` VARCHAR(10) NOT NULL AFTER `title`, ADD `default` VARCHAR(10) NOT NULL AFTER `uom`;
 ALTER TABLE `taxes` CHANGE `uom` `uom` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, CHANGE `default` `default` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
-
+UPDATE `taxes` x SET x.`uom` = NULL WHERE x.`uom` ='';
 INSERT INTO `taxes` (`id`, `tax_code`, `tax_parent_code`, `economic_code`, `title`, `uom`, `default`, `tax_fee`, `mda_name`, `mda_code`, `sector`) VALUES
 ('1', 'VEHICLES', NULL, '12020132', 'General Vehicles taxes', NULL, NULL, NULL, 'Kano Motor License Office', '12020131', 'VEHICLES'),
 ('2', 'Motorcycles', 'VEHICLES', '12020132', 'Motorcycles', NULL, NULL, NULL, 'Kano Motor License Office', '12020131', 'VEHICLES'),

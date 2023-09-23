@@ -151,7 +151,9 @@ module.exports.SignUp = (req, res) => {
                           .json({ success: false, msg: "Database error", err });
                       });
                   },
-                  (_er) => console.log(_er)
+                  (_er) => {console.log(_er)
+                  res.status(500).json({ success: false, msg: _er });
+                  }
                 );
             });
           });
