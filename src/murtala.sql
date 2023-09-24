@@ -1,5 +1,5 @@
 ALTER TABLE `users` CHANGE `accessTo` `accessTo` VARCHAR(4000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
-UPDATE `users` SET `accessTo` = 'MDA Reports, Tax Payers, Tax Setup, Tax Admins, TAX,  NON TAX, VEHICLES, LAND, LGA' WHERE `users`.`role` IN('admin','developer')
+UPDATE `users` SET `accessTo` = 'MDA Reports, Tax Payers, Tax Setup, Tax Admins, TAX,  NON TAX, VEHICLES, LAND, LGA' WHERE `users`.`role` IN('admin','developer');
 DROP PROCEDURE `kigra_taxes`;
 DELIMITER $$
 CREATE  PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(100), IN `in_id` INT, IN `in_tax_code` VARCHAR(100), IN `in_tax_parent_code` VARCHAR(100), IN `in_description` VARCHAR(100), IN `in_tax_fee` VARCHAR(10), IN `in_sector` VARCHAR(100), IN `in_input_type` VARCHAR(50))
