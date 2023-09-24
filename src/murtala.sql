@@ -1,9 +1,8 @@
-ALTER TABLE `taxes` CHANGE `default` `default_input` VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;
 ALTER TABLE `users` CHANGE `accessTo` `accessTo` VARCHAR(4000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
-UPDATE `users` SET `accessTo` = 'MDA Reports, Tax Payers, Tax Collections, Tax Manager Setting, Tax Manager Setting, Non Tax Setting, Vehicles Tax Setting, Land Tax Setting, LGA Revenue Setting' WHERE `users`.`role` ="admin"
+UPDATE `users` SET `accessTo` = 'MDA Reports, Tax Payers, Tax Setup, Tax Admins, TAX,  NON TAX, VEHICLES, LAND, LGA' WHERE `users`.`role` ="admin"
 DROP PROCEDURE `kigra_taxes`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(100), IN `in_id` INT, IN `in_tax_code` VARCHAR(100), IN `in_tax_parent_code` VARCHAR(100), IN `in_description` VARCHAR(100), IN `in_tax_fee` VARCHAR(10), IN `in_sector` VARCHAR(100), IN `in_input_type` VARCHAR(50))
+CREATE  PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(100), IN `in_id` INT, IN `in_tax_code` VARCHAR(100), IN `in_tax_parent_code` VARCHAR(100), IN `in_description` VARCHAR(100), IN `in_tax_fee` VARCHAR(10), IN `in_sector` VARCHAR(100), IN `in_input_type` VARCHAR(50))
 BEGIN
   IF query_type='create' THEN    
     INSERT INTO `taxes` (`tax_code`, `tax_parent_code`, `title`, `tax_fee`,`sector`,default_input) VALUES
