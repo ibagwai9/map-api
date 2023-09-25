@@ -47,7 +47,7 @@ app.use(passport.initialize());
 
 // passport config
 passportConfig(passport);
-app.use(helmet())
+// app.use(helmet())
 // Use the Helmet middleware to set Content Security Policy
 // app.use(
 //   helmet.contentSecurityPolicy({
