@@ -4,7 +4,7 @@ const models = require('../models')
 
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = 'secret';
+opts.secretOrKey =  process.env.JWT_SECRET_KEY;
 
 // create jwt strategy
 module.exports = passport => {

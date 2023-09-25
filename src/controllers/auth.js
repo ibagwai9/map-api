@@ -91,14 +91,15 @@ module.exports.SignUp = (req, res) => {
                         console.log(user);
 
                         let payload = {
+                          id: user.id,
                           username: user.username,
                           email: user.email,
                         };
                         jwt.sign(
                           payload,
-                          "secret",
+                           process.env.JWT_SECRET_KEY,
                           {
-                            expiresIn: "1d",
+                            expiresIn: 84300,
                           },
                           (err, token) => {
                             if (err) throw err;
@@ -125,7 +126,7 @@ module.exports.SignUp = (req, res) => {
                         //   };
                         //   jwt.sign(
                         //     payload,
-                        //     "secret",
+                        //      process.env.JWT_SECRET_KEY,
                         //     {
                         //       expiresIn: "1d",
                         //     },
@@ -370,7 +371,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
                       };
                       jwt.sign(
                         payload,
-                        "secret",
+                         process.env.JWT_SECRET_KEY,
                         {
                           expiresIn: "1d",
                         },
@@ -450,7 +451,7 @@ module.exports.TreasuryAppSignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                          "secret",
+                           process.env.JWT_SECRET_KEY,
                           {
                             expiresIn: "1d",
                           },
@@ -512,7 +513,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-              "secret",
+               process.env.JWT_SECRET_KEY,
               {
                 expiresIn: "1d",
               },
@@ -553,7 +554,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   const token = authToken.split(" ")[1];
   console.log(authToken);
 
-  jwt.verify(token, "secret", (err, decoded) => {
+  jwt.verify(token,  process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
