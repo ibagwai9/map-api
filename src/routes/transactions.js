@@ -4,6 +4,7 @@ const {
   getQRCode, 
   getPaymentSummary 
 } =  require("../controllers/transactions");
+const passport = require("passport");
 
 const {requireAuth} = require("../config/config.js")
 

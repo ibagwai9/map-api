@@ -1,4 +1,5 @@
 const { getTaxPayer } = require("../controllers/segment");
+const passport = require("passport");
 
 module.exports = (app) => {
   // app.post("/segment", postSegment);

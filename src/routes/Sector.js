@@ -1,5 +1,6 @@
 const { postAccount, getId, getNumber } = require("../controllers/account");
 const { postSector } = require("../controllers/sector");
+const passport = require("passport");
 
 module.exports = (app) => {
   app.post(

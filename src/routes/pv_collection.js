@@ -15,6 +15,7 @@ const {
   contractorPaymentScheduleArray,
   getTaxSchedule,
 } = require("../controllers/pv_collection");
+const passport = require("passport");
 
 module.exports = (app) => {
   app.post(

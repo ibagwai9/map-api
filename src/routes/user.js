@@ -10,6 +10,7 @@ const {
   deleteUser,
   verifyAuth,
 } = require("../controllers/user");
+const passport = require("passport");
 
 module.exports = (app) => {
   // create a new user

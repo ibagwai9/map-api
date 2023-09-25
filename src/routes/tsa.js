@@ -7,6 +7,7 @@ const {
   getLGAs,
   getLGARevenues,
 } = require("../controllers/tsa");
+const passport = require("passport");
 
 module.exports = (app) => {
   app.get(

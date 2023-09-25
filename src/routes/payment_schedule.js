@@ -25,6 +25,7 @@ const {
   getApproveCol,
   reportDashboard,
 } = require("../controllers/payment_schedule");
+const passport = require("passport");
 
 module.exports = (app) => {
   app.post(
