@@ -1,25 +1,48 @@
-const { 
+const {
   tsa_code,
-   kigra_get_account_list,
-   getAccChart,
-   getKigrTaxes,
-   postKigrTaxes,
-   getLGAs,
-   getLGARevenues
+  kigra_get_account_list,
+  getAccChart,
+  getKigrTaxes,
+  postKigrTaxes,
+  getLGAs,
+  getLGARevenues,
 } = require("../controllers/tsa");
 
 module.exports = (app) => {
-  app.get("/tsa-code",
-   tsa_code);
-  app.get("/kigra_get_account_list",
-   kigra_get_account_list);
-  app.get('/get-kigra-accounts',
-   getAccChart)
-  app.get('/kigra-taxes',
-   getKigrTaxes)
-  app.post('/kigra-taxes',
-   postKigrTaxes)
-   app.get('/get/lga-list', getLGAs)
-   // /get/lga-revenues is deprecated (Use /get/kigra-taxes)
-   app.get('/get/lga-revenues', getLGARevenues)
+  app.get(
+    "/tsa-code",
+    passport.authenticate("jwt", { session: false }),
+    tsa_code
+  );
+  app.get(
+    "/kigra_get_account_list",
+    passport.authenticate("jwt", { session: false }),
+    kigra_get_account_list
+  );
+  app.get(
+    "/get-kigra-accounts",
+    passport.authenticate("jwt", { session: false }),
+    getAccChart
+  );
+  app.get(
+    "/kigra-taxes",
+    passport.authenticate("jwt", { session: false }),
+    getKigrTaxes
+  );
+  app.post(
+    "/kigra-taxes",
+    passport.authenticate("jwt", { session: false }),
+    postKigrTaxes
+  );
+  app.get(
+    "/get/lga-list",
+    passport.authenticate("jwt", { session: false }),
+    getLGAs
+  );
+  // /get/lga-revenues is deprecated (Use /get/kigra-taxes)
+  app.get(
+    "/get/lga-revenues",
+    passport.authenticate("jwt", { session: false }),
+    getLGARevenues
+  );
 };
