@@ -580,7 +580,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   });
 };
 
-module.exports.verifyToken = (req, res) => {
+module.exports.verifyToken = async function(req, res) {
   const authToken = req.headers["authorization"];
 
   if (!authToken || !authToken.startsWith("Bearer ")) {
@@ -592,43 +592,41 @@ module.exports.verifyToken = (req, res) => {
 
   const token = authToken.slice(7); // Remove "Bearer " from the token string
 
-  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({
-        success: false,
-        msg: "Failed to authenticate token",
-      });
-    }
-
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const { email } = decoded;
 
-    db.User.findAll({
+    const user = await db.User.findOne({
       where: {
         email,
       },
-    })
-      .then((user) => {
-        if (!user) {
-          return res.status(404).json({
-            success: false,
-            msg: "User not found",
-          });
-        }
+    });
 
-        res.json({
-          success: true,
-          user,
-        });
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).json({
-          success: false,
-          msg: "Internal server error",
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found",
       });
-  });
+    }
+
+    const tax_account = await db.sequelize.query(
+      `SELECT * FROM tax_payers WHERE user_id=${user.id}`
+    );
+
+    res.json({
+      success: true,
+      user,
+      tax_account:tax_account[0],
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({
+      success: false,
+      msg: "Failed to authenticate token",
+    });
+  }
 };
+
 
 // module.exports.verifyToken = (req, res) => {
 //   // const {verifyToken} = req.params
