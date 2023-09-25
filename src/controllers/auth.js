@@ -719,3 +719,20 @@ module.exports.searchUser = (req, res) => {
       res.status(500).json({ error, msg: "Error occured" });
     });
 };
+
+
+module.exports.getAdmins = (req, res) => {
+  const { query_type = "select-user", id = "" } = req.query;
+
+  db.sequelize
+    .query(
+      "SELECT * FROM users u WHERE u.role IN('admin', 'agent');",
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occured" });
+    });
+};

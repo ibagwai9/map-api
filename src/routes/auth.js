@@ -9,7 +9,8 @@ const {
   BudgetAppSignUp,
   verifyTokenTreasuryApp,
   searchUser,
-} = require("../controllers/auth");
+  getAdmins
+}  = require ("../controllers/auth");
 
 module.exports = (app) => {
   app.post("/sign_in", SignIn);
@@ -31,4 +32,6 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     searchUser
   );
+  app.get('/users/get-admins', passport.authenticate("jwt", { session: false }), getAdmins);
+ 
 };

@@ -21,7 +21,7 @@ module.exports.tsa_code = (req, res) => {
     });
 };
 
-module.exports.kigra_get_account_list = (req, res)=> {
+module.exports.kigra_get_account_list = (req, res) => {
   const { query_type = null, head = null, search = null } = req.query;
 
   db.sequelize
@@ -45,49 +45,63 @@ module.exports.kigra_get_account_list = (req, res)=> {
         err,
       });
     });
-}
+};
 
-const kigra_account_chart =  (data, success=f=>f, error=f=>f) => {
-  const { query_type = null, head = null, sub_head = null, description=null, remarks=null, type=null } = data;
+const kigra_account_chart = (data, success = (f) => f, error = (f) => f) => {
+  const {
+    query_type = null,
+    head = null,
+    sub_head = null,
+    description = null,
+    remarks = null,
+    type = null,
+  } = data;
 
   db.sequelize
-    .query(`CALL account_chart(:query_type ,:head,:sub_head,:description,:remarks,:type)`, {
-      replacements: {
-        query_type,
-        head,
-        sub_head,
-        description,
-        remarks,
-        type
-      },
-    })
+    .query(
+      `CALL account_chart(:query_type ,:head,:sub_head,:description,:remarks,:type)`,
+      {
+        replacements: {
+          query_type,
+          head,
+          sub_head,
+          description,
+          remarks,
+          type,
+        },
+      }
+    )
     .then((result) => {
-       success(result)
+      success(result);
     })
     .catch((err) => {
-     error(err)
+      error(err);
     });
-}
+};
 
-module.exports.getAccChart = (req, res)=>{
-  kigra_account_chart(req.query, (resp)=>{
-    res.json({success:true, result:resp})
-  },
-  (err)=>{
-    res.status(500).json({success:false, error:err})
-  }
-  )
-}
+module.exports.getAccChart = (req, res) => {
+  kigra_account_chart(
+    req.query,
+    (resp) => {
+      res.json({ success: true, result: resp });
+    },
+    (err) => {
+      res.status(500).json({ success: false, error: err });
+    }
+  );
+};
 
-module.exports.postAccChart =  (req, res)=>{
-  kigra_account_chart(req.body, (resp)=>{
-    res.json({success:true, result:resp})
-  },
-  (err)=>{
-    res.status(500).json({success:false, error:err})
-  }
-  )
-}
+module.exports.postAccChart = (req, res) => {
+  kigra_account_chart(
+    req.body,
+    (resp) => {
+      res.json({ success: true, result: resp });
+    },
+    (err) => {
+      res.status(500).json({ success: false, error: err });
+    }
+  );
+};
 
 const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
   const {
@@ -95,25 +109,27 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
     id = null,
     title = null,
     tax_parent_code = null,
-    parent_code=null,
-    description=null,
+    parent_code = null,
+    description = null,
     tax_code = null,
     tax_fee = null,
     sector = null,
+    default_input = "checked",
   } = data;
 
   db.sequelize
     .query(
-      `CALL kigra_taxes(:query_type, :id, :tax_code, :tax_parent_code, :title, :tax_fee, :sector)`,
+      `CALL kigra_taxes(:query_type, :id, :tax_code, :tax_parent_code, :title, :tax_fee, :sector, :default_input)`,
       {
         replacements: {
           query_type,
           id,
-          title:description?description:title,
-          tax_parent_code:parent_code?parent_code:tax_parent_code,
+          title: description ? description : title,
+          tax_parent_code: parent_code ? parent_code : tax_parent_code,
           tax_code,
           tax_fee,
           sector,
+          default_input,
         },
       }
     )
@@ -127,19 +143,21 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
 
 module.exports.postKigrTaxes = (req, res) => {
   try {
-    Promise.all(req.body.map((tax) => {
-      return new Promise((resolve, reject) => {
-        kigraTaxes(
-          tax,
-          (resp) => {
-            resolve(resp);
-          },
-          (err) => {
-            reject(err);
-          }
-        );
-      });
-    }))
+    Promise.all(
+      req.body.map((tax) => {
+        return new Promise((resolve, reject) => {
+          kigraTaxes(
+            tax,
+            (resp) => {
+              resolve(resp);
+            },
+            (err) => {
+              reject(err);
+            }
+          );
+        });
+      })
+    )
       .then((results) => {
         res.json({ success: true, results });
       })
@@ -147,40 +165,46 @@ module.exports.postKigrTaxes = (req, res) => {
         res.status(500).json({ success: false, error: err });
       });
   } catch (e) {
-    console.log('Error occurred', e);
+    console.log("Error occurred", e);
     res.status(500).json({ success: false, error: e });
   }
 };
 
-module.exports.getKigrTaxes = (req, res)=>{
-  kigraTaxes(req.query, (resp)=>{
-    res.json({success:true, result:resp})
-  },
-  (err)=>{
-    res.status(500).json({success:false, error:err})
-  }
-  )
-}
+module.exports.getKigrTaxes = (req, res) => {
+  kigraTaxes(
+    req.query,
+    (resp) => {
+      res.json({ success: true, result: resp });
+    },
+    (err) => {
+      res.status(500).json({ success: false, error: err });
+    }
+  );
+};
 
+module.exports.getLGARevenues = (req, res) => {
+  db.sequelize
+    .query("SELECT * FROM `lga_revenues` WHERE tax_fee !=''; ")
+    .then((resp) => {
+      res.json({ success: true, result: resp[0] });
+    })
+    .catch((error) => {
+      console.log(error);
+      res
+        .status(500)
+        .json({ success: false, error: "Unable to fetch lga revenues" });
+    });
+};
 
-module.exports.getLGARevenues = (req, res)=>{
-  db.sequelize.query("SELECT * FROM `lga_revenues` WHERE tax_fee !=''; ")
-  .then(resp=>{
-    res.json({success:true, result:resp[0]})
-  })
-  .catch(error=>{
-    console.log(error);
-    res.status(500).json({success:false, error:'Unable to fetch lga revenues'}) 
-  })
-}
-
-module.exports.getLGAs = (req, res)=>{
-  db.sequelize.query("SELECT * FROM `lgas` WHERE state LIKE 'Kano%' ")
-  .then(resp=>{
-    res.json({success:true, result:resp[0]})
-  })
-  .catch(error=>{
-    res.status(500).json({success:false, error:'Unable to fetch Lga list'}) 
-  })
-}
-
+module.exports.getLGAs = (req, res) => {
+  db.sequelize
+    .query("SELECT * FROM `lgas` WHERE state LIKE 'Kano%' ")
+    .then((resp) => {
+      res.json({ success: true, result: resp[0] });
+    })
+    .catch((error) => {
+      res
+        .status(500)
+        .json({ success: false, error: "Unable to fetch Lga list" });
+    });
+};

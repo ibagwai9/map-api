@@ -19,9 +19,7 @@
     "/sign_up": {
       "post": {
         "summary": "Create a new user",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "description": "User information",
           "required": true,
@@ -49,9 +47,7 @@
     "/sign_in": {
       "post": {
         "summary": "User login",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "description": "Login credentials",
           "required": true,
@@ -91,17 +87,13 @@
     "/verify-token": {
       "get": {
         "summary": "Verify Authorization token",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "Bearer": []
           }
         ],
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "operationId": "verifyUserToken",
         "responses": {
           "200": {
@@ -127,9 +119,7 @@
           }
         ],
         "summary": "Get all users",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "responses": {
           "200": {
             "description": "Successful operation",
@@ -169,9 +159,7 @@
           }
         ],
         "summary": "Get user by ID",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "responses": {
           "200": {
             "description": "Successful operation",
@@ -200,9 +188,7 @@
           }
         ],
         "summary": "Update user profile",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "description": "Updated user profile information",
           "required": true,
@@ -238,9 +224,7 @@
           }
         ],
         "summary": "Request password reset",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "description": "User's phone number",
           "required": true,
@@ -276,9 +260,7 @@
           }
         ],
         "summary": "Verify OTP",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "description": "User's phone number and OTP",
           "required": true,
@@ -314,9 +296,7 @@
           }
         ],
         "summary": "Reset Password",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "description": "User's phone number and new password",
           "required": true,
@@ -352,9 +332,7 @@
           }
         ],
         "summary": "View profiles view by ID(UUID)",
-        "tags": [
-          "Profiles"
-        ],
+        "tags": ["Profiles"],
         "parameters": [
           {
             "name": "user_id",
@@ -394,9 +372,7 @@
           }
         ],
         "summary": "Post Request for tax items",
-        "tags": [
-          "Taxes"
-        ],
+        "tags": ["Taxes"],
         "requestBody": {
           "description": "Tax items",
           "required": true,
@@ -432,10 +408,8 @@
           }
         ],
         "summary": "Get Request for tax items",
-        "tags": [
-          "Taxes"
-        ],
-        "parameters": [ 
+        "tags": ["Taxes"],
+        "parameters": [
           {
             "name": "tax_code",
             "in": "query",
@@ -444,7 +418,8 @@
             "schema": {
               "type": "string"
             }
-          },{
+          },
+          {
             "name": "tax_parent_code",
             "in": "query",
             "description": "Parent code",
@@ -491,7 +466,7 @@
     "/get-payment-summary": {
       "post": {
         "summary": "Get Payments Summary",
-        "tags": ["Payments"],
+        "tags": ["Transactions"],
         "parameters": [
           {
             "name": "query_type",
@@ -553,7 +528,67 @@
           }
         }
       }
-    }    
+    },
+    "/transactions/get-qr-code": {
+      "get": {
+        "summary": "Generate QR Code",
+        "tags": ["Transactions"],
+        "description": "Generate a QR code for a transaction using a reference number.",
+        "parameters": [
+          {
+            "name": "ref_no",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The reference number for the transaction."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "QR code generated successfully.",
+            "content": {
+              "image/png": {}
+            }
+          },
+          "400": {
+            "description": "Bad Request. Invalid reference number provided."
+          },
+          "500": {
+            "description": "Internal Server Error. QR code generation failed."
+          }
+        }
+      }
+    },
+    "/transactions/execute": {
+      "post": {
+        "summary": "Create Invoice or Payment",
+        "tags": ["Transactions"],
+        "description": "Create an invoice or process a payment.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully."
+          },
+          "400": {
+            "description": "Bad Request. Invalid input data."
+          },
+          "500": {
+            "description": "Internal Server Error. Transaction creation failed."
+          }
+        }
+      }
+    }
   },
   "components": {
     "securitySchemes": {
@@ -565,6 +600,32 @@
       }
     },
     "schemas": {
+      "TransactionRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The ID of the user initiating the transaction."
+          },
+          "agent_id": {
+            "type": "string",
+            "description": "The ID of the agent involved in the transaction."
+          },
+          "sector": {
+            "type": "string",
+            "enum": ["TAX", "NON TAX", "VEHICLES", "LGA", "LAND"],
+            "description": "The sector (TAX|NON TAX|VEHICLES|LGA|LAND)."
+          },
+          "tax_list": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tax"
+            },
+            "description": "List of taxes applied to the transaction."
+          }
+        },
+        "required": ["user_id", "agent_id", "sector", "tax_list"]
+      },
       "Taxes": {
         "type": "object",
         "properties": {
@@ -607,7 +668,7 @@
             "type": "string",
             "format": "uuid",
             "description": "User ID (Integer) Auto",
-            "example": "4172000"
+            "default": null
           },
           "name": {
             "type": "string",
@@ -631,7 +692,7 @@
           "role": {
             "type": "string",
             "description": "Role of the user",
-            "example": "admin"
+            "example": "user|org|agent|admin|developer"
           },
           "bvn": {
             "type": "string",
@@ -646,7 +707,7 @@
           "taxID": {
             "type": "string",
             "description": "Tax Identification Number",
-            "example": "TIN123"
+            "default": null
           },
           "company_name": {
             "type": "string",
@@ -656,12 +717,12 @@
           "rc": {
             "type": "string",
             "description": "Company's Registration Certificate",
-            "example": "RC12345"
+            "example": "RC12345|BN123456"
           },
           "account_type": {
             "type": "string",
             "description": "Type of the account",
-            "example": "savings"
+            "example": "org|user"
           },
           "phone": {
             "type": "string",
@@ -676,7 +737,7 @@
           "lga": {
             "type": "string",
             "description": "Local Government Area",
-            "example": "Los Angeles"
+            "example": "Fagge"
           },
           "address": {
             "type": "string",
@@ -701,8 +762,33 @@
             "example": "2023-08-24T12:34:56Z"
           }
         }
-      }
-      ,      
+      },
+      "Tax": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the tax."
+          },
+          "amount": {
+            "type": "number",
+            "description": "Amount of the tax."
+          },
+          "rev_code": {
+            "type": "string",
+            "description": "Revenue code associated with the tax."
+          },
+          "org_code": {
+            "type": "string",
+            "description": "Organization code associated with the tax."
+          },
+          "transaction_type": {
+            "type": "string",
+            "description": "Type of transaction."
+          }
+        },
+        "required": ["description", "amount", "transaction_type"]
+      },
       "UserProfileUpdate": {
         "type": "object",
         "properties": {

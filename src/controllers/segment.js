@@ -27,7 +27,7 @@ const today = moment().format("YYYY-MM-DD");
 // };
 
 
-export const  getTaxPayer = (req, res) => {
+module.exports.getTaxPayer = (req, res) => {
   const {query_type=''} = req.query
   db.sequelize
     .query(
