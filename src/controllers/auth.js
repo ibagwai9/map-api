@@ -605,7 +605,7 @@ module.exports.verifyToken = async function(req, res) {
     if (!user) {
       return res.status(404).json({
         success: false,
-        msg: "User not found",
+        msg: "User not found!",
       });
     }
 
