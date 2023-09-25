@@ -55,7 +55,7 @@ const create = (req, res) => {
 const verifyAuth = (req, res, next) => {
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
-  jwt.verify(token, "secret", (error, decoded) => {
+  jwt.verify(token,  process.env.JWT_SECRET_KEY, (error, decoded) => {
     if (error) {
       return res.json({
         success: false,msg: "Failed to authenticate token." + error});
