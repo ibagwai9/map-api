@@ -609,14 +609,14 @@ module.exports.verifyToken = async function(req, res) {
       });
     }
 
-    const tax_account = await db.sequelize.query(
+    const tax_accounts = await db.sequelize.query(
       `SELECT * FROM tax_payers WHERE user_id=${user.id}`
     );
 
     res.json({
       success: true,
       user,
-      tax_account:tax_account[0],
+      tax_accounts:tax_accounts[0],
     });
   } catch (err) {
     console.error(err);
