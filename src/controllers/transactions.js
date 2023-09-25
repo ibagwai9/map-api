@@ -42,7 +42,7 @@ const postTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
-    sector_id = 1,
+    sector = null,
     tax_list = [],
     transaction_date,
     reference_number,
@@ -70,7 +70,7 @@ const postTrx = async (req, res) => {
       query_type: `insert_${transaction_type}`,
       user_id,
       agent_id,
-      sector_id,
+      sector,
       description,
       cr: transaction_type === "payment" ? amount : 0,
       dr: transaction_type === "invoice" ? amount : 0,
@@ -133,7 +133,7 @@ const getTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
-    sector_id = 1,
+    sector = 1,
     status = "",
     transaction_date = null,
     reference_number = null,
@@ -156,7 +156,7 @@ const getTrx = async (req, res) => {
   const params = {
     user_id,
     agent_id,
-    sector_id,
+    sector,
     description,
     cr: 0,
     dr: 0,

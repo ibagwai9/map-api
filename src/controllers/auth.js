@@ -91,14 +91,15 @@ module.exports.SignUp = (req, res) => {
                         console.log(user);
 
                         let payload = {
+                          id: user.id,
                           username: user.username,
                           email: user.email,
                         };
                         jwt.sign(
                           payload,
-                          "secret",
+                           process.env.JWT_SECRET_KEY,
                           {
-                            expiresIn: "1d",
+                            expiresIn: 84300,
                           },
                           (err, token) => {
                             if (err) throw err;
@@ -125,7 +126,7 @@ module.exports.SignUp = (req, res) => {
                         //   };
                         //   jwt.sign(
                         //     payload,
-                        //     "secret",
+                        //      process.env.JWT_SECRET_KEY,
                         //     {
                         //       expiresIn: "1d",
                         //     },
@@ -151,8 +152,9 @@ module.exports.SignUp = (req, res) => {
                           .json({ success: false, msg: "Database error", err });
                       });
                   },
-                  (_er) => {console.log(_er)
-                  res.status(500).json({ success: false, msg: _er });
+                  (_er) => {
+                    console.log(_er);
+                    res.status(500).json({ success: false, msg: _er });
                   }
                 );
             });
@@ -162,75 +164,146 @@ module.exports.SignUp = (req, res) => {
   });
 };
 
-module.exports.SignIn = (req, res) => {
-  const { username, password, role } = req.body;
+module.exports.SignIn = async (req, res) => {
+  const { username, password } = req.body;
 
-  //AND role = "${role}"
-
-  db.sequelize
-    .query(
-      `SELECT * from 
-		users WHERE username =  "${username}" OR email= "${username}" OR taxID = "${username}" `
-    )
-    .then((result) => {
-      if (!result[0].length) {
-        res.status(400).json({
-          success: false,
-          msg: "user does not exits",
-        });
-        console.log("user does not exits");
-      } else {
-        console.log(result[0][0].username);
-
-        let originalPassword = result[0][0].password;
-
-        bcrypt.compare(password, originalPassword).then((isMatch) => {
-          if (isMatch) {
-            console.log("matched!");
-            let user = result[0][0];
-            console.log(user);
-
-            let payload = {
-              username: user.username,
-              email: user.email,
-            };
-
-            jwt.sign(
-              payload,
-              "secret",
-              {
-                expiresIn: "1d",
-              },
-              (err, token) => {
-                if (err) throw err;
-
-                res.json({
-                  success: true,
-                  msg: "Successfully logged in",
-                  token: "Bearer " + token,
-                  user,
-                });
-              }
-            );
-          } else {
-            return res
-              .status(400)
-              .json({ success: false, msg: "Password not correct" });
-          }
-        });
-
-        // else{
-        // 	res.json({
-        // 		response : "Welcome back",
-        // 		status : 200,
-        // 		username : username,
-        // 		result
-        // 	})
-        // 	console.log("success")
-        // }
-      }
+  try {
+    const user = await db.User.findOne({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { username },
+          { email: username },
+          { taxID: username },
+        ],
+      },
     });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        msg: "User does not exist",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (isMatch) {
+      const payload = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      };
+      jwt.sign(
+        payload,
+        process.env.JWT_SECRET_KEY, // Use an environment variable for the secret key
+        {
+          expiresIn: 86400,
+        },
+        (err, token) => {
+          if (err) {
+            console.error(err);
+            return res
+              .status(500)
+              .json({ success: false, msg: "Server error" });
+          }
+
+          res.json({
+            success: true,
+            msg: "Successfully logged in",
+            token: "Bearer " + token,
+            user,
+          });
+        }
+      );
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, msg: "Authentication failed" });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, msg: "Server error" });
+  }
 };
+
+// module.exports.SignIn = (req, res) => {
+//   const { username, password, role } = req.body;
+
+//   //AND role = "${role}"
+
+//   // db.sequelize
+//   //   .query(
+//   //     `SELECT * from
+// 	// 	users WHERE username =  "${username}" OR email= "${username}" OR taxID = "${username}" `
+//   //   )
+
+//     db.User.findOne({
+//       where: {
+//         [db.Sequelize.Op.or]: [
+//           { username },
+//           { email: username },
+//           { taxID: username },
+//         ],
+//       },
+//     })
+//     .then((result) => {
+//       if (!result[0].length) {
+//         res.status(400).json({
+//           success: false,
+//           msg: "user does not exits",
+//         });
+//         console.log("user does not exits");
+//       } else {
+//         console.log(result[0][0].username);
+
+//         let originalPassword = result[0][0].password;
+
+//         bcrypt.compare(password, originalPassword).then((isMatch) => {
+//           if (isMatch) {
+//             console.log("matched!");
+//             let user = result[0][0];
+//             console.log(user);
+
+//             let payload = {
+//               username: user.username,
+//               email: user.email,
+//             };
+
+//             jwt.sign(
+//               payload,
+//               process.env.JWT_SECRET_KEY,
+//               {
+//                 expiresIn: "1d",
+//               },
+//               (err, token) => {
+//                 if (err) throw err;
+
+//                 res.json({
+//                   success: true,
+//                   msg: "Successfully logged in",
+//                   token: "Bearer " + token,
+//                   user,
+//                 });
+//               }
+//             );
+//           } else {
+//             return res
+//               .status(400)
+//               .json({ success: false, msg: "Password not correct" });
+//           }
+//         });
+
+//         // else{
+//         // 	res.json({
+//         // 		response : "Welcome back",
+//         // 		status : 200,
+//         // 		username : username,
+//         // 		result
+//         // 	})
+//         // 	console.log("success")
+//         // }
+//       }
+//     });
+// };
 
 module.exports.BudgetAppSignUp = (req, res) => {
   let form = req.body.form;
@@ -300,7 +373,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
                       };
                       jwt.sign(
                         payload,
-                        "secret",
+                         process.env.JWT_SECRET_KEY,
                         {
                           expiresIn: "1d",
                         },
@@ -380,7 +453,7 @@ module.exports.TreasuryAppSignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                          "secret",
+                           process.env.JWT_SECRET_KEY,
                           {
                             expiresIn: "1d",
                           },
@@ -442,7 +515,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-              "secret",
+               process.env.JWT_SECRET_KEY,
               {
                 expiresIn: "1d",
               },
@@ -483,7 +556,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   const token = authToken.split(" ")[1];
   console.log(authToken);
 
-  jwt.verify(token, "secret", (err, decoded) => {
+  jwt.verify(token,  process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
@@ -510,38 +583,87 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
 };
 
 module.exports.verifyToken = (req, res) => {
-  // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
-  const token = authToken.split(" ")[1];
-  console.log(authToken, "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
 
-  jwt.verify(token, "secret", (err, decoded) => {
+  if (!authToken || !authToken.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      msg: "Invalid or missing token",
+    });
+  }
+
+  const token = authToken.slice(7); // Remove "Bearer " from the token string
+
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) {
-      return res.json({
+      return res.status(401).json({
         success: false,
         msg: "Failed to authenticate token",
-        err,
       });
     }
 
     const { email } = decoded;
 
-    console.log(decoded);
+    db.User.findAll({
+      where: {
+        email,
+      },
+    })
+      .then((user) => {
+        if (!user) {
+          return res.status(404).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
 
-    db.sequelize
-      .query(
-        `SELECT *  from users 
-      where email="${email}"`
-      )
-      .then((result) => {
-        res.json({ success: true, user: result[0] });
+        res.json({
+          success: true,
+          user,
+        });
       })
       .catch((err) => {
-        console.log(err);
-        res.status(500).json({ status: "failed", err });
+        console.error(err);
+        res.status(500).json({
+          success: false,
+          msg: "Internal server error",
+        });
       });
   });
 };
+
+// module.exports.verifyToken = (req, res) => {
+//   // const {verifyToken} = req.params
+//   const authToken = req.headers["authorization"];
+//   const token = authToken.split(" ")[1];
+
+//   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+//     if (err) {
+//       return res.json({
+//         success: false,
+//         msg: "Failed to authenticate token",
+//         err,
+//       });
+//     }
+
+//     const { email } = decoded;
+
+//     console.log(decoded);
+
+//     db.sequelize
+//       .query(
+//         `SELECT *  from users
+//       where email="${email}"`
+//       )
+//       .then((result) => {
+//         res.json({ success: true, user: result[0] });
+//       })
+//       .catch((err) => {
+//         console.log(err);
+//         res.status(500).json({ status: "failed", err });
+//       });
+//   });
+// };
 
 module.exports.getUsers = (req, res) => {
   const { role = "" } = req.query;
@@ -594,6 +716,23 @@ module.exports.searchUser = (req, res) => {
     )
     .then((resp) => {
       res.json({ success: true, data: resp });
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occured" });
+    });
+};
+
+
+module.exports.getAdmins = (req, res) => {
+  const { query_type = "select-user", id = "" } = req.query;
+
+  db.sequelize
+    .query(
+      "SELECT * FROM users u WHERE u.role IN('admin', 'agent');",
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
     })
     .catch((error) => {
       console.error({ error });

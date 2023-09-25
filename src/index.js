@@ -3,6 +3,7 @@ const  passport =  require("passport");
 const  cors =  require("cors");
 const  models =  require("./models");
 const  multer =  require("multer");
+const passportConfig = require('./config/passport');
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
@@ -41,9 +42,10 @@ models.sequelize.sync().then(() => {
 
 // passport middleware
 app.use(passport.initialize());
+// app.use(passport.initialize());
 
 // passport config
-require("./config/passport")(passport);
+passportConfig(passport);
 
 //default route
 app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
@@ -56,12 +58,10 @@ require("./routes/tsa.js")(app);
 require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
 require("./routes/Sector")(app);
+require("./routes/segment")(app);
 require("./routes/interswitch.js")(app);
 require("./routes/budget.js")(app);
-// require("./routes/organization")(app);
-// require("./routes/segment")(app);
-// require("./routes/budget")(app);
-//create a server
+
 var server = app.listen(port, function () {
   var host = server.address().address;
   var port = server.address().port;
