@@ -193,7 +193,7 @@ module.exports.SignIn = async (req, res) => {
         payload,
         process.env.JWT_SECRET_KEY, // Use an environment variable for the secret key
         {
-          expiresIn: "1d",
+          expiresIn: 86400,
         },
         (err, token) => {
           if (err) {
