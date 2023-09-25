@@ -97,7 +97,7 @@ module.exports.SignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                           process.env.JWT_SECRET_KEY,
+                          "secret",
                           {
                             expiresIn: 84300,
                           },
@@ -126,7 +126,7 @@ module.exports.SignUp = (req, res) => {
                         //   };
                         //   jwt.sign(
                         //     payload,
-                        //      process.env.JWT_SECRET_KEY,
+                        //     "secret",
                         //     {
                         //       expiresIn: "1d",
                         //     },
@@ -371,7 +371,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
                       };
                       jwt.sign(
                         payload,
-                         process.env.JWT_SECRET_KEY,
+                        "secret",
                         {
                           expiresIn: "1d",
                         },
@@ -451,7 +451,7 @@ module.exports.TreasuryAppSignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                           process.env.JWT_SECRET_KEY,
+                          "secret",
                           {
                             expiresIn: "1d",
                           },
@@ -513,7 +513,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-               process.env.JWT_SECRET_KEY,
+              "secret",
               {
                 expiresIn: "1d",
               },
@@ -554,7 +554,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   const token = authToken.split(" ")[1];
   console.log(authToken);
 
-  jwt.verify(token,  process.env.JWT_SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
@@ -580,7 +580,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   });
 };
 
-module.exports.verifyToken = async function(req, res) {
+module.exports.verifyToken = (req, res) => {
   const authToken = req.headers["authorization"];
 
   if (!authToken || !authToken.startsWith("Bearer ")) {
@@ -592,41 +592,43 @@ module.exports.verifyToken = async function(req, res) {
 
   const token = authToken.slice(7); // Remove "Bearer " from the token string
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const { email } = decoded;
-
-    const user = await db.User.findOne({
-      where: {
-        email,
-      },
-    });
-
-    if (!user) {
-      return res.status(404).json({
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({
         success: false,
-        msg: "User not found!",
+        msg: "Failed to authenticate token",
       });
     }
 
-    const tax_accounts = await db.sequelize.query(
-      `SELECT * FROM tax_payers WHERE user_id=${user.id}`
-    );
+    const { email } = decoded;
 
-    res.json({
-      success: true,
-      user,
-      tax_accounts:tax_accounts[0],
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(401).json({
-      success: false,
-      msg: "Failed to authenticate token",
-    });
-  }
+    db.User.findAll({
+      where: {
+        email,
+      },
+    })
+      .then((user) => {
+        if (!user) {
+          return res.status(404).json({
+            success: false,
+            msg: "User not found",
+          });
+        }
+
+        res.json({
+          success: true,
+          user,
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        res.status(500).json({
+          success: false,
+          msg: "Internal server error",
+        });
+      });
+  });
 };
-
 
 // module.exports.verifyToken = (req, res) => {
 //   // const {verifyToken} = req.params
