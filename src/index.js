@@ -1,13 +1,14 @@
-const  express =  require("express");
-const  passport =  require("passport");
-const  cors =  require("cors");
-const  models =  require("./models");
-const  multer =  require("multer");
-const passportConfig = require('./config/passport');
+const express = require("express");
+const passport = require("passport");
+const cors = require("cors");
+const models = require("./models");
+const multer = require("multer");
+const passportConfig = require("./config/passport");
+const helmet = require("helmet");
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
-var xmlparser = require('express-xml-bodyparser');
+var xmlparser = require("express-xml-bodyparser");
 
 const app = express();
 app.use(express.static(path.join(__dirname)));
@@ -46,6 +47,25 @@ app.use(passport.initialize());
 
 // passport config
 passportConfig(passport);
+// app.use(helmet())
+// Use the Helmet middleware to set Content Security Policy
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'", "trusted-cdn.com"],
+//     },
+//   })
+// );
+
+// app.use(
+//   helmet.hsts({
+//     maxAge: 31536000, // 1 year in seconds
+//     includeSubDomains: true,
+//   })
+// );
+
+app.use(helmet.xContentTypeOptions());
 
 //default route
 app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
