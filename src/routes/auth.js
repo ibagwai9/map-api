@@ -1,3 +1,4 @@
+const passport = require("passport");
 const {
   SignIn,
   SignUp,
@@ -20,8 +21,17 @@ module.exports = (app) => {
   app.post("/budget-app/sign_up", BudgetAppSignUp);
   app.get("/treasury-app/verify-token", verifyTokenTreasuryApp);
   app.post("/register-kigra");
-  app.get("/users", getUsers);
-  app.get("/verify-token", verifyToken);
-  app.get("/users/serach", searchUser);
-  app.get('/users/get-admins', getAdmins);
+  app.get("/users", passport.authenticate("jwt", { session: false }), getUsers);
+  app.get(
+    "/verify-token",
+    passport.authenticate("jwt", { session: false }),
+    verifyToken
+  );
+  app.get(
+    "/users/serach",
+    passport.authenticate("jwt", { session: false }),
+    searchUser
+  );
+  app.get('/users/get-admins', passport.authenticate("jwt", { session: false }), getAdmins);
+ 
 };
