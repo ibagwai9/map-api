@@ -97,7 +97,7 @@ module.exports.SignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                           process.env.JWT_SECRET_KEY,
+                          "secret",
                           {
                             expiresIn: 84300,
                           },
@@ -126,7 +126,7 @@ module.exports.SignUp = (req, res) => {
                         //   };
                         //   jwt.sign(
                         //     payload,
-                        //      process.env.JWT_SECRET_KEY,
+                        //     "secret",
                         //     {
                         //       expiresIn: "1d",
                         //     },
@@ -371,7 +371,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
                       };
                       jwt.sign(
                         payload,
-                         process.env.JWT_SECRET_KEY,
+                        "secret",
                         {
                           expiresIn: "1d",
                         },
@@ -451,7 +451,7 @@ module.exports.TreasuryAppSignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                           process.env.JWT_SECRET_KEY,
+                          "secret",
                           {
                             expiresIn: "1d",
                           },
@@ -513,7 +513,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-               process.env.JWT_SECRET_KEY,
+              "secret",
               {
                 expiresIn: "1d",
               },
@@ -554,7 +554,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   const token = authToken.split(" ")[1];
   console.log(authToken);
 
-  jwt.verify(token,  process.env.JWT_SECRET_KEY, (err, decoded) => {
+  jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
