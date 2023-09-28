@@ -115,11 +115,12 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
     tax_fee = null,
     sector = null,
     default_input = "checked",
+    uom=null
   } = data;
 
   db.sequelize
     .query(
-      `CALL kigra_taxes(:query_type, :id, :tax_code, :tax_parent_code, :title, :tax_fee, :sector, :default_input)`,
+      `CALL kigra_taxes(:query_type, :id, :tax_code, :tax_parent_code, :title, :tax_fee, :sector, :default_input,:uom)`,
       {
         replacements: {
           query_type,
@@ -130,6 +131,7 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
           tax_fee,
           sector,
           default_input,
+          uom
         },
       }
     )
