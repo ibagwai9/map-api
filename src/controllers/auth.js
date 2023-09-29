@@ -1,7 +1,15 @@
+<<<<<<< HEAD
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { json } = require("sequelize");
+=======
+import db from "../models";
+import bcrypt from "bcryptjs";
+import jwt, { decode } from "jsonwebtoken";
+import { send } from "../services/smsApi";
+const transport = require("../config/nodemailer");
+>>>>>>> 0a652a74f0ceae8c92f6c7c29069e99853cf939b
 
 module.exports.SignUp = (req, res) => {
   const {
@@ -113,6 +121,43 @@ module.exports.SignUp = (req, res) => {
                             });
                           }
                         );
+                        if(phone) {
+                          send(phone, `Welcome to KIRMAS\nYour Tax ID is ${user.taxID}`, (resp) => {
+                            console.log("SMS sent");
+                            console.log(resp);
+                          }, err => {
+                            console.log('SMS not sent');
+                            console.log(err);
+                          });
+                        }
+                        if(email) {
+                          transport
+                            .sendMail({
+                              from: "KIRMAS",
+                              to: email,
+                              subject: "Welcome",
+                              html: ` <center>
+                              <img src='https://mdas.kigra.gov.ng/images/knlogo.png'
+                              height='80px' width='80px' />
+                            </center>
+                    
+                            <h3>Warm welcome,</h3>
+                            <h4>Thank you for registering with KIRMAS</h4>
+                    
+                            <p>Your Tax ID is ${user.taxID}.</p>      
+                            <p>Do let us know if you are experiencing any difficulty at any point. Thank you.</p>
+                            <br />
+                    
+                            <p>Best regards.</p>
+                            <p>KIRMAS Support</p>`,
+                            })
+                            .then((info) => {
+                              console.log("Message sent: %s", info.messageId);
+                            })
+                            .catch((err) => console.log("Error", err));
+                        }
+
+
                         // .then((resultR) => {
                         //   //   res.json({
                         //   //   status: "success",
