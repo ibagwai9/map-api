@@ -1,8 +1,9 @@
 const moment = require("moment");
 const db = require("../models");
+const { Model } = require("sequelize");
 const today = moment().format("YYYY-MM-DD");
 
-export const postAccount = (req, res) => {
+module.exports.postAccount = (req, res) => {
   const {
     head="",sub_head ="",description="",remarks="",type="",id=0
   } = req.body;
@@ -25,7 +26,7 @@ export const postAccount = (req, res) => {
       res.status(500).json({ success: false, err });
     });
 };
-export const getId = (req, res) => {
+module.exports.getId = (req, res) => {
   console.log(req.params);
   let { id } = req.params;
   db.sequelize
@@ -40,7 +41,7 @@ export const getId = (req, res) => {
 };
 
 
-export const getNumber =(req,res)=>{
+module.exports.getNumber =(req,res)=>{
 
 const {id=0}=req.query;
 

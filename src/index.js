@@ -1,17 +1,22 @@
-const  express =  require("express");
-const  passport =  require("passport");
-const  cors =  require("cors");
-const  models =  require("./models");
-const  multer =  require("multer");
+const express = require("express");
+const passport = require("passport");
+const cors = require("cors");
+const models = require("./models");
+const multer = require("multer");
+const passportConfig = require("./config/passport");
+const helmet = require("helmet");
 
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
-var xmlparser = require('express-xml-bodyparser');
+var xmlparser = require("express-xml-bodyparser");
 
 const app = express();
 app.use(express.static(path.join(__dirname)));
 app.use(xmlparser());
 app.use(express.json({ limit: "50mb" }));
+
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger-doc.json");
 
 let port = process.env.PORT || 3589;
 
@@ -22,11 +27,11 @@ app.use("/uploads", express.static(path.join(__dirname, "src/uploads")));
 
 app.use(express.static(__dirname + upload));
 
-// app.use(
-//   "/docs",
-//   swaggerUi.serve,
-//   swaggerUi.setup(swaggerDocument, { explorer: true })
-// );
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, { explorer: true })
+);
 
 app.use(cors());
 
@@ -38,12 +43,32 @@ models.sequelize.sync().then(() => {
 
 // passport middleware
 app.use(passport.initialize());
+// app.use(passport.initialize());
 
 // passport config
-require("./config/passport")(passport);
+passportConfig(passport);
+// app.use(helmet())
+// Use the Helmet middleware to set Content Security Policy
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'", "trusted-cdn.com"],
+//     },
+//   })
+// );
+
+// app.use(
+//   helmet.hsts({
+//     maxAge: 31536000, // 1 year in seconds
+//     includeSubDomains: true,
+//   })
+// );
+
+app.use(helmet.xContentTypeOptions());
 
 //default route
-app.get("/", (req, res) => res.send("Hello my World, it gonna be good day"));
+app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
 
 require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);
@@ -53,12 +78,10 @@ require("./routes/tsa.js")(app);
 require("./routes/Transaction_history")(app);
 require("./routes/auth.js")(app);
 require("./routes/Sector")(app);
+require("./routes/segment")(app);
 require("./routes/interswitch.js")(app);
 require("./routes/budget.js")(app);
-// require("./routes/organization")(app);
-// require("./routes/segment")(app);
-// require("./routes/budget")(app);
-//create a server
+
 var server = app.listen(port, function () {
   var host = server.address().address;
   var port = server.address().port;

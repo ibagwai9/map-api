@@ -2,7 +2,7 @@ const { getTransaction, handleInvoice, handleLgaInvoice } = require("../controll
 
 
 module.exports = (app) => {
-  app.post('/getTransaction', getTransaction);
+  app.post('/getTransaction',passport.authenticate("jwt", { session: false }), getTransaction);
 
   app.post('/invoice', handleInvoice)
   app.post('/lga-invoices', handleLgaInvoice)

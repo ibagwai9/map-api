@@ -1,14 +1,12 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import passport from 'passport';
-
-import db from '../models';
+const bcrypt =  require('bcryptjs');
+const jwt =  require('jsonwebtoken');
+const db =  require('../models');
 const User = db.User;
 
 // load input validation
-import validateRegisterForm from '../validation/register';
-import validateLoginForm from '../validation/login';
-import isEmpty from '../validation/isEmpty';
+const validateRegisterForm =  require('../validation/register');
+const validateLoginForm =  require('../validation/login');
+const isEmpty =  require('../validation/isEmpty');
 
 // create user
 const create = (req, res) => {
@@ -57,7 +55,7 @@ const create = (req, res) => {
 const verifyAuth = (req, res, next) => {
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
-  jwt.verify(token, "secret", (error, decoded) => {
+  jwt.verify(token,  process.env.JWT_SECRET_KEY, (error, decoded) => {
     if (error) {
       return res.json({
         success: false,msg: "Failed to authenticate token." + error});
@@ -175,7 +173,7 @@ const deleteUser = (req, res) => {
     .catch(err => res.status(500).json({ msg: 'Failed to delete!' }));
 };
 
-export { 
+module.exports = { 
     create, 
     login, 
     findAllUsers, 

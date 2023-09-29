@@ -1156,12 +1156,11 @@ exports.getReports = (req, res) => {
       res.status(500).json({ err });
     });
 };
-
-export function number_generator(
+ exports.number_generator = (
   { query_type = "", prefix = "", description = "", code = "" },
   callback = (f) => f,
   error = (f) => f
-) {
+) =>{
   db.sequelize
     .query("CALL number_generator(:query_type, :prefix, :description, :code)", {
       replacements: {

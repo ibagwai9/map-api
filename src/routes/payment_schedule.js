@@ -1,6 +1,6 @@
-const { upload } = require('../config/multer.js')
+const { upload } = require("../config/multer.js");
 
-import {
+const {
   paymentSchedule,
   paymentScheduleArray,
   updateBudget,
@@ -23,39 +23,140 @@ import {
   getApprovalAttachment,
   deleteApproveCol,
   getApproveCol,
-  reportDashboard
-} from '../controllers/payment_schedule'
+  reportDashboard,
+} = require("../controllers/payment_schedule");
+const passport = require("passport");
 
 module.exports = (app) => {
-  app.post('/post_payment_schedule', paymentSchedule)
-  app.post('/post_approval_collection', approvalCollection)
-  app.post('/post_check_details', postChequeDetails)
-  app.post('/post_payment_schedule_array', paymentScheduleArray)
-  app.post('/update_budgets', updateBudget)
-  app.post('/batch-upload-budget', batchUpload)
-  app.post('/post_budgets', postBudget)
-  app.post('/budget_summary', budget_summary)
-  app.post('/mda_bank_details', mda_bank_details)
-  app.post('/select_mda_bank_details', select_mda_bank_details)
-  app.post('/select_mda_bank_details/:id', select_mda_bank_details)
-  app.get('/get-budget-summary', get_budget_summary)
-  app.post('/get-budget-summary1', get_budget_summary)
-  app.post('/get_batch_list', get_batch_list)
-  app.post('/update-budget-code', updateBudgetCode)
-  app.get('/get_mdabank_details', getMdaBankDetails)
-  app.post('/fetch_approval_images', fetchApprovalImages)
-  app.post('/post_images', upload.array('files'), fileUploader)
-  app.delete('/delete-approve-collection',deleteApproveCol)
-  app.get('/get-approve-col',getApproveCol)
+  app.post(
+    "/post_payment_schedule",
+    passport.authenticate("jwt", { session: false }),
+    paymentSchedule
+  );
+  app.post(
+    "/post_approval_collection",
+    passport.authenticate("jwt", { session: false }),
+    approvalCollection
+  );
+  app.post(
+    "/post_check_details",
+    passport.authenticate("jwt", { session: false }),
+    postChequeDetails
+  );
+  app.post(
+    "/post_payment_schedule_array",
+    passport.authenticate("jwt", { session: false }),
+    paymentScheduleArray
+  );
+  app.post(
+    "/update_budgets",
+    passport.authenticate("jwt", { session: false }),
+    updateBudget
+  );
+  app.post(
+    "/batch-upload-budget",
+    passport.authenticate("jwt", { session: false }),
+    batchUpload
+  );
+  app.post(
+    "/post_budgets",
+    passport.authenticate("jwt", { session: false }),
+    postBudget
+  );
+  app.post(
+    "/budget_summary",
+    passport.authenticate("jwt", { session: false }),
+    budget_summary
+  );
+  app.post(
+    "/mda_bank_details",
+    passport.authenticate("jwt", { session: false }),
+    mda_bank_details
+  );
+  app.post(
+    "/select_mda_bank_details",
+    passport.authenticate("jwt", { session: false }),
+    select_mda_bank_details
+  );
+  app.post(
+    "/select_mda_bank_details/:id",
+    passport.authenticate("jwt", { session: false }),
+    select_mda_bank_details
+  );
+  app.get(
+    "/get-budget-summary",
+    passport.authenticate("jwt", { session: false }),
+    get_budget_summary
+  );
+  app.post(
+    "/get-budget-summary1",
+    passport.authenticate("jwt", { session: false }),
+    get_budget_summary
+  );
+  app.post(
+    "/get_batch_list",
+    passport.authenticate("jwt", { session: false }),
+    get_batch_list
+  );
+  app.post(
+    "/update-budget-code",
+    passport.authenticate("jwt", { session: false }),
+    updateBudgetCode
+  );
+  app.get(
+    "/get_mdabank_details",
+    passport.authenticate("jwt", { session: false }),
+    getMdaBankDetails
+  );
+  app.post(
+    "/fetch_approval_images",
+    passport.authenticate("jwt", { session: false }),
+    fetchApprovalImages
+  );
+  app.post(
+    "/post_images",
+    upload.array("files"),
+    passport.authenticate("jwt", { session: false }),
+    fileUploader
+  );
+  app.delete(
+    "/delete-approve-collection",
+    passport.authenticate("jwt", { session: false }),
+    deleteApproveCol
+  );
+  app.get(
+    "/get-approve-col",
+    passport.authenticate("jwt", { session: false }),
+    getApproveCol
+  );
 
-  app.get('/get-reports', getReports)
+  app.get(
+    "/get-reports",
+    passport.authenticate("jwt", { session: false }),
+    getReports
+  );
 
-  app.get('/number-generator', getNextCode)
-  app.post('/number-generator', postNextCode)
+  app.get(
+    "/number-generator",
+    passport.authenticate("jwt", { session: false }),
+    getNextCode
+  );
+  app.post(
+    "/number-generator",
+    passport.authenticate("jwt", { session: false }),
+    postNextCode
+  );
 
-  app.get('/fetch-approval-images', getApprovalAttachment)
-
+  app.get(
+    "/fetch-approval-images",
+    passport.authenticate("jwt", { session: false }),
+    getApprovalAttachment
+  );
 
   // REPORTS
-  app.get('/reports/budget-report-ag', reportDashboard)
-}
+  app.get(
+    "/reports/budget-report-ag",
+    passport.authenticate("jwt", { session: false }),
+    reportDashboard
+  );
+};

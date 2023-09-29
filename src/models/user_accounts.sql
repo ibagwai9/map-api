@@ -18,3 +18,5 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
+ALTER TABLE `taxes` ADD `mda_name` VARCHAR(200) NULL DEFAULT NULL AFTER `tax_fee`, ADD `mda_code` VARCHAR(30) NULL DEFAULT NULL AFTER `mda_name`;
