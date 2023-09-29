@@ -2,7 +2,6 @@
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { json } = require("sequelize");
 const { send } = require("../services/smsApi");
 const transport = require("../config/nodemailer");
 
