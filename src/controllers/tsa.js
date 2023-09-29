@@ -2,6 +2,31 @@ const db = require("../models");
 
 const UUIDV4 = require("uuid").v4;
 
+export const updateRevenuePayment = (req, res ) => {
+  const { amount } =req.body;
+  // insert into tsa_finding TABLE
+  db.sequelize.query('CALL update_igr (:query_type, :account, :amount, :fund_source)', {
+    replacements: {
+      query_type: 'update',
+      account: '',
+      amount,
+      fund_source: ''
+    }
+  })
+  .then((results) => {
+    res.json({
+      success: true,
+      results,
+    });
+  })
+  .catch((err) => {
+    console.log(err);
+    res.status(500).json(err);
+  });
+
+
+}
+
 exports.tsa_code = (req, res) => {
   const { types = "FAAC" } = req.query;
   db.sequelize

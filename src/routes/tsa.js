@@ -5,7 +5,7 @@ import {
    getKigrTaxes,
    postKigrTaxes,
    getLGAs,
-   getLGARevenues
+   getLGARevenues, updateRevenuePayment
 } from "../controllers/tsa";
 
 module.exports = (app) => {
@@ -22,5 +22,6 @@ module.exports = (app) => {
    app.get('/get/lga-list', getLGAs)
    app.get('/get/lga-revenues', getLGARevenues)
    
+   app.put('/tsa-funding/update-igr', updateRevenuePayment)
   
 };
