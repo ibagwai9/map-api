@@ -1,9 +1,9 @@
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { json } = require("sequelize");
 
 module.exports.SignUp = (req, res) => {
-  console.log(req.body);
   const {
     username = "",
     password = "",
@@ -735,3 +735,65 @@ module.exports.getAdmins = (req, res) => {
       res.status(500).json({ error, msg: "Error occured" });
     });
 };
+
+module.exports.UpdateTaxPayer = (req,res)=>{
+  const {
+    user_id=null,
+    username = "",
+    org_name = "",
+    name = "",
+    email = "",
+    org_email = "",
+    role = "user",
+    accessTo = "",
+    bvn = "",
+    office_address = "",
+    rc = "",
+    tin = "",
+    org_tin = "",
+    account_type = "",
+    phone = "",
+    office_phone = "",
+    state = "",
+    lga = "",
+    password=null,
+    address = "",
+    query_type='update-taxpayer'
+  } = req.body;
+
+  db.sequelize
+  .query(
+    "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :accessTo);",
+    {
+      replacements: {
+        user_id,
+        query_type,
+        org_name,
+        name,
+        username,
+        email,
+        org_email,
+        password,
+        role,
+        bvn,
+        tin,
+        org_tin,
+        org_name,
+        rc,
+        account_type,
+        phone,
+        office_phone,
+        state,
+        lga,
+        address,
+        office_address,
+        accessTo,
+      },
+    }
+  )
+  .then(resp=>res.json({success:true, data:resp}))
+  .catch((error) => {
+    console.error({ error });
+    res.status(500).json({ error, msg: "Error occured" });
+  });
+}
