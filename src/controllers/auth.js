@@ -1,15 +1,10 @@
-<<<<<<< HEAD
+
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { json } = require("sequelize");
-=======
-import db from "../models";
-import bcrypt from "bcryptjs";
-import jwt, { decode } from "jsonwebtoken";
-import { send } from "../services/smsApi";
+const { send } = require("../services/smsApi");
 const transport = require("../config/nodemailer");
->>>>>>> 0a652a74f0ceae8c92f6c7c29069e99853cf939b
 
 module.exports.SignUp = (req, res) => {
   const {
