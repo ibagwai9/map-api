@@ -2,6 +2,10 @@ const moment = require("moment");
 const { uuid } = require("uuidv4");
 const db = require("../models");
 const today = moment().format("YYYY-MM-DD");
+const axios = require("axios")
+
+export const E_BUDGET_APIURL = 'https://budget-apis-6a4315f6f2fc.herokuapp.com/account'
+
 exports.paymentSchedule = (req, res) => {
   // console.log('kello')
   // console.log('body', req.body)
@@ -208,8 +212,10 @@ exports.paymentScheduleArray = (req, res) => {
 
       let count = 0;
 
+      let queue = []
+
       paymentScheduleTable.forEach((item, idx) => {
-        db.sequelize
+       queue.push(db.sequelize
           .query(
             `CALL payment_schedule (
             :query_type, 
@@ -296,10 +302,19 @@ exports.paymentScheduleArray = (req, res) => {
                 search: item.search ? item.search : "",
               },
             }
-          )
-          .then(() => {
+          ))
+          queue.push(axios.post(E_BUDGET_APIURL + '/select-appoved-buget?query_type=update', {
+            admin_code:mda_code,
+            economic_code:mda_economic_code,
+            program_code:'',
+            function_code:'',
+            fund_code:'',
+            geo_code:'',
+            budget_year:''
+          }))
+          // .then(() => {
             if (item.payment_type === "full_payment" && item.approval_no) {
-              db.sequelize.query(
+             queue.push(db.sequelize.query(
                 `CALL approval_collection (
                   :collection_date,
                   :approval_date,
@@ -330,11 +345,16 @@ exports.paymentScheduleArray = (req, res) => {
                     id:''
                   },
                 }
-              );
+              ))
             }
-          });
+          // });
       });
+
+      Promise.all(queue).then(() => {
       res.json({ success: true, batch_code1 });
+      }).catch(err => {
+        console.log(err)
+      })
     }
   });
 

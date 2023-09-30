@@ -1,9 +1,13 @@
-import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
-import db from "../models";
+const { ExtractJwt } = require('passport-jwt')
+const JwtStrategy =  require('passport-jwt').Strategy 
+const models = require('../models')
+
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = process.env.JWT_SECRET_KEY;
-module.exports = (passport) => {
+opts.secretOrKey =  process.env.JWT_SECRET_KEY;
+
+// create jwt strategy
+module.exports = passport => {
   passport.use(
     new JwtStrategy(opts, (jwt_payload, done) => {
       // Check if the token has expired
