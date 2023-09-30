@@ -6,6 +6,7 @@ const {
   postKigrTaxes,
   getLGAs,
   getLGARevenues,
+  getMDAs,
 } = require("../controllers/tsa");
 const passport = require("passport");
 
@@ -45,5 +46,11 @@ module.exports = (app) => {
     "/get/lga-revenues",
     passport.authenticate("jwt", { session: false }),
     getLGARevenues
+  );
+  
+  app.get(
+    "/get/mdas",
+    passport.authenticate("jwt", { session: false }),
+    getMDAs
   );
 };

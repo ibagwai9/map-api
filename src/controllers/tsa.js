@@ -210,3 +210,19 @@ module.exports.getLGAs = (req, res) => {
         .json({ success: false, error: "Unable to fetch Lga list" });
     });
 };
+
+
+module.exports.getMDAs = (req, res) => {
+  db.sequelize
+    .query("SELECT x.mda_name, x.mda_code FROM `taxes` x WHERE x.mda_name IS NOT NULL GROUP BY x.mda_name")
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
+    })
+    .catch((error) => {
+      console.log({error});
+      res
+        .status(500)
+        .json({ success: false, error: "Unable to fetch Lga list" });
+    });
+};
+
