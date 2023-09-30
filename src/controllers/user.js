@@ -1,49 +1,43 @@
-const bcrypt =  require('bcryptjs');
-const jwt =  require('jsonwebtoken');
-const db =  require('../models');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const db = require("../models");
 const User = db.User;
 
 // load input validation
-const validateRegisterForm =  require('../validation/register');
-const validateLoginForm =  require('../validation/login');
-const isEmpty =  require('../validation/isEmpty');
+const validateRegisterForm = require("../validation/register");
+const validateLoginForm = require("../validation/login");
+const isEmpty = require("../validation/isEmpty");
 
 // create user
 const create = (req, res) => {
   console.log(req.body);
   const { errors, isValid } = validateRegisterForm(req.body);
-  let { 
-    name,
-    username, 
-    role,
-    email, 
-    password,
-  } = req.body;
+  let { name, username, role, email, password } = req.body;
 
-  if(!isValid) {
+  if (!isValid) {
     return res.status(400).json(errors);
   }
 
-  User.findAll({ where: { email } }).then(user => {
+  User.findAll({ where: { email } }).then((user) => {
     if (user.length) {
-      return res.status(400).json({ email: 'Email already exists!' });
+      return res.status(400).json({ email: "Email already exists!" });
     } else {
-      let newUser = { 
+      let newUser = {
         name,
-        username, 
+        username,
         role,
-        email, 
-        password, 
+        email,
+        password,
       };
       bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(newUser.password, salt, (err, hash) => {
           if (err) throw err;
           newUser.password = hash;
           User.create(newUser)
-            .then(user => {
+            .then((user) => {
               res.json({ user });
             })
-            .catch(err => {
+            .catch((err) => {
               res.status(500).json({ err });
             });
         });
@@ -55,22 +49,24 @@ const create = (req, res) => {
 const verifyAuth = (req, res, next) => {
   const authToken = req.headers["authorization"];
   const token = authToken.split(" ")[1];
-  jwt.verify(token, "secret", (error, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (error, decoded) => {
     if (error) {
       return res.json({
-        success: false,msg: "Failed to authenticate token." + error});
+        success: false,
+        msg: "Failed to authenticate token." + error,
+      });
     }
     const { id } = decoded;
     User.findOne({ where: { id } })
       .then((user) => {
-        if(!isEmpty(user)){
-          res.json({success: true, user });
+        if (!isEmpty(user)) {
+          res.json({ success: true, user });
           next();
         }
       })
       .catch((error) => {
         // res.status(500).json({ success: false, error });
-        console.log({error});
+        console.log({ error });
       });
   });
 };
@@ -78,73 +74,81 @@ const login = (req, res) => {
   const { errors, isValid } = validateLoginForm(req.body);
 
   // check validation
-  if(!isValid) {
+  if (!isValid) {
     return res.status(400).json(errors);
   }
   const { email, password } = req.body;
-  db.sequelize.query(`select * from users where email=:email or username=:email`,{
-    replacements:{email}
-  })
-  .then(users => {
-    // console.log({users:users[0][0].email})
-    //check for user
-    if (!users.length) {
-      errors.email = 'User not found!';
-      return res.status(404).json(errors);
-    }
-    const user = users[0][0];
-     
-    let originalPassword = user.password
+  db.sequelize
+    .query(`select * from users where email=:email or username=:email`, {
+      replacements: { email },
+    })
+    .then((users) => {
+      // console.log({users:users[0][0].email})
+      //check for user
+      if (!users.length) {
+        errors.email = "User not found!";
+        return res.status(404).json(errors);
+      }
+      const user = users[0][0];
 
-    //check for password
-    bcrypt
-      .compare(password, originalPassword)
-      .then(isMatch => {
-        if (isMatch) {
-          // user matched
-          console.log('matched!')
-          const { id, username } = user;
-          const payload = { id, username }; //jwt payload
-          // console.log(payload)
+      let originalPassword = user.password;
 
-          jwt.sign(payload, 'secret', { 
-            expiresIn: 3600 
-          }, (err, token) => {
-            res.json({
-              success: true,
-              token: 'Bearer ' + token,
-              role: user.role
-            });
-          });
-        } else {
-          errors.password = 'Password not correct';
-          return res.status(400).json(errors);
-        }
-    }).catch(error => console.log({error}));
-  }).catch(error => res.status(500).json({error}));
+      //check for password
+      bcrypt
+        .compare(password, originalPassword)
+        .then((isMatch) => {
+          if (isMatch) {
+            // user matched
+            console.log("matched!");
+            const { id, username } = user;
+            const payload = { id, username }; //jwt payload
+            // console.log(payload)
+
+            jwt.sign(
+              payload,
+              process.env.JWT_SECRET_KEY,
+              {
+                expiresIn: 3600,
+              },
+              (err, token) => {
+                res.json({
+                  success: true,
+                  token: "Bearer " + token,
+                  role: user.role,
+                });
+              }
+            );
+          } else {
+            errors.password = "Password not correct";
+            return res.status(400).json(errors);
+          }
+        })
+        .catch((error) => console.log({ error }));
+    })
+    .catch((error) => res.status(500).json({ error }));
 };
 
 // fetch all users
 const findAllUsers = (req, res) => {
   User.findAll()
-    .then(user => {
+    .then((user) => {
       res.json({ user });
     })
-    .catch(err => res.status(500).json({ err }));
+    .catch((err) => res.status(500).json({ err }));
 };
 
 // fetch user by userId
 const findById = (req, res) => {
   const id = req.params.userId;
-  
+
   User.findAll({ where: { id } })
-    .then(user => {
-      if(!user.length) {
-        return res.json({ msg: 'user not found'})
+    .then((user) => {
+      if (!user.length) {
+        return res.json({ msg: "user not found" });
       }
-      res.json({ user })
+      res.json({ user });
     })
-    .catch(err => res.status(500).json({ err }));
+    .catch((err) => res.status(500).json({ err }));
 };
 
 // update a user's info
@@ -160,8 +164,8 @@ const update = (req, res) => {
     },
     { where: { id } }
   )
-    .then(user => res.status(200).json({ user }))
-    .catch(err => res.status(500).json({ err }));
+    .then((user) => res.status(200).json({ user }))
+    .catch((err) => res.status(500).json({ err }));
 };
 
 // delete a user
@@ -169,16 +173,16 @@ const deleteUser = (req, res) => {
   const id = req.params.userId;
 
   User.destroy({ where: { id } })
-    .then(() => res.status.json({ msg: 'User has been deleted successfully!' }))
-    .catch(err => res.status(500).json({ msg: 'Failed to delete!' }));
+    .then(() => res.status.json({ msg: "User has been deleted successfully!" }))
+    .catch((err) => res.status(500).json({ msg: "Failed to delete!" }));
 };
 
-module.exports = { 
-    create, 
-    login, 
-    findAllUsers, 
-    findById, 
-    update, 
-    verifyAuth,
-    deleteUser 
-}
+module.exports = {
+  create,
+  login,
+  findAllUsers,
+  findById,
+  update,
+  verifyAuth,
+  deleteUser,
+};
