@@ -34,5 +34,5 @@ module.exports = (app) => {
     searchUser
   );
   app.get('/users/get-admins', passport.authenticate("jwt", { session: false }), getAdmins);
- app.post('/tax-payer/update',passport.authenticate("jwt", { session: false }), UpdateTaxPayer)
+ app.post('/auths/-post-users',passport.authenticate("jwt", { session: false }), UpdateTaxPayer)
 };

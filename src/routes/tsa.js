@@ -7,6 +7,7 @@ const {
   getLGAs,
   getLGARevenues,
   getMDAs,
+  getMdaDepartments,
 } = require("../controllers/tsa");
 const passport = require("passport");
 
@@ -53,4 +54,14 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     getMDAs
   );
+  
+  app.get(
+    "/get/mda-departments",
+    passport.authenticate("jwt", { session: false }),
+    getMdaDepartments
+  );
+
+
+
+
 };

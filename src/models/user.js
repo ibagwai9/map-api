@@ -28,6 +28,9 @@ module.exports = (sequelize, DataTypes) => {
       address: DataTypes.STRING,
       office_address: DataTypes.STRING,
       accessTo: DataTypes.STRING,
+      mda_name: DataTypes.STRING,
+      mda_code: DataTypes.STRING,
+      department: DataTypes.STRING,
       createdAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
