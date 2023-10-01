@@ -772,7 +772,7 @@ module.exports.getAdmins = (req, res) => {
   const { query_type = "select-user", id = "", mda_code=null } = req.query;
 
   db.sequelize
-    .query(`SELECT * FROM users u WHERE u.role IN('admin', 'agent') ${mda_code?`AND mda_code='${mda_code}'`:''} ;`)
+    .query(`SELECT u.*, NULL AS password FROM users u WHERE u.role IN('admin', 'agent') ${mda_code?`AND mda_code='${mda_code}'`:''} ;`)
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
@@ -825,7 +825,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               username,
               email,
               org_email,
-              password:newPass,
+              password:password?newPass:null,
               role,
               bvn,
               tin,
