@@ -32,7 +32,7 @@ CREATE PROCEDURE `user_accounts`(
         CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
 
     IF in_query_type = 'insert' THEN
-        INSERT INTO users (name, username, email, password, role,account_type, phone,   TaxID)
+        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department,  TaxID)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, @Tax_ID); 
         
         INSERT INTO `tax_payers`(`name`, `username`, `email`, `role`, `bvn`, `tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `state`, `lga`, `address`) 
@@ -42,7 +42,7 @@ CREATE PROCEDURE `user_accounts`(
     ELSEIF in_query_type='create-admin' THEN
        INSERT INTO users (name, username, email, password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, @Tax_ID); 
-         IF in_query_type = 'update-admin' THEN
+    ELSEIF  in_query_type = 'update-admin' THEN
         -- Update columns based on input parameters, maintaining initial values if not provided
         UPDATE users
         SET 
