@@ -27,8 +27,8 @@ module.exports.SignUp = (req, res) => {
     lga = "",
     address = "",
     department = "",
-    mda_name,
-    mda_code,
+    mda_name="",
+    mda_code="",
   } = req.body;
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
