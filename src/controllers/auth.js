@@ -557,7 +557,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-              "secret",
+              process.env.JWT_SECRET_KEY,
               {
                 expiresIn: "1d",
               },
@@ -595,10 +595,16 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 module.exports.verifyTokenTreasuryApp = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
+  
+  if (!authToken || !authToken.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      msg: "Invalid or missing token",
+    });
+  }
   const token = authToken.split(" ")[1];
-  console.log(authToken);
 
-  jwt.verify(token, "secret", (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
