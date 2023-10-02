@@ -88,7 +88,11 @@ module.exports.SignUp = (req, res) => {
                 .then(
                   (userResp) => {
                     db.sequelize
-                      .query(`SELECT * from users where email="${email}"`)
+                      .query(`SELECT * from users where email=:email`, {
+                        replacements: {
+                          email,
+                        },
+                      })
                       .then((resultR) => {
                         //   res.json({
                         //   status: "success",
@@ -104,7 +108,7 @@ module.exports.SignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                          "secret",
+                          process.env.JWT_SECRET_KEY,
                           {
                             expiresIn: 84300,
                           },
@@ -415,7 +419,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
                       };
                       jwt.sign(
                         payload,
-                        "secret",
+                        process.env.JWT_SECRET_KEY,
                         {
                           expiresIn: "1d",
                         },
@@ -495,7 +499,7 @@ module.exports.TreasuryAppSignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                          "secret",
+                          process.env.JWT_SECRET_KEY,
                           {
                             expiresIn: "1d",
                           },
@@ -557,7 +561,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-              "secret",
+              process.env.JWT_SECRET_KEY,
               {
                 expiresIn: "1d",
               },
@@ -598,7 +602,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   const token = authToken.split(" ")[1];
   console.log(authToken);
 
-  jwt.verify(token, "secret", (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
@@ -766,14 +770,11 @@ module.exports.searchUser = (req, res) => {
     });
 };
 
-
 module.exports.getAdmins = (req, res) => {
   const { query_type = "select-user", id = "" } = req.query;
 
   db.sequelize
-    .query(
-      "SELECT * FROM users u WHERE u.role IN('admin', 'agent');",
-    )
+    .query("SELECT * FROM users u WHERE u.role IN('admin', 'agent');")
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
