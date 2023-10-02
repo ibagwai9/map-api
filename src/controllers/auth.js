@@ -1,4 +1,3 @@
-
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -28,8 +27,8 @@ module.exports.SignUp = (req, res) => {
     lga = "",
     address = "",
     department = "",
-    mda_name,
-    mda_code
+    mda_name="",
+    mda_code="",
   } = req.body;
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
@@ -81,7 +80,7 @@ module.exports.SignUp = (req, res) => {
                       accessTo,
                       mda_name,
                       mda_code,
-                      department
+                      department,
                     },
                   }
                 )
@@ -120,16 +119,21 @@ module.exports.SignUp = (req, res) => {
                             });
                           }
                         );
-                        if(phone) {
-                          send(phone, `Welcome to KIRMAS\nYour Tax ID is ${user.taxID}`, (resp) => {
-                            console.log("SMS sent");
-                            console.log(resp);
-                          }, err => {
-                            console.log('SMS not sent');
-                            console.log(err);
-                          });
+                        if (phone) {
+                          send(
+                            phone,
+                            `Welcome to KIRMAS\nYour Tax ID is ${user.taxID}`,
+                            (resp) => {
+                              console.log("SMS sent");
+                              console.log(resp);
+                            },
+                            (err) => {
+                              console.log("SMS not sent");
+                              console.log(err);
+                            }
+                          );
                         }
-                        if(email) {
+                        if (email) {
                           transport
                             .sendMail({
                               from: "KIRMAS",
@@ -155,7 +159,6 @@ module.exports.SignUp = (req, res) => {
                             })
                             .catch((err) => console.log("Error", err));
                         }
-
 
                         // .then((resultR) => {
                         //   //   res.json({
@@ -630,8 +633,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   });
 };
 
-
-module.exports.verifyToken = async function(req, res) {
+module.exports.verifyToken = async function (req, res) {
   const authToken = req.headers["authorization"];
 
   if (!authToken || !authToken.startsWith("Bearer ")) {
@@ -667,7 +669,7 @@ module.exports.verifyToken = async function(req, res) {
     res.json({
       success: true,
       user,
-      tax_accounts:tax_accounts[0],
+      tax_accounts: tax_accounts[0],
     });
   } catch (err) {
     console.error(err);
@@ -757,9 +759,9 @@ module.exports.searchUser = (req, res) => {
           address: "",
           office_address: "",
           accessTo: "",
-          mda_name:'',
-          mda_code:'',
-          department:''
+          mda_name: "",
+          mda_code: "",
+          department: "",
         },
       }
     )
@@ -772,14 +774,11 @@ module.exports.searchUser = (req, res) => {
     });
 };
 
-
 module.exports.getAdmins = (req, res) => {
-  const { query_type = "select-user", id = "" } = req.query;
+  const { query_type = "select-user", id = "", mda_code=null } = req.query;
 
   db.sequelize
-    .query(
-      "SELECT * FROM users u WHERE u.role IN('admin', 'agent');",
-    )
+    .query(`SELECT u.*, NULL AS password FROM users u WHERE u.role IN('admin', 'agent') ${mda_code?`AND mda_code='${mda_code}'`:''} ;`)
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
@@ -789,9 +788,9 @@ module.exports.getAdmins = (req, res) => {
     });
 };
 
-module.exports.UpdateTaxPayer = (req,res)=>{
+module.exports.UpdateTaxPayer = (req, res) => {
   const {
-    user_id=null,
+    user_id = null,
     username = "",
     org_name = "",
     name = "",
@@ -809,50 +808,55 @@ module.exports.UpdateTaxPayer = (req,res)=>{
     office_phone = "",
     state = "",
     lga = "",
-    password=null,
+    password = null,
     address = "",
-    query_type='update-taxpayer',
-    mda_name="",
-    mda_code="",
-    department="",
+    query_type = "update-taxpayer",
+    mda_name = "",
+    mda_code = "",
+    department = "",
   } = req.body;
-
-  db.sequelize
-  .query(
-    "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :accessTo);",
-    {
-      replacements: {
-        user_id,
-        query_type,
-        org_name,
-        name,
-        username,
-        email,
-        org_email,
-        password,
-        role,
-        bvn,
-        tin,
-        org_tin,
-        org_name,
-        rc,
-        account_type,
-        phone,
-        office_phone,
-        state,
-        lga,
-        address,
-        office_address,
-        accessTo,
-        mda_name,
-        mda_code,
-        department
-      },
-    }
-  )
-  .then(resp=>res.json({success:true, data:resp}))
-  .catch((error) => {
-    console.error({ error });
-    res.status(500).json({ error, msg: "Error occured" });
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      if (err) throw err;
+      let newPass = hash;
+      db.sequelize
+        .query(
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo);",
+          {
+            replacements: {
+              user_id,
+              query_type,
+              org_name,
+              name,
+              username,
+              email,
+              org_email,
+              password:password?newPass:null,
+              role,
+              bvn,
+              tin,
+              org_tin,
+              org_name,
+              rc,
+              account_type,
+              phone,
+              office_phone,
+              state,
+              lga,
+              address,
+              office_address,
+              accessTo,
+              mda_name,
+              mda_code,
+              department,
+            },
+          }
+        )
+        .then((resp) => res.json({ success: true, data: resp }))
+        .catch((error) => {
+          console.error({ error });
+          res.status(500).json({ error, msg: "Error occured" });
+        });
+    });
   });
-}
+};
