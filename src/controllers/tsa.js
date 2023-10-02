@@ -226,3 +226,17 @@ module.exports.getMDAs = (req, res) => {
     });
 };
 
+module.exports.getMdaDepartments = (req, res) => {
+  const {mda_code=null}=req.query
+    db.sequelize
+    .query(`SELECT * FROM taxes x WHERE x.mda_code LIKE '%${mda_code}%' AND x.is_department=1`)
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
+    })
+    .catch((error) => {
+      console.log({error});
+      res
+        .status(500)
+        .json({ success: false, error: "Unable to get Departments." });
+    });
+};
