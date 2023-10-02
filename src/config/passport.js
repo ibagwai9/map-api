@@ -1,6 +1,7 @@
 const { ExtractJwt } = require('passport-jwt')
 const JwtStrategy =  require('passport-jwt').Strategy 
-const models = require('../models')
+const models = require('../models');
+const db = require('../models');
 
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
@@ -12,9 +13,9 @@ module.exports = passport => {
     new JwtStrategy(opts, (jwt_payload, done) => {
       // Check if the token has expired
       const currentTime = Math.floor(Date.now() / 1000); // Convert to seconds
-      if (jwt_payload.exp > currentTime) {
-        return done(null, false, { message: 'Token has expired' });
-      }
+      // if (jwt_payload.exp > currentTime) {
+      //   return done(null, false, { message: 'Token has expired' });
+      // }
 
       db.User.findAll({ where: { id: jwt_payload.id } })
         .then((user) => {
