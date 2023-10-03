@@ -6,7 +6,7 @@ const Users = models.User;
 
 const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = "secret";
+opts.secretOrKey = process.env.JWT_SECRET_KEY;
 // opts.issuer = 'accounts.examplesoft.com';
 // opts.audience = 'yoursite.net';
 
@@ -14,7 +14,11 @@ module.exports = (passport) => {
   passport.use(
     new JwtStrategy(opts, (jwt_payload, done) => {
       models.sequelize
-        .query(`SELECT * from  sign_up WHERE id = "${jwt_payload.id}"`)
+        .query(`SELECT * from  sign_up WHERE id = :id`, {
+          replacements: {
+            id: jwt_payload.id,
+          },
+        })
         .then((user) => {
           if (user[0].length) {
             return done(null, user);

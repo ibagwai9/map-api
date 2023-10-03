@@ -14,7 +14,7 @@ const passport = require("passport");
 module.exports = (app) => {
   app.get(
     "/tsa-code",
-    passport.authenticate("jwt", { session: false }),
+    // passport.authenticate("jwt", { session: false }),
     tsa_code
   );
   app.get(
@@ -51,7 +51,7 @@ module.exports = (app) => {
   
   app.get(
     "/get/mdas",
-    passport.authenticate("jwt", { session: false }),
+    // passport.authenticate("jwt", { session: false }),
     getMDAs
   );
   

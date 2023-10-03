@@ -3,7 +3,7 @@ const passport = require("passport");
 const cors = require("cors");
 const models = require("./models");
 const multer = require("multer");
-const passportConfig = require("./config/passport");
+const passportConfig = require("./config/newPassport");
 const helmet = require("helmet");
 
 const path = require("path");
@@ -47,7 +47,7 @@ app.use(passport.initialize());
 
 // passport config
 passportConfig(passport);
-// app.use(helmet())
+app.use(helmet())
 // Use the Helmet middleware to set Content Security Policy
 // app.use(
 //   helmet.contentSecurityPolicy({
