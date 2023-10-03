@@ -9,20 +9,20 @@ module.exports = postOrganization = (req,res) => {
         sector_name="",
         sector_code="8098798",
         org_name="",
-        org_code = "",
+        mda_code = "",
 
     } =req.body;
     console.log(req.body);
     const {query_type=''} =req.query
     db.sequelize
     .query(
-        `call organization(:sector_name,:sector_code,:org_name,:org_code,:query_type)`,
+        `call organization(:sector_name,:sector_code,:org_name,:mda_code,:query_type)`,
         {
             replacements:{
                 sector_name,
                 sector_code,
                 org_name,
-                org_code,
+                mda_code,
                 query_type,
             }
         }

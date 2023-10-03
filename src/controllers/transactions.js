@@ -1,4 +1,3 @@
-const { json } = require("sequelize");
 const db = require("../models");
 const QRCode = require("qrcode");
 const moment = require("moment");
@@ -7,7 +6,7 @@ require("dotenv").config();
 const getInvoiceDetails = async (userId, refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id, a.reference_number, a.dr, a.description, b.name FROM tax_transactions a 
+      `SELECT a.user_id, a.reference_number, a.amount, a.description, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
         where 
         #a.user_id="${userId}" and 
@@ -22,10 +21,28 @@ const getInvoiceDetails = async (userId, refNo) => {
 const callHandleTaxTransaction = async (replacements) => {
   try {
     const results = await db.sequelize.query(
-      `CALL HandleTaxTransaction(:query_type, :user_id, :agent_id,:org_code,
-        :rev_code, :description, :nin_id, :org_name, :paid_by, :confirmed_by, 
-        :payer_acct_no, :payer_bank_name, :cr, :dr, :transaction_date, 
-        :transaction_type, :status, :reference_number, :start_date, :end_date)`,
+      `CALL HandleTaxTransaction( :query_type, 
+        :user_id, 
+        :agent_id,
+        :org_name,
+        :mda_code,
+        :tax_code,    
+        :rev_code,
+        :description,
+        :nin_id,
+        :paid_by,
+        :confirmed_by,
+        :payer_acct_no,
+        :payer_bank_name,
+        :amount,
+        :transaction_date,
+        :transaction_type,
+        :status,
+        :reference_number,
+        :department,
+        :service_category,
+        :start_date, 
+        :end_date)`,
       {
         replacements,
       }
@@ -42,16 +59,14 @@ const postTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
-    sector = null,
     tax_list = [],
     transaction_date,
     reference_number,
-    nin_id = "",
-    org_name = "",
-    paid_by = "",
-    confirmed_by = "",
-    payer_acct_no = "",
-    payer_bank_name = "",
+    nin_id = null,
+    paid_by = null,
+    confirmed_by = null,
+    payer_acct_no = null,
+    payer_bank_name = null,
     start_date = null,
     end_date = null,
   } = req.body;
@@ -59,33 +74,38 @@ const postTrx = async (req, res) => {
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
     const {
+      tax_code,
+      tax_parent_code,
+      department=null,
       description,
       amount,
-      rev_code = null,
-      org_code = null,
+      economic_code = null,
+      mda_code = null,
+      mda_name = null,
       transaction_type,
     } = tax;
 
     const params = {
       query_type: `insert_${transaction_type}`,
+      tax_code,
       user_id,
       agent_id,
-      sector,
       description,
-      cr: transaction_type === "payment" ? amount : 0,
-      dr: transaction_type === "invoice" ? amount : 0,
+      amount,
       transaction_date,
       transaction_type,
-      status: description === "invoice" ? "paid" : "saved",
+      status: transaction_type === "payment" ? "paid" : "saved",
       reference_number,
-      rev_code,
-      org_code,
+      rev_code:economic_code,
+      mda_code:mda_code,
       nin_id,
-      org_name,
+      org_name:mda_name,
       paid_by,
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
+      department,
+      service_category:tax_parent_code,
       start_date,
       end_date,
     };
@@ -131,41 +151,44 @@ const postTrx = async (req, res) => {
 // Update | Payment approval and others operations should use get
 const getTrx = async (req, res) => {
   const {
-    user_id = null,
-    agent_id = null,
-    sector = 1,
-    status = "",
-    transaction_date = null,
-    reference_number = null,
-    nin_id = "",
-    org_name = "",
-    paid_by = "",
-    confirmed_by = "",
-    payer_acct_no = "",
-    payer_bank_name = "",
-    description = "",
-    start_date = null,
-    end_date = null,
-    rev_code = "",
-    org_code = "",
-    transaction_type = "invoice",
-    query_type = "",
+    user_id=null,
+    agent_id=null,
+    item_code=null,
+    tax_code=null,
+    status=null,
+    description=null,
+    amount=null,
+    transaction_date=null,
+    transaction_type=null,
+    rev_code=null,
+    mda_code=null,
+    nin_id=null,
+    org_name=null,
+    paid_by=null,
+    confirmed_by=null,
+    payer_acct_no=null,
+    payer_bank_name=null,
+    query_type=null,
+    start_date=null,
+    end_date=null,
+    department=null,
+    service_category=null,
     ref_no=null,
+    reference_number=null,
   } = req.query;
 
   const params = {
     user_id,
     agent_id,
-    sector,
+    tax_code:item_code?item_code:tax_code,
+    status,
     description,
-    cr: 0,
-    dr: 0,
+    amount,
     transaction_date,
     transaction_type,
-    status,
     reference_number:ref_no?ref_no:reference_number,
     rev_code,
-    org_code,
+    mda_code,
     nin_id,
     org_name,
     paid_by,
@@ -175,6 +198,8 @@ const getTrx = async (req, res) => {
     query_type,
     start_date,
     end_date,
+    department,
+    service_category,
   };
 
   try {
@@ -196,8 +221,8 @@ async function getQRCode(req, res) {
   try {
     const payment = await db.sequelize.query(
       `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
-    );
-
+    )
+    
     const transaction_date =
       payment[0] && payment[0].length
         ? payment[0][0].transaction_date
