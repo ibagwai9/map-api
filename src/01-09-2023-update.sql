@@ -109,7 +109,7 @@ CREATE PROCEDURE `user_accounts`(
 END $$
 DELIMITER ;
 
-DROP CREATE PROCEDURE IF EXISTS `HandleTaxTransaction`;
+DROP  PROCEDURE IF EXISTS `HandleTaxTransaction`;
 DELIMITER $$
 CREATE PROCEDURE `HandleTaxTransaction`(
 IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), 
@@ -121,6 +121,7 @@ IN `p_item_code` VARCHAR(50),
 IN `p_rev_code` VARCHAR(50), 
 IN `p_description` VARCHAR(300), 
 IN `p_nin_id` VARCHAR(12), 
+IN `p_tin` VARCHAR(12), 
 IN `p_paid_by` VARCHAR(50), 
 IN `p_confirmed_by` VARCHAR(50), 
 IN `p_payer_acct_no` VARCHAR(10), 
@@ -145,6 +146,7 @@ BEGIN
         rev_code,
         description,
         nin_id,
+        tin,
         agent_id,
         paid_by,
         confirmed_by,
@@ -166,6 +168,7 @@ BEGIN
         p_rev_code,
         p_description,
         p_nin_id,
+        p_tin,
         p_agent_id,
         p_paid_by,
         p_confirmed_by,
@@ -192,6 +195,7 @@ BEGIN
         rev_code,
         description,
         nin_id,
+        tin,
         agent_id,
         paid_by,
         confirmed_by,
@@ -213,6 +217,7 @@ BEGIN
         p_rev_code,
         p_description,
         p_nin_id,
+        p_tin,
         p_agent_id,
         p_paid_by,
         p_confirmed_by,
@@ -279,3 +284,4 @@ ALTER TABLE `tax_transactions` CHANGE `org_code` `mda_code` VARCHAR(50) CHARACTE
 ALTER TABLE `tax_transactions` CHANGE `dr` `amount` DECIMAL(10,2) NOT NULL;
 ALTER TABLE `tax_transactions` CHANGE `rev_code` `rev_code` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
 ALTER TABLE `tax_transactions` CHANGE `paid_by` `paid_by` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `confirmed_by` `confirmed_by` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `payer_acct_no` `payer_acct_no` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `payer_bank_name` `payer_bank_name` VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
+ALTER TABLE `tax_transactions` ADD `tin` VARCHAR(12) NULL DEFAULT NULL AFTER `nin_id`;
