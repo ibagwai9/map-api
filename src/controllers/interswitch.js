@@ -86,7 +86,6 @@ const handleInvoiceValidation = (reqJson, res) => {
             </Customer>
         </Customers>
     </CustomerInformationResponse>`
-
           res.set('Content-Type', 'text/xml')
           res.send(responseData)
         } else {
@@ -187,7 +186,8 @@ const handleInvoice = (req, res) => {
       const logId =
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0]
-      console.log(amountPaid)
+      console.log(amountPaid, reqJson.paymentnotificationrequest.payments[0].payment[0]
+        .paymentlogid)
       if (
         amountPaid &&
         amountPaid !== '0' &&
@@ -312,8 +312,6 @@ const handleInvoice = (req, res) => {
 
                 // res.send(reqJson)
               }
-            
-            
             
             
             
