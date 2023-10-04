@@ -1,7 +1,5 @@
-
-DROP  PROCEDURE IF EXISTS `user_accounts`;
 DELIMITER $$
-CREATE PROCEDURE `user_accounts`(
+CREATE  PROCEDURE `user_accounts`(
     IN `in_query_type` VARCHAR(20), 
     IN `in_id` VARCHAR(255),
     IN `in_name` VARCHAR(255),
@@ -25,15 +23,17 @@ CREATE PROCEDURE `user_accounts`(
     IN `in_mda_name` VARCHAR(150),
     IN `in_mda_code` VARCHAR(150),
     IN `in_department` VARCHAR(150),
-    IN `in_accessTo` VARCHAR(300)
-) BEGIN
+    IN `in_accessTo` VARCHAR(300),
+    IN `in_rank` VARCHAR(100)
+)
+BEGIN
   
     DECLARE Tax_ID INT;
         CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
 
     IF in_query_type = 'insert' THEN
-        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department,  TaxID)
-        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, @Tax_ID); 
+        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, `rank`, TaxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank, @Tax_ID); 
         
         INSERT INTO `tax_payers`(`name`, `username`, `email`, `role`, `bvn`, `tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `state`, `lga`, `address`) 
         VALUES (in_name,in_username,in_email,in_role,in_bvn,in_org_tin,@Tax_ID,in_org_name,in_rc,in_account_type,in_phone,in_state,in_lga,in_address);
@@ -77,7 +77,8 @@ CREATE PROCEDURE `user_accounts`(
             lga = IFNULL(in_lga, lga),
             address = IFNULL(in_address, address),
             office_address = IFNULL(in_office_address, office_address),
-            accessTo = IFNULL(in_accessTo, accessTo)
+            accessTo = IFNULL(in_accessTo, accessTo),
+           `rank` = IFNULL(in_rank, `rank`)  
         WHERE user_id = in_id;
         -- SELECT statement here if needed
     ELSEIF in_query_type = 'update' THEN
@@ -106,7 +107,7 @@ CREATE PROCEDURE `user_accounts`(
         OR u.office_phone  LIKE CONCAT('%', in_id, '%')  
         OR u.phone  LIKE CONCAT('%', in_id, '%'); 
     END IF;
-END $$
+END$$
 DELIMITER ;
 
 DROP  PROCEDURE IF EXISTS `HandleTaxTransaction`;
@@ -241,7 +242,7 @@ BEGIN
  	IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
           SELECT 
       y.*,
-            (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+            (SELECT SUM(x.amount) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
     FROM 
       tax_transactions y 
     WHERE 
@@ -252,7 +253,7 @@ BEGIN
        ELSE 
           SELECT 
       y.*,
-      (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+      (SELECT SUM(x.amount) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
     FROM 
       tax_transactions y 
     WHERE 
@@ -275,13 +276,16 @@ END IF;
 END$$
 DELIMITER ;
 
+ALTER TABLE `tax_transactions` CHANGE `org_code` `mda_code` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
 
 ALTER TABLE `tax_transactions` ADD `mda_name` VARCHAR(150) NULL DEFAULT NULL AFTER `reference_number`;
+
 ALTER TABLE `tax_transactions` ADD `item_code` VARCHAR(100) NULL DEFAULT NULL AFTER `mda_code`;
 ALTER TABLE `tax_transactions` ADD `department` VARCHAR(150) NULL DEFAULT NULL AFTER `reference_number`, 
 ADD `service_category` VARCHAR(150) NULL DEFAULT NULL AFTER `department`;
-ALTER TABLE `tax_transactions` CHANGE `org_code` `mda_code` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
 ALTER TABLE `tax_transactions` CHANGE `dr` `amount` DECIMAL(10,2) NOT NULL;
 ALTER TABLE `tax_transactions` CHANGE `rev_code` `rev_code` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
 ALTER TABLE `tax_transactions` CHANGE `paid_by` `paid_by` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `confirmed_by` `confirmed_by` VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `payer_acct_no` `payer_acct_no` VARCHAR(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL, CHANGE `payer_bank_name` `payer_bank_name` VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
 ALTER TABLE `tax_transactions` ADD `tin` VARCHAR(12) NULL DEFAULT NULL AFTER `nin_id`;
+
+ALTER TABLE `users` ADD `rank` VARCHAR(12) NULL DEFAULT NULL AFTER `department`;

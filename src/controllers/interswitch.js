@@ -71,16 +71,16 @@ const handleInvoiceValidation = (reqJson, res) => {
                 <Email></Email>
                 <Phone></Phone>
                 <ThirdPartyCode></ThirdPartyCode>
-                <Amount>${results[0].dr}</Amount>
+                <Amount>${results[0].amount}</Amount>
                 <PaymentItems>
                   <Item>
                       <ProductName>${results[0].description}</ProductName>
                       <ProductCode>01</ProductCode>
                       <Quantity>1</Quantity>
-                      <Price>${results[0].dr}</Price>
-                      <Subtotal>${results[0].dr}</Subtotal>
+                      <Price>${results[0].amount}</Price>
+                      <Subtotal>${results[0].amount}</Subtotal>
                       <Tax>0</Tax>
-                      <Total>${results[0].dr}</Total>
+                      <Total>${results[0].amount}</Total>
                   </Item>
               </PaymentItems>
             </Customer>
@@ -201,8 +201,8 @@ const handleInvoice = (req, res) => {
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              console.log({amountPaid, dr: resp[0][0].dr})
-              if (resp[0][0].dr !== amountPaid) {
+              console.log({amountPaid, amount: resp[0][0].amount})
+              if (resp[0][0].amount !== amountPaid) {
                 res.set('Content-Type', 'text/xml')
                 res.send(`
                 <PaymentNotificationResponse>
@@ -425,8 +425,8 @@ const handleLgaInvoice = (req, res) => {
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              console.log({amountPaid, dr: resp[0][0].dr})
-              if (resp[0][0].dr !== amountPaid) {
+              console.log({amountPaid, amount: resp[0][0].amount})
+              if (resp[0][0].amount !== amountPaid) {
                 res.set('Content-Type', 'text/xml')
                 res.send(`
                 <PaymentNotificationResponse>
@@ -477,7 +477,7 @@ const handleLgaInvoice = (req, res) => {
                     // const branchName = pp.branchname[0]
                     // const bankname = pp.bankname[0]
                     const isReversal = pp.isreversal[0]
-                    // const amountPaid = pp.amount[0]
+                    const amountPaid = pp.amount[0]
 
                     if (isReversal === 'False') {
                       asyncRequestList.push(

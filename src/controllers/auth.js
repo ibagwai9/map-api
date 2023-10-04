@@ -29,6 +29,7 @@ module.exports.SignUp = (req, res) => {
     department = "",
     mda_name="",
     mda_code="",
+    rank=""
   } = req.body;
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
@@ -54,7 +55,7 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank)",
                   {
                     replacements: {
                       query_type: "insert",
@@ -81,6 +82,7 @@ module.exports.SignUp = (req, res) => {
                       mda_name,
                       mda_code,
                       department,
+                      rank
                     },
                   }
                 )
@@ -738,7 +740,7 @@ module.exports.searchUser = (req, res) => {
 
   db.sequelize
     .query(
-      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo)",
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank)",
       {
         replacements: {
           query_type,
@@ -766,6 +768,7 @@ module.exports.searchUser = (req, res) => {
           mda_name: "",
           mda_code: "",
           department: "",
+          rank:""
         },
       }
     )
@@ -818,6 +821,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     mda_name = "",
     mda_code = "",
     department = "",
+    rank = "",
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -825,7 +829,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank);",
           {
             replacements: {
               user_id,
@@ -853,6 +857,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               mda_name,
               mda_code,
               department,
+              rank
             },
           }
         )
