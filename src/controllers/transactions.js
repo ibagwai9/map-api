@@ -3,7 +3,7 @@ const QRCode = require("qrcode");
 const moment = require("moment");
 require("dotenv").config();
 
-export const getInvoiceDetails = async (userId, refNo) => {
+module.exports.getInvoiceDetails = async (userId, refNo) => {
   try {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id, a.reference_number, a.dr, b.name FROM tax_transactions a 
