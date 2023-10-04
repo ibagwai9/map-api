@@ -110,9 +110,12 @@ BEGIN
 END$$
 DELIMITER ;
 
-DROP  PROCEDURE IF EXISTS `HandleTaxTransaction`;
-DELIMITER $$
-CREATE PROCEDURE `HandleTaxTransaction`(
+
+ALTER TABLE `tax_transactions` CHANGE `amount` `dr` DECIMAL(10,2) NOT NULL;
+ALTER TABLE `tax_transactions` ADD `cr` DECIMAL(10,2) NOT NULL DEFAULT '0' AFTER `dr`;
+
+DROP  PROCEDURE IF EXISTS `HandleTaxTransaction`;DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction`(
 IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), 
 IN `p_user_id` VARCHAR(9), 
 IN `p_agent_id` VARCHAR(9), 
@@ -120,7 +123,7 @@ IN `p_mda_name` VARCHAR(300),
 IN `p_mda_code` VARCHAR(50), 
 IN `p_item_code` VARCHAR(50), 
 IN `p_rev_code` VARCHAR(50), 
-IN `p_description` VARCHAR(300), 
+IN `p_description` VARCHAR(500), 
 IN `p_nin_id` VARCHAR(12), 
 IN `p_tin` VARCHAR(12), 
 IN `p_paid_by` VARCHAR(50), 
@@ -129,7 +132,7 @@ IN `p_payer_acct_no` VARCHAR(10),
 IN `p_payer_bank_name` VARCHAR(50), 
 IN `p_amount` DECIMAL(10,2), 
 IN `p_transaction_date` DATE, 
-IN `p_transaction_type` ENUM('payment','invoice'), 
+IN `p_transaction_type` ENUM('payment','invoice','transaction'), 
 IN `p_status` VARCHAR(20), 
 IN `p_reference_number` VARCHAR(50), 
 IN `p_department` VARCHAR(150), 
@@ -153,7 +156,8 @@ BEGIN
         confirmed_by,
         payer_acct_no,
         payer_bank_name,
-        amount,
+        cr,
+        dr,
         transaction_date,
         transaction_type,
         status,
@@ -176,6 +180,7 @@ BEGIN
         p_payer_acct_no,
         p_payer_bank_name,
         p_amount,
+        0,
         p_transaction_date,
         p_transaction_type,
         p_status,
@@ -202,7 +207,8 @@ BEGIN
         confirmed_by,
         payer_acct_no,
         payer_bank_name,
-        amount,
+        cr,
+        dr,
         transaction_date,
         transaction_type,
         status,
@@ -224,6 +230,7 @@ BEGIN
         p_confirmed_by,
         p_payer_acct_no,
         p_payer_bank_name,
+        0,
         p_amount,
         p_transaction_date,
         p_transaction_type,
@@ -232,7 +239,7 @@ BEGIN
         p_department, 
         p_service_category
     );
-  ELSEIF p_query_type = 'check_balance' THEN
+   ELSEIF p_query_type = 'check_balance' THEN
     -- Query user's balance based on their user_id
     SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
     FROM tax_transactions
@@ -242,7 +249,7 @@ BEGIN
  	IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
           SELECT 
       y.*,
-            (SELECT SUM(x.amount) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+            (SELECT SUM(x.dr - x.cr) AS  FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
     FROM 
       tax_transactions y 
     WHERE 
@@ -253,7 +260,9 @@ BEGIN
        ELSE 
           SELECT 
       y.*,
-      (SELECT SUM(x.amount) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+      (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+
+      (SELECT SUM(x.dr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS dr 
     FROM 
       tax_transactions y 
     WHERE 

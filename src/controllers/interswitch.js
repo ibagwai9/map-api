@@ -71,21 +71,22 @@ const handleInvoiceValidation = (reqJson, res) => {
                 <Email></Email>
                 <Phone></Phone>
                 <ThirdPartyCode></ThirdPartyCode>
-                <Amount>${results[0].amount}</Amount>
+                <Amount>${results[0].dr}</Amount>
                 <PaymentItems>
                   <Item>
                       <ProductName>${results[0].description}</ProductName>
                       <ProductCode>01</ProductCode>
                       <Quantity>1</Quantity>
-                      <Price>${results[0].amount}</Price>
-                      <Subtotal>${results[0].amount}</Subtotal>
+                      <Price>${results[0].dr}</Price>
+                      <Subtotal>${results[0].dr}</Subtotal>
                       <Tax>0</Tax>
-                      <Total>${results[0].amount}</Total>
+                      <Total>${results[0].dr}</Total>
                   </Item>
               </PaymentItems>
             </Customer>
         </Customers>
     </CustomerInformationResponse>`
+
           res.set('Content-Type', 'text/xml')
           res.send(responseData)
         } else {
@@ -186,8 +187,7 @@ const handleInvoice = (req, res) => {
       const logId =
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0]
-      console.log(amountPaid, reqJson.paymentnotificationrequest.payments[0].payment[0]
-        .paymentlogid)
+      console.log(amountPaid)
       if (
         amountPaid &&
         amountPaid !== '0' &&
@@ -197,12 +197,12 @@ const handleInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status IN ("PAID", "saved") AND transaction_type='invoice'`,
+            `SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              console.log({amountPaid, amount: resp[0][0].amount})
-              if (resp[0][0].amount !== amountPaid) {
+              console.log({amountPaid, dr: resp[0][0].dr})
+              if (resp[0][0].dr !== amountPaid) {
                 res.set('Content-Type', 'text/xml')
                 res.send(`
                 <PaymentNotificationResponse>
@@ -261,7 +261,7 @@ const handleInvoice = (req, res) => {
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
-                WHERE reference_number="${referenceNo}"`),
+                WHERE reference_number='${referenceNo}'`),
                       )
                     } else {
                       asyncRequestList.push(
@@ -312,6 +312,8 @@ const handleInvoice = (req, res) => {
 
                 // res.send(reqJson)
               }
+            
+            
             
             
             
@@ -419,12 +421,12 @@ const handleLgaInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status IN ("PAID", "saved") AND transaction_type='invoice'`,
+            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status='saved' AND transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              console.log({amountPaid, amount: resp[0][0].amount})
-              if (resp[0][0].amount !== amountPaid) {
+              console.log({amountPaid, dr: resp[0][0].dr})
+              if (resp[0][0].dr !== amountPaid) {
                 res.set('Content-Type', 'text/xml')
                 res.send(`
                 <PaymentNotificationResponse>
@@ -475,7 +477,7 @@ const handleLgaInvoice = (req, res) => {
                     // const branchName = pp.branchname[0]
                     // const bankname = pp.bankname[0]
                     const isReversal = pp.isreversal[0]
-                    const amountPaid = pp.amount[0]
+                    // const amountPaid = pp.amount[0]
 
                     if (isReversal === 'False') {
                       asyncRequestList.push(

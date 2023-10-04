@@ -3,20 +3,20 @@ const QRCode = require("qrcode");
 const moment = require("moment");
 require("dotenv").config();
 
-const getInvoiceDetails = async (userId, refNo) => {
+export const getInvoiceDetails = async (userId, refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id, a.reference_number, a.amount, a.description, b.name FROM tax_transactions a 
+      `SELECT a.user_id, a.reference_number, a.dr, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
         where 
         #a.user_id="${userId}" and 
-        a.reference_number="${userId}" AND a.transaction_type='invoice'`
-    );
-    return reqData[0];
+        a.reference_number="${refNo}" AND a.transaction_type='invoice'`,
+    )
+    return reqData[0]
   } catch (error) {
-    return error;
+    return error
   }
-};
+}
 
 const callHandleTaxTransaction = async (replacements) => {
   try {
@@ -71,6 +71,7 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
+    service_category=null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -96,7 +97,7 @@ const postTrx = async (req, res) => {
       amount,
       transaction_date,
       transaction_type,
-      status: transaction_type === "payment" ? "paid" : "saved",
+      status: "saved",
       reference_number,
       rev_code:economic_code,
       mda_code:mda_code,
@@ -108,7 +109,7 @@ const postTrx = async (req, res) => {
       payer_acct_no,
       payer_bank_name,
       department,
-      service_category:tax_parent_code,
+      service_category:service_category?service_category:tax_parent_code,
       start_date,
       end_date,
     };
