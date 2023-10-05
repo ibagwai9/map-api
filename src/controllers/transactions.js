@@ -1,22 +1,23 @@
 const db = require("../models");
 const QRCode = require("qrcode");
 const moment = require("moment");
+const { default: axios } = require("axios");
 require("dotenv").config();
 
-const getInvoiceDetails = async (userId, refNo) => {
+const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id, a.reference_number, SUM(a.dr) AS dr, b.name FROM tax_transactions a 
+      `SELECT a.user_id, b.email, b.phone, a.reference_number, SUM(a.dr) AS dr, GROUP_CONCAT(a.description, ', ') AS description, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
         where 
-        #a.user_id="${userId}" and 
-        a.reference_number="${refNo}" AND a.transaction_type='invoice'`,
-    )
-    return reqData[0]
+        a.reference_number="${refNo}" AND a.transaction_type='invoice'`
+    );
+    console.log(reqData[0]);
+    return reqData[0];
   } catch (error) {
-    return error
+    return error;
   }
-}
+};
 
 const callHandleTaxTransaction = async (replacements) => {
   try {
@@ -51,7 +52,7 @@ const callHandleTaxTransaction = async (replacements) => {
     return results;
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    throw new Error("Error executing stored procedure: "+JSON.stringify(err));
+    throw new Error("Error executing stored procedure: " + JSON.stringify(err));
   }
 };
 
@@ -71,7 +72,7 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
-    service_category=null,
+    service_category = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -79,7 +80,7 @@ const postTrx = async (req, res) => {
     const {
       tax_code,
       tax_parent_code,
-      department=null,
+      department = null,
       description,
       amount,
       economic_code = null,
@@ -99,17 +100,17 @@ const postTrx = async (req, res) => {
       transaction_type,
       status: "saved",
       reference_number,
-      rev_code:economic_code,
-      mda_code:mda_code,
+      rev_code: economic_code,
+      mda_code: mda_code,
       nin_id,
       tin,
-      org_name:mda_name,
+      org_name: mda_name,
       paid_by,
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
       department,
-      service_category:service_category?service_category:tax_parent_code,
+      service_category: service_category ? service_category : tax_parent_code,
       start_date,
       end_date,
     };
@@ -120,7 +121,10 @@ const postTrx = async (req, res) => {
       return { success: true, data: results };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
-      return { success: false, message: "Error executing stored procedure: "+JSON.stringify(error) };
+      return {
+        success: false,
+        message: "Error executing stored procedure: " + JSON.stringify(error),
+      };
     }
   };
 
@@ -138,7 +142,8 @@ const postTrx = async (req, res) => {
     if (hasFailedTransaction) {
       return res.status(500).json({
         success: false,
-        message: "Error executing some stored procedures: "+JSON.stringify(error) ,
+        message:
+          "Error executing some stored procedures: " + JSON.stringify(error),
       });
     }
 
@@ -146,52 +151,53 @@ const postTrx = async (req, res) => {
     return res.status(200).json({ success: true, data: transactionResults });
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Error executing stored procedures:"+JSON.stringify(err)  });
+    return res.status(500).json({
+      success: false,
+      message: "Error executing stored procedures:" + JSON.stringify(err),
+    });
   }
 };
 
 // Update | Payment approval and others operations should use get
 const getTrx = async (req, res) => {
   const {
-    user_id=null,
-    agent_id=null,
-    item_code=null,
-    tax_code=null,
-    status=null,
-    description=null,
-    amount=null,
-    transaction_date=null,
-    transaction_type=null,
-    rev_code=null,
-    mda_code=null,
-    nin_id=null,
-    tin=null,
-    org_name=null,
-    paid_by=null,
-    confirmed_by=null,
-    payer_acct_no=null,
-    payer_bank_name=null,
-    query_type=null,
-    start_date=null,
-    end_date=null,
-    department=null,
-    service_category=null,
-    ref_no=null,
-    reference_number=null,
+    user_id = null,
+    agent_id = null,
+    item_code = null,
+    tax_code = null,
+    status = null,
+    description = null,
+    amount = null,
+    transaction_date = null,
+    transaction_type = null,
+    rev_code = null,
+    mda_code = null,
+    nin_id = null,
+    tin = null,
+    org_name = null,
+    paid_by = null,
+    confirmed_by = null,
+    payer_acct_no = null,
+    payer_bank_name = null,
+    query_type = null,
+    start_date = null,
+    end_date = null,
+    department = null,
+    service_category = null,
+    ref_no = null,
+    reference_number = null,
   } = req.query;
 
   const params = {
     user_id,
     agent_id,
-    tax_code:item_code?item_code:tax_code,
+    tax_code: item_code ? item_code : tax_code,
     status,
     description,
     amount,
     transaction_date,
     transaction_type,
-    reference_number:ref_no?ref_no:reference_number,
+    reference_number: ref_no ? ref_no : reference_number,
     rev_code,
     mda_code,
     nin_id,
@@ -213,9 +219,10 @@ const getTrx = async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     console.error("Error executing stored procedure:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error executing stored procedure: "+JSON.stringify(error)  });
+    res.status(500).json({
+      success: false,
+      message: "Error executing stored procedure: " + JSON.stringify(error),
+    });
   }
 };
 
@@ -227,17 +234,15 @@ async function getQRCode(req, res) {
   try {
     const payment = await db.sequelize.query(
       `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
-    )
-    
+    );
+
     const transaction_date =
       payment[0] && payment[0].length
         ? payment[0][0].transaction_date
         : "Invalid";
 
-      const status =
-          payment[0] && payment[0].length
-            ? payment[0][0].status
-            : "Invalid";
+    const status =
+      payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
 
     const user = await db.User.findOne({
       where: { id: payment[0][0].user_id },
@@ -247,9 +252,15 @@ async function getQRCode(req, res) {
     const phoneNumber = user.dataValues.phone || "Invalid";
     console.log({ user: user.dataValues.id });
 
-  const url = `https://kirmas.kn.gov.ng/payment-${status==='saved'?'invoice':status=='Paid'?'receipt':'404'}?ref_no=${refno}`;
+    const url = `https://kirmas.kn.gov.ng/payment-${
+      status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
+    }?ref_no=${refno}`;
     // Create a payload string with the payer's information
-    const payload = `Date:${moment(transaction_date).format('DD/MM/YYYY')}\nName: ${name}\nPhone: ${phoneNumber}\n${status==='saved'?'Invoice':status==='Paid'?'Receipt':'Invalid'} ID: ${refno}\nUrl: ${url}`;
+    const payload = `Date:${moment(transaction_date).format(
+      "DD/MM/YYYY"
+    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
+      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
+    } ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -271,21 +282,115 @@ async function getQRCode(req, res) {
 const getPaymentSummary = (req, res) => {
   const { start_date, end_date, query_type, mda_code } = req.query;
   db.sequelize
-    .query(`CALL GetPaymentsSummary( :query_type,:start_date, :end_date, :mda_code)`, {
-      replacements: {
-        start_date: start_date,
-        end_date: end_date,
-        query_type: query_type,
-        mda_code: mda_code,
-      },
-    })
+    .query(
+      `CALL GetPaymentsSummary( :query_type,:start_date, :end_date, :mda_code)`,
+      {
+        replacements: {
+          start_date: start_date,
+          end_date: end_date,
+          query_type: query_type,
+          mda_code: mda_code,
+        },
+      }
+    )
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
     .catch((err) => {
       console.error(err);
-      res.json({ success: false, msg: 'Error occurred' });
+      res.json({ success: false, msg: "Error occurred" });
     });
+};
+
+const getTertiary = (inst_code) => {
+  console.log();
+  axios
+    .get(
+      `https://kanoacademic.igr.ng/api/v1/notifications?institute=${inst_code}`
+    )
+    .then((resp) => {
+      // const responseData = JSON.parse(resp.data);
+      console.log(resp.data);
+      if (resp.status === 200) {
+        let arr = [];
+        console.log(resp.data);
+        resp.data.data.forEach((item) => {
+          console.log(item);
+          arr.push(
+            db.sequelize.query(
+              "CALL institution_transactions( :query_type,:id,:refno,:institutionName,:institutionCode,:accountNumber,:datetime,:amount,:narration,:anyOtherData,:payerName,:phone)",
+              {
+                replacements: {
+                  ...item,
+                  id: item._id,
+                  query_type: "insert",
+                  datetime: moment(item.datetime).format("YYYY-MM-DD hh:mm:ss"),
+                  institutionCode: inst_code,
+                },
+              }
+            )
+          );
+        });
+        Promise.all(arr)
+          .then((results) => {
+            console.log(results);
+            // res.json({ results, success: true });
+          })
+          .catch((error) => {
+            // res.status(500).json({ error });
+            console.log(error);
+          });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const insertTertiaryData = async (inst) => {
+  const {
+    query_type,
+    id,
+    refno,
+    institutionName,
+    institutionCode,
+    accountNumber,
+    datetime,
+    amount,
+    narration,
+    anyOtherData,
+    payerName,
+    phone,
+  } = inst;
+  try {
+    const results = await db.sequelize.query(
+      "call intitution_transaction( :query_type,:id,:refno,:institutionName,:institutionCode,:accountNumber,:datetime,:amount,:narration,:anyOtherData,:payerName,:phone)",
+      {
+        replacements: {
+          query_type,
+          id,
+          refno,
+          institutionName,
+          institutionCode,
+          accountNumber,
+          datetime,
+          amount,
+          narration,
+          anyOtherData,
+          payerName,
+          phone,
+        },
+      }
+    );
+    console.log(results);
+
+    return results;
+  } catch (error) {
+    console.log(error);
+    throw new Error(
+      "Error executing stored procedure: " + JSON.stringify(error)
+    );
+  }
 };
 
 module.exports = {
@@ -294,5 +399,6 @@ module.exports = {
   postTrx,
   getInvoiceDetails,
   getPaymentSummary,
-  getInvoiceDetails
+  getInvoiceDetails,
+  getTertiary,
 };

@@ -12,5 +12,9 @@ const {requireAuth} = require("../config/config.js")
     app.post('/transactions/execute',passport.authenticate("jwt", { session: false }), postTrx)
     app.get('/transactions/retrieve',passport.authenticate("jwt", { session: false }), getTrx)
     app.get('/transactions/get-qr-code',passport.authenticate("jwt", { session: false }), getQRCode)
-    app.get('/get-payment-summary',passport.authenticate("jwt", { session: false }), getPaymentSummary)
+    app.get('/get-payment-summary',passport.authenticate("jwt", { session: false }), getPaymentSummary) 
+    
+    // app.get('/get-tertiary-trx',
+    // // passport.authenticate("jwt", { session: false }),
+    //  getTertiary) 
   };
