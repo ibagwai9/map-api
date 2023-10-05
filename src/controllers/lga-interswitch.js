@@ -197,7 +197,7 @@ const handleInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT x.*, SUM(x.dr) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status='saved' AND x.transaction_type='invoice'`,
+            `SELECT x.*, SUM(x.dr) AS amount FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status='saved' AND x.transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
@@ -309,8 +309,14 @@ const handleInvoice = (req, res) => {
               </Payments>
           </PaymentNotificationResponse>`)
                   })
+
                 // res.send(reqJson)
               }
+            
+            
+            
+            
+            
             } else {
               res.set('Content-Type', 'text/xml')
               res.send(`
@@ -366,8 +372,10 @@ const handleInvoice = (req, res) => {
       </Customers>
   </Response>`)
   }
+
   // })
 }
+
 const handleLgaInvoice = (req, res) => {
   // let sampleRequest = `<customerinformationrequest>
   //     <ServiceUsername></ServiceUsername>
@@ -413,7 +421,7 @@ const handleLgaInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT x.*, SUM(x.dr) AS amount FROM tax_transactions x WHERE x.reference_number="${referenceNo}" AND x.status='saved' AND x.transaction_type='invoice'`,
+            `SELECT x.*, SUM(x.dr) AS dr FROM tax_transactions x WHERE x.reference_number="${referenceNo}" AND x.status='saved' AND x.transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
@@ -528,11 +536,6 @@ const handleLgaInvoice = (req, res) => {
 
                 // res.send(reqJson)
               }
-            
-            
-            
-            
-            
             } else {
               res.set('Content-Type', 'text/xml')
               res.send(`

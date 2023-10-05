@@ -311,3 +311,14 @@ ALTER TABLE `tax_transactions` CHANGE `paid_by` `paid_by` VARCHAR(50) CHARACTER 
 ALTER TABLE `tax_transactions` ADD `tin` VARCHAR(12) NULL DEFAULT NULL AFTER `nin_id`;
 
 ALTER TABLE `users` ADD `rank` VARCHAR(12) NULL DEFAULT NULL AFTER `department`;
+
+
+
+ALTER TABLE `tax_transactions` ADD `logId` VARCHAR(50) NULL AFTER `service_category`, 
+    ADD `paymentdate` DATE NULL DEFAULT NULL AFTER `logId`, ADD `dateSettled` DATE NULL DEFAULT NULL AFTER `paymentdate`;
+ALTER TABLE `tax_transactions` ADD `modeOfPayment` VARCHAR(50) NULL DEFAULT NULL AFTER `dateSettled`;
+
+ALTER TABLE `tax_transactions` ADD `interswitch_ref` VARCHAR(60) NULL DEFAULT NULL AFTER `modeOfPayment`;
+
+ALTER TABLE `tax_transactions` ADD `paymentAmount` DECIMAL(10,2) NULL DEFAULT NULL AFTER `cr`;
+
