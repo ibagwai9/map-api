@@ -1002,15 +1002,12 @@ exports.projectType = (req, res) => {
 
 exports.taxes = (req, res) => {
   // console.log("kello")
-  console.log("body", req.body);
+  // console.log("body", req.body);
   const { query_type = "" } = req.body;
 
   db.sequelize
     .query(
-      `CALL taxes (
-    :query_type
-      )`,
-
+      `CALL taxes(:query_type)`,
       {
         replacements: {
           query_type,
