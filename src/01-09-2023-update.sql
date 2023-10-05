@@ -114,7 +114,8 @@ DELIMITER ;
 ALTER TABLE `tax_transactions` CHANGE `amount` `dr` DECIMAL(10,2) NOT NULL;
 ALTER TABLE `tax_transactions` ADD `cr` DECIMAL(10,2) NOT NULL DEFAULT '0' AFTER `dr`;
 
-DROP  PROCEDURE IF EXISTS `HandleTaxTransaction`;DELIMITER $$
+DROP  PROCEDURE IF EXISTS `HandleTaxTransaction`;
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `HandleTaxTransaction`(
 IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), 
 IN `p_user_id` VARCHAR(9), 
@@ -244,32 +245,44 @@ BEGIN
     SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
     FROM tax_transactions
     WHERE user_id = p_user_id;
-  ELSEIF p_query_type = 'view_payer_ledger' THEN
+ 
+ ELSEIF p_query_type = 'view_payer_ledger' THEN
     -- View payer's ledger for invoice transactions
- 	IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
-          SELECT 
-      y.*,
-            (SELECT SUM(x.dr - x.cr) AS  FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
-    FROM 
-      tax_transactions y 
-    WHERE 
-      y.user_id = p_user_id  
-       AND DATE(y.transaction_date) BETWEEN DATE(p_start_date) AND DATE(p_end_date)
-    GROUP BY 
-      y.reference_number;
-       ELSE 
-          SELECT 
-      y.*,
-      (SELECT SUM(x.dr - x.cr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS balance 
+    IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr 
+        FROM tax_transactions y 
+        WHERE y.user_id = p_user_id  
+            AND DATE(y.transaction_date) BETWEEN DATE(p_start_date) AND DATE(p_end_date)
+        GROUP BY y.reference_number;
+    ELSE
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr 
+        FROM tax_transactions y 
+        WHERE y.user_id = p_user_id  
+        GROUP BY y.reference_number;
+    END IF;
 
-      (SELECT SUM(x.dr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS dr 
-    FROM 
-      tax_transactions y 
-    WHERE 
-     y.user_id = p_user_id  
-    GROUP BY 
-      y.reference_number;
-       END IF;
   ELSEIF p_query_type = 'approve_payment' THEN
     -- Approve a payment transaction
     UPDATE tax_transactions

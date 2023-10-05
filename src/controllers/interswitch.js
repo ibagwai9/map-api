@@ -197,12 +197,12 @@ const handleInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice'`,
+            `SELECT x.*, SUM(x.dr) AS amount FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status='saved' AND x.transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              console.log({amountPaid, dr: resp[0][0].dr})
-              if (resp[0][0].dr !== amountPaid) {
+              console.log({amountPaid, amount: resp[0][0].amount})
+              if (resp[0][0].amount !== amountPaid) {
                 res.set('Content-Type', 'text/xml')
                 res.send(`
                 <PaymentNotificationResponse>
@@ -421,7 +421,7 @@ const handleLgaInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT * FROM tax_transactions WHERE reference_number="${referenceNo}" AND status='saved' AND transaction_type='invoice'`,
+            `SELECT x.*, SUM(x.dr) AS amount FROM tax_transactions x WHERE x.reference_number="${referenceNo}" AND x.status='saved' AND x.transaction_type='invoice'`,
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
