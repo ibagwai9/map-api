@@ -303,10 +303,14 @@ const getPaymentSummary = (req, res) => {
 };
 
 const getTertiary = (inst_code) => {
-  console.log();
   axios
     .get(
-      `https://kanoacademic.igr.ng/api/v1/notifications?institute=${inst_code}`
+      `https://kanoacademic.igr.ng/api/v1/notifications?institute=${inst_code}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.INST_API_TOKEN}`,
+        },
+      }
     )
     .then((resp) => {
       // const responseData = JSON.parse(resp.data);

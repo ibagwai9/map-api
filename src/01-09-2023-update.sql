@@ -338,6 +338,8 @@ CREATE TABLE `institution_transactions` (
  PRIMARY KEY (`id`)
 );
 
+
+DROP PROCEDURE IF EXISTS PROCEDURE `institution_transactions`;
 DELIMITER $$
 CREATE  PROCEDURE `institution_transactions`(
     IN `query_type` VARCHAR(100),
@@ -351,7 +353,10 @@ CREATE  PROCEDURE `institution_transactions`(
     IN `in_narration` VARCHAR(250),
     IN `in_anyOtherData` VARCHAR(250),
     IN `in_payerName` VARCHAR(50),
-    IN `in_phone` VARCHAR(15)
+    IN `in_phone` VARCHAR(15),
+    IN `start_date` VARCHAR(15),
+    IN `end_date` VARCHAR(15)
+
 )
 BEGIN 
     IF query_type = 'insert' THEN
@@ -392,7 +397,9 @@ BEGIN
             SET MESSAGE_TEXT = 'Record with ID already exists.';
         END IF;
     ELSEIF query_type = 'select-by-code' THEN
-        SELECT * FROM institution_transactions WHERE institutionCode = in_institutionCode;
+        SELECT * FROM institution_transactions WHERE institutionCode = in_institutionCode AND DATE(`datetime`) BETWEEN start_date AND end_date;
+    ELSEIF query_type = 'select-by-phone' THEN
+        SELECT * FROM institution_transactions WHERE phone = in_phone AND DATE(`datetime`) BETWEEN start_date AND end_date;
     END IF;
 END$$
 DELIMITER ;

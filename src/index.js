@@ -22,6 +22,7 @@ const swaggerDocument = require("./swagger-doc.json");
 
 let port = process.env.PORT || 3589;
 const { getTertiary } = require("./controllers/transactions");
+const { institutions } = require("./config/institutions");
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -67,9 +68,10 @@ app.use(helmet());
 //   })
 // );
 cron.schedule("0 */12 * * *", () => {
-  ["kust", "ymsu"].forEach((inst) => {
-    console.log(inst);
-    getTertiary(inst);
+  // cron.schedule("*/30 * * * * *", () => {
+  institutions.forEach((inst) => {
+    // console.log(inst);
+    getTertiary(inst.code);
   });
 });
 
