@@ -10,8 +10,9 @@ const {
   verifyTokenTreasuryApp,
   searchUser,
   getAdmins,
-  UpdateTaxPayer
-}  = require ("../controllers/auth");
+  UpdateTaxPayer,
+  getTaxPayer,
+} = require("../controllers/auth");
 
 module.exports = (app) => {
   app.post("/sign_in", SignIn);
@@ -33,6 +34,20 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     searchUser
   );
-  app.get('/users/get-admins', passport.authenticate("jwt", { session: false }), getAdmins);
- app.post('/auths/-post-users',passport.authenticate("jwt", { session: false }), UpdateTaxPayer)
+  app.get(
+    "/users/get-admins",
+    passport.authenticate("jwt", { session: false }),
+    getAdmins
+  );
+  app.post(
+    "/auths/-post-users",
+    passport.authenticate("jwt", { session: false }),
+    UpdateTaxPayer
+  );
+
+  app.get(
+    "/users/get-tax-payer",
+    passport.authenticate("jwt", { session: false }),
+    getTaxPayer
+  );
 };

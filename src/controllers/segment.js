@@ -26,15 +26,12 @@ const today = moment().format("YYYY-MM-DD");
 //     });
 // };
 
-
-module.exports.getTaxPayer = (req, res) => {
-  const {query_type=''} = req.query
+module.exports.getTaxPayers = (req, res) => {
+  const { query_type = "" } = req.query;
   db.sequelize
-    .query(
-      `select * from tax_payers`
-    )
+    .query(`select * from tax_payers`)
     .then((results) => {
-      res.json({ success: true, results:results[0] });
+      res.json({ success: true, results: results[0] });
     })
     .catch((err) => {
       console.log(err);

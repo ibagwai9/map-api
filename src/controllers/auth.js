@@ -27,9 +27,9 @@ module.exports.SignUp = (req, res) => {
     lga = "",
     address = "",
     department = "",
-    mda_name="",
-    mda_code="",
-    rank=""
+    mda_name = "",
+    mda_code = "",
+    rank = "",
   } = req.body;
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
@@ -82,7 +82,7 @@ module.exports.SignUp = (req, res) => {
                       mda_name,
                       mda_code,
                       department,
-                      rank
+                      rank,
                     },
                   }
                 )
@@ -604,7 +604,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 module.exports.verifyTokenTreasuryApp = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
-  
+
   if (!authToken || !authToken.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
@@ -768,7 +768,7 @@ module.exports.searchUser = (req, res) => {
           mda_name: "",
           mda_code: "",
           department: "",
-          rank:""
+          rank: "",
         },
       }
     )
@@ -782,10 +782,14 @@ module.exports.searchUser = (req, res) => {
 };
 
 module.exports.getAdmins = (req, res) => {
-  const { query_type = "select-user", id = "", mda_code=null } = req.query;
+  const { query_type = "select-user", id = "", mda_code = null } = req.query;
 
   db.sequelize
-    .query(`SELECT u.*, NULL AS password FROM users u WHERE u.role IN('admin', 'agent') ${mda_code?`AND mda_code='${mda_code}'`:''} ;`)
+    .query(
+      `SELECT u.*, NULL AS password FROM users u WHERE u.role IN('admin', 'agent') ${
+        mda_code ? `AND mda_code='${mda_code}'` : ""
+      } ;`
+    )
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
@@ -839,7 +843,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               username,
               email,
               org_email,
-              password:password?newPass:null,
+              password: password ? newPass : null,
               role,
               bvn,
               tin,
@@ -857,7 +861,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               mda_name,
               mda_code,
               department,
-              rank
+              rank,
             },
           }
         )
@@ -868,4 +872,19 @@ module.exports.UpdateTaxPayer = (req, res) => {
         });
     });
   });
+};
+
+module.exports.getTaxPayer = (req, res) => {
+  const { user_id } = req.query;
+  db.sequelize
+    .query("SELECT * FROM tax_payers WHERE user_id=:user_id", {
+      replacements: {
+        user_id,
+      },
+    })
+    .then((resp) => res.json({ success: true, data: resp[0] }))
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occured" });
+    });
 };

@@ -406,4 +406,6 @@ DELIMITER ;
 
 UPDATE taxes SET mda_name='Kano State Internal Revenue Services', mda_code='022000800100' WHERE sector='TAX';
 
+ALTER TABLE `taxes` CHANGE `is_department` `department` VARCHAR(150) NULL DEFAULT NULL;
+
 
