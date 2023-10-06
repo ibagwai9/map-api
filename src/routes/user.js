@@ -22,9 +22,9 @@ module.exports = (app) => {
   //retrieve all users
   app.get(
     "/api/users",
-    passport.authenticate("jwt", {
-      session: false,
-    }),
+    // passport.authenticate("jwt", {
+    //   session: false,
+    // }),
     // allowOnly(config.accessLevels.admin,
     findAllUsers
     // )

@@ -322,3 +322,88 @@ ALTER TABLE `tax_transactions` ADD `interswitch_ref` VARCHAR(60) NULL DEFAULT NU
 
 ALTER TABLE `tax_transactions` ADD `paymentAmount` DECIMAL(10,2) NULL DEFAULT NULL AFTER `cr`;
 
+
+CREATE TABLE `institution_transactions` (
+ `id` varchar(50) NOT NULL,
+ `refno` int(11) DEFAULT NULL,
+ `institutionName` varchar(255) DEFAULT NULL,
+ `institutionCode` varchar(255) DEFAULT NULL,
+ `accountNumber` varchar(20) DEFAULT NULL,
+ `datetime` datetime DEFAULT NULL,
+ `amount` decimal(10,2) DEFAULT NULL,
+ `narration` text DEFAULT NULL,
+ `anyOtherData` text DEFAULT NULL,
+ `payerName` varchar(255) DEFAULT NULL,
+ `phone` varchar(15) DEFAULT NULL,
+ PRIMARY KEY (`id`)
+);
+
+
+DROP PROCEDURE IF EXISTS PROCEDURE `institution_transactions`;
+DELIMITER $$
+CREATE  PROCEDURE `institution_transactions`(
+    IN `query_type` VARCHAR(100),
+    IN `in_id` VARCHAR(100),
+    IN `in_refno` VARCHAR(50),
+    IN `in_institutionName` VARCHAR(255),
+    IN `in_institutionCode` VARCHAR(255),
+    IN `in_accountNumber` VARCHAR(20),
+    IN `in_datetime` DATETIME,
+    IN `in_amount` DECIMAL(10,2),
+    IN `in_narration` VARCHAR(250),
+    IN `in_anyOtherData` VARCHAR(250),
+    IN `in_payerName` VARCHAR(50),
+    IN `in_phone` VARCHAR(15),
+    IN `start_date` VARCHAR(15),
+    IN `end_date` VARCHAR(15)
+
+)
+BEGIN 
+    IF query_type = 'insert' THEN
+        -- Check if a record with the given ID exists
+        SET @id_exists = (SELECT COUNT(*) FROM institution_transactions WHERE id = in_id);
+        
+        IF @id_exists = 0 THEN
+            -- Insert the record if the ID does not exist
+            INSERT INTO institution_transactions (
+                id,
+                refno,
+                institutionName,
+                institutionCode,
+                accountNumber,
+                datetime,
+                amount,
+                narration,
+                anyOtherData,
+                payerName,
+                phone
+            )
+            VALUES (
+                in_id,
+                in_refno,
+                in_institutionName,
+                in_institutionCode,
+                in_accountNumber,
+                in_datetime,
+                in_amount,
+                in_narration,
+                in_anyOtherData,
+                in_payerName,
+                in_phone
+            );
+        ELSE
+            -- Handle the case when the ID already exists (e.g., you can raise an error)
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Record with ID already exists.';
+        END IF;
+    ELSEIF query_type = 'select-by-code' THEN
+        SELECT * FROM institution_transactions WHERE institutionCode = in_institutionCode AND DATE(`datetime`) BETWEEN start_date AND end_date;
+    ELSEIF query_type = 'select-by-phone' THEN
+        SELECT * FROM institution_transactions WHERE phone = in_phone AND DATE(`datetime`) BETWEEN start_date AND end_date;
+    END IF;
+END$$
+DELIMITER ;
+
+UPDATE taxes SET mda_name='Kano State Internal Revenue Services', mda_code='022000800100' WHERE sector='TAX';
+
+
