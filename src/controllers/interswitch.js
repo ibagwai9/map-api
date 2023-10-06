@@ -49,12 +49,12 @@ const getTransaction = async (req, res) => {
 };
 
 const handleInvoiceValidation = (reqJson, res) => {
-  console.log(reqJson.customerinformationrequest.custreference[0]);
-  if (reqJson.customerinformationrequest.merchantreference[0] === "6405") {
-    getInvoiceDetails(
-      reqJson.customerinformationrequest.custreference[0]
-      // reqJson.customerinformationrequest.paymentitemcode[0],
-    )
+  const custreference = reqJson.customerinformationrequest.custreference[0];
+  const merchantreference =
+    reqJson.customerinformationrequest.merchantreference[0];
+
+  if (merchantreference === "6405") {
+    getInvoiceDetails(custreference)
       .then((results) => {
         console.log(results);
 
@@ -62,11 +62,11 @@ const handleInvoiceValidation = (reqJson, res) => {
           let firstName = results[0].name;
           // let lastName = results[0].name.split(" ")[1]
           let responseData = `<CustomerInformationResponse>
-        <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+        <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
             <Customer>
                 <Status>0</Status>
-                <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+                <CustReference>${custreference}</CustReference>
                 <CustomerReferenceAlternate></CustomerReferenceAlternate>
                 <FirstName>${firstName}</FirstName>
                 <LastName></LastName>
@@ -87,17 +87,16 @@ const handleInvoiceValidation = (reqJson, res) => {
             </Customer>
         </Customers>
     </CustomerInformationResponse>`;
-
           res.set("Content-Type", "text/xml");
           res.send(responseData);
         } else {
           res.set("Content-Type", "text/xml");
           res.send(`<CustomerInformationResponse>
-        <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+        <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
             <Customer>
                 <Status>1</Status>
-                <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+                <CustReference>${custreference}</CustReference>
                 <Amount>0</Amount>
             </Customer>
         </Customers>
@@ -108,11 +107,11 @@ const handleInvoiceValidation = (reqJson, res) => {
         console.log(error);
         res.set("Content-Type", "text/xml");
         res.send(`<CustomerInformationResponse>
-        <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+        <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
             <Customer>
                 <Status>1</Status>
-                <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+                <CustReference>${custreference}</CustReference>
                 <Amount>0</Amount>
             </Customer>
         </Customers>
@@ -121,11 +120,12 @@ const handleInvoiceValidation = (reqJson, res) => {
   } else {
     res.set("Content-Type", "text/xml");
     res.send(`<CustomerInformationResponse>
-      <MerchantReference>${reqJson.customerinformationrequest.merchantreference[0]}</MerchantReference>
+      <MerchantReference>${merchantreference}</MerchantReference>
       <Customers>
           <Customer>
               <Status>1</Status>
-              <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+              <CustReference>${custreference}</CustReference>
+              <StatusMessage>Invalid Merchantreference</StatusMessage>
               <Amount>0</Amount>
           </Customer>
       </Customers>
@@ -239,10 +239,7 @@ const handleInvoice = (req, res) => {
 
                     const paymentDate = pp.paymentdate[0];
                     const dateSettled = pp.settlementdate[0];
-                    // const branchName = pp.branchname[0]
-                    // const bankname = pp.bankname[0]
                     const isReversal = pp.isreversal[0];
-                    // const amountPaid = pp.amount[0]
 
                     if (isReversal === "False") {
                       asyncRequestList.push(
@@ -523,7 +520,8 @@ const handleLgaInvoice = (req, res) => {
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
-                      <PaymentLogId>0</PaymentLogId>
+                      <PaymentLogId>${logId}</PaymentLogId>
+                      <CustReference>${referenceNo}</CustReference>
                       <Status>1</Status>
                   </Payment>
               </Payments>
