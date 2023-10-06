@@ -72,7 +72,6 @@ const handleInvoiceValidation = (reqJson, res) => {
                 <LastName></LastName>
                 <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
-                <ThirdPartyCode></ThirdPartyCode>
                 <Amount>${results[0].dr}</Amount>
                 <PaymentItems>
                   <Item>
@@ -99,12 +98,6 @@ const handleInvoiceValidation = (reqJson, res) => {
             <Customer>
                 <Status>1</Status>
                 <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
-                <CustomerReferenceAlternate></CustomerReferenceAlternate>
-                <FirstName></FirstName>
-                <LastName></LastName>
-                <Email></Email>
-                <Phone></Phone>
-                <ThirdPartyCode></ThirdPartyCode>
                 <Amount>0</Amount>
             </Customer>
         </Customers>
@@ -120,12 +113,6 @@ const handleInvoiceValidation = (reqJson, res) => {
             <Customer>
                 <Status>1</Status>
                 <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
-                <CustomerReferenceAlternate></CustomerReferenceAlternate>
-                <FirstName></FirstName>
-                <LastName></LastName>
-                <Email></Email>
-                <Phone></Phone>
-                <ThirdPartyCode></ThirdPartyCode>
                 <Amount>0</Amount>
             </Customer>
         </Customers>
@@ -139,12 +126,6 @@ const handleInvoiceValidation = (reqJson, res) => {
           <Customer>
               <Status>1</Status>
               <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
-              <CustomerReferenceAlternate></CustomerReferenceAlternate>
-              <FirstName></FirstName>
-              <LastName></LastName>
-              <Email></Email>
-              <Phone></Phone>
-              <ThirdPartyCode></ThirdPartyCode>
               <Amount>0</Amount>
           </Customer>
       </Customers>
@@ -210,6 +191,8 @@ const handleInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
+                        <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
@@ -223,6 +206,8 @@ const handleInvoice = (req, res) => {
                     <PaymentNotificationResponse>
                         <Payments>
                             <Payment>
+                            <PaymentLogId>${logId}</PaymentLogId>
+                            <CustReference>${referenceNo}</CustReference>
                                 <PaymentLogId>${logId}</PaymentLogId>
                                 <Status>0</Status>
                             </Payment>
@@ -234,6 +219,8 @@ const handleInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
+                        <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>Invalid Customer Reference</StatusMessage>
@@ -299,7 +286,8 @@ const handleInvoice = (req, res) => {
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
-                      <PaymentLogId>${logId}</PaymentLogId>
+                  <PaymentLogId>${logId}</PaymentLogId>
+                  <CustReference>${referenceNo}</CustReference>
                       <Status>0</Status>
                   </Payment>
               </Payments>
@@ -313,6 +301,8 @@ const handleInvoice = (req, res) => {
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
+                  <PaymentLogId>${logId}</PaymentLogId>
+                  <CustReference>${referenceNo}</CustReference>
                       <PaymentLogId>0</PaymentLogId>
                       <Status>1</Status>
                   </Payment>
@@ -327,7 +317,8 @@ const handleInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
-                            <PaymentLogId>0</PaymentLogId>
+                        <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>Customer Reference not found or invalid</StatusMessage>
                         </Payment>
@@ -343,6 +334,8 @@ const handleInvoice = (req, res) => {
               <Payment>
                   <PaymentLogId>0</PaymentLogId>
                   <Status>1</Status>
+                  <PaymentLogId>${logId}</PaymentLogId>
+                  <CustReference>${referenceNo}</CustReference>
                   <StatusMessage>Please provide a valid amount</StatusMessage>
               </Payment>
           </Payments>
@@ -516,6 +509,7 @@ const handleLgaInvoice = (req, res) => {
               <Payments>
                   <Payment>
                       <PaymentLogId>${logId}</PaymentLogId>
+                      <CustReference>${referenceNo}</CustReference>
                       <Status>0</Status>
                   </Payment>
               </Payments>
@@ -586,15 +580,12 @@ const handleLgaInvoice = (req, res) => {
           <Customer>
               <Status>1</Status>
               <CustReference>NA</CustReference>
-              <CustomerReferenceAlternate></CustomerReferenceAlternate>
-              <ThirdPartyCode></ThirdPartyCode>
+              <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
               <Amount>0</Amount>
           </Customer>
       </Customers>
   </Response>`);
   }
-
-  // })
 };
 
 module.exports = {
