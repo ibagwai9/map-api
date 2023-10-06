@@ -68,9 +68,9 @@ app.use(helmet());
 //   })
 // );
 cron.schedule("0 */12 * * *", () => {
-  // cron.schedule("*/30 * * * * *", () => {
+// cron.schedule("*/30 * * * * *", () => {
   institutions.forEach((inst) => {
-    // console.log(inst);
+    // console.log(inst);mnhy
     getTertiary(inst.code);
   });
 });

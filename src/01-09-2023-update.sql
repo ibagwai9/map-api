@@ -404,4 +404,6 @@ BEGIN
 END$$
 DELIMITER ;
 
+UPDATE taxes SET mda_name='Kano State Internal Revenue Services', mda_code='022000800100' WHERE sector='TAX';
+
 
