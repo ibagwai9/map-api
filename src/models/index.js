@@ -10,7 +10,7 @@ const basename = path.basename(__filename);
 const config = {
   username: "root",
   password: "",
-  database: "finance",
+  database: "finance_2",
   host: "localhost",
   port:3307,
   dialect:  "mysql",
