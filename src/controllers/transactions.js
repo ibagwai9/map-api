@@ -43,6 +43,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :reference_number,
         :department,
         :service_category,
+        :sector,
         :start_date, 
         :end_date)`,
       {
@@ -87,6 +88,7 @@ const postTrx = async (req, res) => {
       mda_name = null,
       service_category = null,
       transaction_type,
+      sector = null,
     } = tax;
 
     const params = {
@@ -111,6 +113,7 @@ const postTrx = async (req, res) => {
       payer_bank_name,
       department,
       service_category: service_category ? service_category : tax_parent_code,
+      sector,
       start_date,
       end_date,
     };
@@ -185,6 +188,7 @@ const getTrx = async (req, res) => {
     department = null,
     service_category = null,
     ref_no = null,
+    sector = null,
     reference_number = null,
   } = req.query;
 
@@ -212,6 +216,7 @@ const getTrx = async (req, res) => {
     end_date,
     department,
     service_category,
+    sector,
   };
 
   try {

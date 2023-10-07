@@ -195,7 +195,11 @@ const handleInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT x.*, SUM(x.dr) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status='saved' AND x.transaction_type='invoice'`
+            `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
+            FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS x
+            LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
+            ON 1=1
+            GROUP BY x.reference_number;`
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
@@ -214,7 +218,7 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                             <PaymentLogId>${logId}</PaymentLogId>
-                            <Status>1</Status>
+                            <Status>2</Status>
                             <StatusMessage>Customer Reference Expired.</StatusMessage>
                         </Payment>
                     </Payments>
@@ -398,6 +402,7 @@ const handleInvoice = (req, res) => {
   }
   // })
 };
+
 const handleLgaInvoice = (req, res) => {
   // let sampleRequest = `<customerinformationrequest>
   //     <ServiceUsername></ServiceUsername>
@@ -434,7 +439,6 @@ const handleLgaInvoice = (req, res) => {
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0];
       console.log(amountPaid);
-
       if (
         amountPaid &&
         amountPaid !== "0" &&
@@ -444,11 +448,15 @@ const handleLgaInvoice = (req, res) => {
       ) {
         db.sequelize
           .query(
-            `SELECT x.*, SUM(x.dr) AS amount FROM tax_transactions x WHERE x.reference_number="${referenceNo}" AND x.status='saved' AND x.transaction_type='invoice'`
+            `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
+            FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS x
+            LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
+            ON 1=1
+            GROUP BY x.reference_number;`
           )
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
-              console.log({ amountPaid, dr: resp[0][0].dr });
+              console.log({ amountPaid, amount: resp[0][0].dr });
               const createdAt = resp[0][0].created_at;
               console.log({ createdAt });
               console.log("createdAt");
@@ -463,7 +471,7 @@ const handleLgaInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                             <PaymentLogId>${logId}</PaymentLogId>
-                            <Status>1</Status>
+                            <Status>2</Status>
                             <StatusMessage>Customer Reference Expired.</StatusMessage>
                         </Payment>
                     </Payments>
@@ -474,6 +482,8 @@ const handleLgaInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
+                        <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
@@ -487,6 +497,8 @@ const handleLgaInvoice = (req, res) => {
                     <PaymentNotificationResponse>
                         <Payments>
                             <Payment>
+                            <PaymentLogId>${logId}</PaymentLogId>
+                            <CustReference>${referenceNo}</CustReference>
                                 <PaymentLogId>${logId}</PaymentLogId>
                                 <Status>0</Status>
                             </Payment>
@@ -498,6 +510,8 @@ const handleLgaInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
+                        <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>Invalid Customer Reference</StatusMessage>
@@ -516,24 +530,25 @@ const handleLgaInvoice = (req, res) => {
 
                     const paymentDate = pp.paymentdate[0];
                     const dateSettled = pp.settlementdate[0];
-                    // const branchName = pp.branchname[0]
-                    // const bankname = pp.bankname[0]
                     const isReversal = pp.isreversal[0];
-                    // const amountPaid = pp.amount[0]
 
                     if (isReversal === "False") {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
-                SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
+                SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
+                  dateSettled
+                ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
-                WHERE reference_number="${referenceNo}"`)
+                WHERE reference_number='${referenceNo}'`)
                       );
                     } else {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                     SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
-                  paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
+                    paymentdate="${moment(paymentDate).format(
+                      "YYYY-MM-DD"
+                    )}", modeOfPayment="${modeOfPayment}", 
                   paymentAmount="${amountPaid}"
                   WHERE reference_number="${referenceNo}"`)
                       );
@@ -555,8 +570,8 @@ const handleLgaInvoice = (req, res) => {
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
-                      <PaymentLogId>${logId}</PaymentLogId>
-                      <CustReference>${referenceNo}</CustReference>
+                  <PaymentLogId>${logId}</PaymentLogId>
+                  <CustReference>${referenceNo}</CustReference>
                       <Status>0</Status>
                   </Payment>
               </Payments>
@@ -570,14 +585,14 @@ const handleLgaInvoice = (req, res) => {
           <PaymentNotificationResponse>
               <Payments>
                   <Payment>
-                      <PaymentLogId>${logId}</PaymentLogId>
-                      <CustReference>${referenceNo}</CustReference>
+                  <PaymentLogId>${logId}</PaymentLogId>
+                  <CustReference>${referenceNo}</CustReference>
+                      <PaymentLogId>0</PaymentLogId>
                       <Status>1</Status>
                   </Payment>
               </Payments>
           </PaymentNotificationResponse>`);
                   });
-
                 // res.send(reqJson)
               }
             } else {
@@ -586,7 +601,8 @@ const handleLgaInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
-                            <PaymentLogId>0</PaymentLogId>
+                        <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>Customer Reference not found or invalid</StatusMessage>
                         </Payment>
@@ -602,6 +618,8 @@ const handleLgaInvoice = (req, res) => {
               <Payment>
                   <PaymentLogId>0</PaymentLogId>
                   <Status>1</Status>
+                  <PaymentLogId>${logId}</PaymentLogId>
+                  <CustReference>${referenceNo}</CustReference>
                   <StatusMessage>Please provide a valid amount</StatusMessage>
               </Payment>
           </Payments>
@@ -628,12 +646,14 @@ const handleLgaInvoice = (req, res) => {
           <Customer>
               <Status>1</Status>
               <CustReference>NA</CustReference>
-              <CustReference>${reqJson.customerinformationrequest.custreference[0]}</CustReference>
+              <CustomerReferenceAlternate></CustomerReferenceAlternate>
+              <ThirdPartyCode></ThirdPartyCode>
               <Amount>0</Amount>
           </Customer>
       </Customers>
   </Response>`);
   }
+  // })
 };
 
 module.exports = {
