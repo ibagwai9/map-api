@@ -193,6 +193,7 @@ const handleInvoice = (req, res) => {
         amountPaid !== 0 &&
         amountPaid !== 0.0
       ) {
+        
         db.sequelize
           .query(
             `SELECT x.*, SUM(x.dr) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status='saved' AND x.transaction_type='invoice'`
