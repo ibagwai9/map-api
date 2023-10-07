@@ -4,7 +4,7 @@ const db = require("../models");
 const today = moment().format("YYYY-MM-DD");
 const axios = require("axios")
 
-export const E_BUDGET_APIURL = 'https://budget-apis-6a4315f6f2fc.herokuapp.com/account'
+module.exports.E_BUDGET_APIURL = 'https://budget-apis-6a4315f6f2fc.herokuapp.com/account'
 
 exports.paymentSchedule = (req, res) => {
   // console.log('kello')

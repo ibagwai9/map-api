@@ -778,7 +778,7 @@
             "type": "string",
             "description": "Revenue code associated with the tax."
           },
-          "org_code": {
+          "mda_code": {
             "type": "string",
             "description": "Organization code associated with the tax."
           },
