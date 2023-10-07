@@ -10,7 +10,7 @@ const getInvoiceDetails = async (refNo) => {
       `SELECT a.user_id, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, GROUP_CONCAT(a.description, ', ') AS description, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
         where 
-        a.reference_number="${refNo}" AND a.transaction_type='invoice'`
+        a.reference_number='${refNo}' AND a.transaction_type='invoice'`
     );
     console.log(reqData[0]);
     return reqData[0];
@@ -72,20 +72,20 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
-    service_category = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
     const {
-      tax_code,
-      tax_parent_code,
+      tax_code = null,
+      tax_parent_code = null,
       department = null,
       description,
       amount,
       economic_code = null,
       mda_code = null,
       mda_name = null,
+      service_category = null,
       transaction_type,
     } = tax;
 

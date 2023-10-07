@@ -60,8 +60,23 @@ const handleInvoiceValidation = (reqJson, res) => {
 
         if (results && results.length) {
           let firstName = results[0].name;
-          // let lastName = results[0].name.split(" ")[1]
-          let responseData = `<CustomerInformationResponse>
+          let user_id = results[0].user_id;
+          if (user_id === null) {
+            res.set("Content-Type", "text/xml");
+            res.send(`<CustomerInformationResponse>
+        <MerchantReference>${merchantreference}</MerchantReference>
+        <Customers>
+            <Customer>
+            <Status>1</Status>
+            <StatusMessage>Customer Reference not found or invalid</StatusMessage>
+                <CustReference>${custreference}</CustReference>
+                <Amount>0</Amount>
+            </Customer>
+        </Customers>
+    </CustomerInformationResponse>`);
+          } else {
+            // let lastName = results[0].name.split(" ")[1]
+            let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
             <Customer>
@@ -69,7 +84,6 @@ const handleInvoiceValidation = (reqJson, res) => {
                 <CustReference>${custreference}</CustReference>
                 <CustomerReferenceAlternate></CustomerReferenceAlternate>
                 <FirstName>${firstName}</FirstName>
-                <LastName></LastName>
                 <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${results[0].dr}</Amount>
@@ -87,8 +101,9 @@ const handleInvoiceValidation = (reqJson, res) => {
             </Customer>
         </Customers>
     </CustomerInformationResponse>`;
-          res.set("Content-Type", "text/xml");
-          res.send(responseData);
+            res.set("Content-Type", "text/xml");
+            res.send(responseData);
+          }
         } else {
           res.set("Content-Type", "text/xml");
           res.send(`<CustomerInformationResponse>
@@ -246,19 +261,15 @@ const handleInvoice = (req, res) => {
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
                   dateSettled
-                ).format("YYYY-MM-DD")}, 
-                paymentdate="${moment(paymentDate).format(
-                  "YYYY-MM-DD"
-                )}", modeOfPayment="${modeOfPayment}", 
+                ).format("YYYY-MM-DD")}", 
+                paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)
                       );
                     } else {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
-                    SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                      dateSettled
-                    ).format("YYYY-MM-DD")}, 
+                    SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                     paymentdate="${moment(paymentDate).format(
                       "YYYY-MM-DD"
                     )}", modeOfPayment="${modeOfPayment}", 
@@ -404,6 +415,7 @@ const handleLgaInvoice = (req, res) => {
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0];
       console.log(amountPaid);
+
       if (
         amountPaid &&
         amountPaid !== "0" &&
@@ -418,7 +430,26 @@ const handleLgaInvoice = (req, res) => {
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
               console.log({ amountPaid, dr: resp[0][0].dr });
-              if (resp[0][0].dr !== amountPaid) {
+              const createdAt = resp[0][0].created_at;
+              console.log({ createdAt });
+              console.log("createdAt");
+              console.log("createdAt here");
+              if (
+                createdAt &&
+                moment(createdAt).isBefore(moment().subtract(1, "months"))
+              ) {
+                res.set("Content-Type", "text/xml");
+                res.send(`
+                <PaymentNotificationResponse>
+                    <Payments>
+                        <Payment>
+                            <PaymentLogId>${logId}</PaymentLogId>
+                            <Status>1</Status>
+                            <StatusMessage>Customer Reference Expired.</StatusMessage>
+                        </Payment>
+                    </Payments>
+                </PaymentNotificationResponse>`);
+              } else if (resp[0][0].dr !== amountPaid) {
                 res.set("Content-Type", "text/xml");
                 res.send(`
                 <PaymentNotificationResponse>
