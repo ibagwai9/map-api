@@ -14,8 +14,8 @@ module.exports = (app) => {
     getTransaction
   );
   app.post("/invoice", handleInvoice); //Tax/None tax, Motor Lisense
-  app.post("/tax/invoices", tax.handleInvoice); //Tax/None tax, Motor Lisense
-  app.post("/nontax/invoices", nontax.handleInvoice); //Tax/None tax, Motor Lisense
-  app.post("/lga-invoices", handleLgaInvoice);
-  app.post("/land-use-charges", land.handleInvoice);
+  app.post("/tax/invoices", handleInvoice); //Tax/None tax, Motor Lisense
+  app.post("/nontax/invoices", handleInvoice); //Tax/None tax, Motor Lisense
+  app.post("/lga-invoices", handleInvoice); 
+  app.post("/land-use-charges", handleInvoice);
 };
