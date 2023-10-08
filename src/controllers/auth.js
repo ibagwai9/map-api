@@ -876,15 +876,46 @@ module.exports.UpdateTaxPayer = (req, res) => {
 
 module.exports.getTaxPayer = (req, res) => {
   const { user_id } = req.query;
+
+  // First, try to find the record in the tax_payers table
   db.sequelize
     .query("SELECT * FROM tax_payers WHERE user_id=:user_id", {
       replacements: {
         user_id,
       },
     })
-    .then((resp) => res.json({ success: true, data: resp[0][0] }))
+    .then((resp) => {
+      const taxPayerData = resp[0][0];
+
+      if (taxPayerData) {
+        // If a record is found in tax_payers, return it
+        res.json({ success: true, data: taxPayerData });
+      } else {
+        // If no record is found in tax_payers, try to find it in the users table
+        db.sequelize
+          .query("SELECT * FROM users WHERE user_id=:user_id", {
+            replacements: {
+              user_id,
+            },
+          })
+          .then((userResp) => {
+            const userData = userResp[0][0];
+            if (userData) {
+              // If a record is found in users, return it
+              res.json({ success: true, data: userData });
+            } else {
+              // If no record is found in either table, return an error message
+              res.status(404).json({ msg: "User not found" });
+            }
+          })
+          .catch((error) => {
+            console.error({ error });
+            res.status(500).json({ error, msg: "Error occurred" });
+          });
+      }
+    })
     .catch((error) => {
       console.error({ error });
-      res.status(500).json({ error, msg: "Error occured" });
+      res.status(500).json({ error, msg: "Error occurred" });
     });
 };
