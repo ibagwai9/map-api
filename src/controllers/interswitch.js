@@ -193,7 +193,7 @@ const handleInvoice = (req, res) => {
         amountPaid !== 0 &&
         amountPaid !== 0.0
       ) {
-        
+
         db.sequelize
           .query(
             `SELECT x.*, SUM(x.dr) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status='saved' AND x.transaction_type='invoice'`
@@ -202,9 +202,6 @@ const handleInvoice = (req, res) => {
             if (resp && resp.length && resp[0].length) {
               console.log({ amountPaid, amount: resp[0][0].dr });
               const createdAt = resp[0][0].created_at;
-              console.log({ createdAt });
-              console.log("createdAt");
-              console.log("createdAt here");
               if (
                 createdAt &&
                 moment(createdAt).isBefore(moment().subtract(1, "months"))
