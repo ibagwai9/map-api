@@ -882,7 +882,7 @@ module.exports.getTaxPayer = (req, res) => {
         user_id,
       },
     })
-    .then((resp) => res.json({ success: true, data: resp[0] }))
+    .then((resp) => res.json({ success: true, data: resp[0][0] }))
     .catch((error) => {
       console.error({ error });
       res.status(500).json({ error, msg: "Error occured" });

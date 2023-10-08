@@ -518,7 +518,6 @@ BEGIN
         department, 
         service_category,
         sector
-
     ) VALUES (
         p_user_id,
         p_item_code,
