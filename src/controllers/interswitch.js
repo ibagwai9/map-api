@@ -288,8 +288,6 @@ const handleInvoice = (req, res) => {
                         <Payments>
                             <Payment>
                             <PaymentLogId>${logId}</PaymentLogId>
-                            <CustReference>${referenceNo}</CustReference>
-                                <PaymentLogId>${logId}</PaymentLogId>
                                 <Status>0</Status>
                             </Payment>
                         </Payments>
@@ -361,7 +359,6 @@ const handleInvoice = (req, res) => {
               <Payments>
                   <Payment>
                   <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
                       <Status>0</Status>
                   </Payment>
               </Payments>
