@@ -1,4 +1,4 @@
-const { postContactUs, getTaxPayers } = require("../controllers/segment");
+const { postContactUs, getTaxPayers, addDepartment } = require("../controllers/segment");
 const passport = require("passport");
 
 module.exports = (app) => {
@@ -12,4 +12,12 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     postContactUs
   );
+  
+  // app.post(
+  //   "/add-departments",
+  //   passport.authenticate("jwt", { session: false }),
+  //   addDepartment
+  // );
+  
+
 };

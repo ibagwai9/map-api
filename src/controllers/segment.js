@@ -44,3 +44,23 @@ module.exports.getTaxPayers = (req, res) => {
       res.status(500).json({ success: false, err });
     });
 };
+
+// module.exports.addDepartment = (req, res) => {
+//   const { description = "", type = "" } = req.body;
+//   const { query_type = "insert" } = req.query;
+//   db.sequelize
+//     .query(`call add_department(:query_type, :description,:type)`, {
+//       replacements: {
+//         description,
+//         type,
+//         query_type,
+//       },
+//     })
+//     .then((results) => {
+//       res.json({ success: true, results });
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res.status(500).json({ success: false, err });
+//     });
+// };
