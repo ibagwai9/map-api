@@ -112,7 +112,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <CustomerReferenceAlternate></CustomerReferenceAlternate>
                 <FirstName>${firstName}</FirstName>
                 <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
