@@ -1,8 +1,9 @@
 const db = require("../models");
 const request = require("request-promise");
+const moment = require("moment");
 
 module.exports.addTransactionsApi = async (item) => {
-  console.log(item);
+  //   console.log(item);
   const {
     paystatus = "",
     startcount = 0,
@@ -36,7 +37,7 @@ module.exports.addTransactionsApi = async (item) => {
           status,
           surname,
           othernames,
-          paymentdate,
+          paymentdate: moment(paymentdate).format("YYYY-MM-DD hh:mm:ss"),
           paymentmethod,
           localid,
           onlineid,
@@ -61,6 +62,9 @@ module.exports.addTransactionsApi = async (item) => {
 };
 
 module.exports.addHospitalData = async () => {
+  const _noCount = await db.sequelize.query(
+    "select ifnull(max(transactioncount),0)  as startcount from transactions; "
+  );
   const options = {
     method: "POST",
     url: "https://kano.hirms.net/apiresource/allpayments.php",
@@ -69,44 +73,57 @@ module.exports.addHospitalData = async () => {
       userkey: process.env.userkey,
       privatekey: process.env.privatekey,
       hashkey: process.env.hashkey,
+      startcount: _noCount[0][0].startcount,
     },
     json: true, // Automatically parse response as JSON
   };
-
   try {
     let returndata = 1;
-    console.log("herer");
-    while (returndata) {
-        const response = await request(options);
-      console.log(response);
 
-      if (!response.body  || response.body.returndata  === 0) {
+    while (returndata) {
+      await new Promise((resolve) => setTimeout(resolve, 7000));
+      const response = await request(options);
+      //   console.log(response.returndata);
+      if (response.returndata === 0) {
         returndata = 0; // Update returndata to zero or exit the loop
         console.log("Break");
         break; // Exit the while loop
-      }
-
-      if (returndata) {
+      } else if (
+        response.payload &&
+        Array.isArray(response.payload) &&
+        response.payload.length > 0
+      ) {
+        // console.log("add");
         const arr = [];
-        response.body.payload.forEach((_item) => {
-          _item.items.forEach((item) => {
-            arr.push(
-              module.exports.addTransactionsApi({
-                ..._item,
-                ...item,
-              })
-            );
-          });
+        response.payload.forEach((_item) => {
+          //   console.log(_item);
+          if (_item.items && Array.isArray(_item.items)) {
+            _item.items.forEach((item) => {
+              arr.push(
+                module.exports
+                  .addTransactionsApi({
+                    ..._item,
+                    ...item,
+                  })
+                  .catch((error) => {
+                    console.error("Error in addTransactionsApi:", error);
+                    throw error; // Re-throw the error to propagate it
+                  })
+              );
+            });
+          } else {
+            console.error("Invalid items property:", _item.items);
+          }
         });
-        Promise.all(arr)
-          .then((results) => {
-            console.log(results);
-          })
+
+        await Promise.all(arr)
+          .then((results) => console.log(results))
           .catch((error) => {
-            console.log(error);
-          });
-        const results = await Promise.all(arr);
-        console.log(results);
+            console.error("Error in addTransactionsApi:", error);
+            throw error; // Re-throw the error to propagate it
+          }); // Use await to wait for all promises to resolve
+      } else {
+        console.error("Invalid response payload:", response.payload);
       }
     }
   } catch (error) {

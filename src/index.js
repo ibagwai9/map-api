@@ -76,9 +76,9 @@ cron.schedule("0 2 * * *", () => {
   });
 });
 
-cron.schedule("0 4 * * *", () => {
-  // cron.schedule('* * * * *', () => {
-    console.log("Herrrrrr")
+// cron.schedule("* * * * *", () => {
+cron.schedule("40 18 * * *", () => {
+  console.log("Herrrrrr");
   addHospitalData();
 });
 
