@@ -891,34 +891,9 @@ module.exports.getTaxPayer = (req, res) => {
     })
     .then((resp) => {
       const taxPayerData = resp[0][0];
-
-      if (taxPayerData) {
-        // If a record is found in tax_payers, return it
-        res.json({ success: true, data: taxPayerData });
-      } else {
-        // If no record is found in tax_payers, try to find it in the users table
-        db.sequelize
-          .query("SELECT * FROM users WHERE user_id=:user_id", {
-            replacements: {
-              user_id,
-            },
-          })
-          .then((userResp) => {
-            const userData = userResp[0][0];
-            if (userData) {
-              // If a record is found in users, return it
-              res.json({ success: true, data: userData });
-            } else {
-              // If no record is found in either table, return an error message
-              res.status(404).json({ msg: "User not found" });
-            }
-          })
-          .catch((error) => {
-            console.error({ error });
-            res.status(500).json({ error, msg: "Error occurred" });
-          });
-      }
+      res.json({ success: true, data: taxPayerData });
     })
+
     .catch((error) => {
       console.error({ error });
       res.status(500).json({ error, msg: "Error occurred" });
