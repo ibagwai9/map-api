@@ -7,7 +7,7 @@ require("dotenv").config();
 const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,a.item_code, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, GROUP_CONCAT(a.description, ', ') AS description, b.name FROM tax_transactions a 
+      `SELECT a.user_id, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
         where 
         a.reference_number='${refNo}' AND a.transaction_type='invoice'`
@@ -27,7 +27,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :agent_id,
         :org_name,
         :mda_code,
-        :tax_code,    
+        :item_code,    
         :rev_code,
         :description,
         :nin_id,
@@ -78,7 +78,7 @@ const postTrx = async (req, res) => {
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
     const {
-      tax_code = null,
+      item_code = null,
       tax_parent_code = null,
       department = null,
       description,
@@ -93,7 +93,7 @@ const postTrx = async (req, res) => {
 
     const params = {
       query_type: `insert_${transaction_type}`,
-      tax_code,
+      item_code,
       user_id,
       agent_id,
       description,
@@ -167,7 +167,6 @@ const getTrx = async (req, res) => {
     user_id = null,
     agent_id = null,
     item_code = null,
-    tax_code = null,
     status = null,
     description = null,
     amount = null,
@@ -195,7 +194,7 @@ const getTrx = async (req, res) => {
   const params = {
     user_id,
     agent_id,
-    tax_code: item_code ? item_code : tax_code,
+    item_code,
     status,
     description,
     amount,
