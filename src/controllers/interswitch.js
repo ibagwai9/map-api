@@ -120,7 +120,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <PaymentItems>
                   <Item>
                       <ProductName>${results[0].description}</ProductName>
-                      <ProductCode>01</ProductCode>
+                      <ProductCode>${results[0].item_code}</ProductCode>
                       <Quantity>1</Quantity>
                       <Price>${results[0].dr}</Price>
                       <Subtotal>${results[0].dr}</Subtotal>
