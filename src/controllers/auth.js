@@ -30,6 +30,7 @@ module.exports.SignUp = (req, res) => {
     mda_name = "",
     mda_code = "",
     rank = "",
+    // user_status = "approved",
   } = req.body;
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
@@ -83,6 +84,7 @@ module.exports.SignUp = (req, res) => {
                       mda_code,
                       department,
                       rank,
+                      // user_status,
                     },
                   }
                 )
@@ -769,6 +771,7 @@ module.exports.searchUser = (req, res) => {
           mda_code: "",
           department: "",
           rank: "",
+          // user_status: "approved",
         },
       }
     )
@@ -826,6 +829,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     mda_code = "",
     department = "",
     rank = "",
+    // user_status = "approved",
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -862,6 +866,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               mda_code,
               department,
               rank,
+              // user_status,
             },
           }
         )
@@ -913,6 +918,24 @@ module.exports.getTaxPayer = (req, res) => {
             res.status(500).json({ error, msg: "Error occurred" });
           });
       }
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
+};
+
+module.exports.getTaxPayerInfo = (req, res) => {
+  const { user_id } = req.query;
+  db.sequelize
+    .query("SELECT * FROM tax_payers WHERE id=:user_id", {
+      replacements: {
+        user_id,
+      },
+    })
+    .then((resp) => {
+      const taxPayerData = resp[0][0];
+      res.json({ success: true, data: taxPayerData });
     })
     .catch((error) => {
       console.error({ error });
