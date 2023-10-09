@@ -237,7 +237,7 @@ const handleInvoice = (req, res) => {
         db.sequelize
           .query(
             `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
-            FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status 'saved' AND transaction_type='invoice') AS x
+            FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status IN ('saved','PAID') AND transaction_type='invoice') AS x
             LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
             ON 1=1
             GROUP BY x.reference_number;`
@@ -693,4 +693,5 @@ const handleInvoice = (req, res) => {
 module.exports = {
   getTransaction,
   handleInvoice,
+  // handleLgaInvoice,
 };
