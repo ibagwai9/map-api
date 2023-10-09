@@ -10,6 +10,5 @@ module.exports.allowOnly = function(accessLevel, callback) {
 
         callback(req, res)
     }
-
     return checkUserRole;
 }

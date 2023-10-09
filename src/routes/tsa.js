@@ -6,13 +6,15 @@ const {
   postKigrTaxes,
   getLGAs,
   getLGARevenues,
+  getMDAs,
+  getMdaDepartments,
 } = require("../controllers/tsa");
 const passport = require("passport");
 
 module.exports = (app) => {
   app.get(
     "/tsa-code",
-    passport.authenticate("jwt", { session: false }),
+    // passport.authenticate("jwt", { session: false }),
     tsa_code
   );
   app.get(
@@ -46,4 +48,20 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     getLGARevenues
   );
+  
+  app.get(
+    "/get/mdas",
+    // passport.authenticate("jwt", { session: false }),
+    getMDAs
+  );
+  
+  app.get(
+    "/get/mda-departments",
+    passport.authenticate("jwt", { session: false }),
+    getMdaDepartments
+  );
+
+
+
+
 };

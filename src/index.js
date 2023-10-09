@@ -15,11 +15,14 @@ app.use(express.static(path.join(__dirname)));
 app.use(xmlparser());
 app.use(express.json({ limit: "50mb" }));
 
+const cron = require("node-cron");
+
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger-doc.json");
 
 let port = process.env.PORT || 3589;
-
+const { getTertiary } = require("./controllers/transactions");
+const { institutions } = require("./config/institutions");
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -47,7 +50,7 @@ app.use(passport.initialize());
 
 // passport config
 passportConfig(passport);
-// app.use(helmet())
+app.use(helmet());
 // Use the Helmet middleware to set Content Security Policy
 // app.use(
 //   helmet.contentSecurityPolicy({
@@ -64,6 +67,13 @@ passportConfig(passport);
 //     includeSubDomains: true,
 //   })
 // );
+cron.schedule("0 */12 * * *", () => {
+// cron.schedule("*/30 * * * * *", () => {
+  institutions.forEach((inst) => {
+    // console.log(inst);mnhy
+    getTertiary(inst.code);
+  });
+});
 
 app.use(helmet.xContentTypeOptions());
 
