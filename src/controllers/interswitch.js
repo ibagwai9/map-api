@@ -87,7 +87,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
       getInvoiceDetails(custreference)
         .then((results) => {
           console.log(results);
-
           if (results && results.length) {
             let firstName = results[0].name;
             let user_id = results[0].user_id;
@@ -112,7 +111,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <CustomerReferenceAlternate></CustomerReferenceAlternate>
                 <FirstName>${firstName}</FirstName>
                 <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
@@ -315,7 +313,6 @@ const handleInvoice = (req, res) => {
                     // const invoiceId = pp.custreference[0]
                     const interswitchRef = pp.paymentreference[0];
                     const modeOfPayment = pp.paymentmethod[0];
-
                     const paymentDate = pp.paymentdate[0];
                     const dateSettled = pp.settlementdate[0];
                     const isReversal = pp.isreversal[0];
@@ -366,7 +363,6 @@ const handleInvoice = (req, res) => {
                   })
                   .catch((err) => {
                     console.log(err);
-
                     res.set("Content-Type", "text/xml");
                     res.send(`
           <PaymentNotificationResponse>
@@ -433,8 +429,6 @@ const handleInvoice = (req, res) => {
           <Customer>
               <Status>1</Status>
               <CustReference>NA</CustReference>
-              <CustomerReferenceAlternate></CustomerReferenceAlternate>
-              <ThirdPartyCode></ThirdPartyCode>
               <Amount>0</Amount>
           </Customer>
       </Customers>
