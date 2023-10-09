@@ -7,7 +7,7 @@ require("dotenv").config();
 const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, GROUP_CONCAT(a.description, ', ') AS description, b.name FROM tax_transactions a 
+      `SELECT a.user_id,a.item_code, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, GROUP_CONCAT(a.description, ', ') AS description, b.name FROM tax_transactions a 
         JOIN users b on a.user_id=b.id 
         where 
         a.reference_number='${refNo}' AND a.transaction_type='invoice'`

@@ -120,7 +120,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <PaymentItems>
                   <Item>
                       <ProductName>${results[0].description}</ProductName>
-                      <ProductCode>01</ProductCode>
+                      <ProductCode>${results[0].item_code}</ProductCode>
                       <Quantity>1</Quantity>
                       <Price>${results[0].dr}</Price>
                       <Subtotal>${results[0].dr}</Subtotal>
@@ -326,8 +326,8 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                  dateSettled
-                ).format("YYYY-MM-DD")}", 
+                          dateSettled
+                        ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)
