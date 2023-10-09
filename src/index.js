@@ -23,6 +23,7 @@ const swaggerDocument = require("./swagger-doc.json");
 let port = process.env.PORT || 3589;
 const { getTertiary } = require("./controllers/transactions");
 const { institutions } = require("./config/institutions");
+const { addHospitalData } = require("./controllers/transactions-hpt");
 // make express look in the public directory for assets (css/js/img)
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -67,12 +68,18 @@ app.use(helmet());
 //     includeSubDomains: true,
 //   })
 // );
-cron.schedule("0 */12 * * *", () => {
-// cron.schedule("*/30 * * * * *", () => {
+cron.schedule("0 2 * * *", () => {
+  // cron.schedule("*/30 * * * * *", () => {
   institutions.forEach((inst) => {
     // console.log(inst);mnhy
     getTertiary(inst.code);
   });
+});
+
+cron.schedule("0 4 * * *", () => {
+  // cron.schedule('* * * * *', () => {
+    console.log("Herrrrrr")
+  addHospitalData();
 });
 
 app.use(helmet.xContentTypeOptions());
@@ -95,6 +102,5 @@ require("./routes/budget.js")(app);
 var server = app.listen(port, function () {
   var host = server.address().address;
   var port = server.address().port;
-
   console.log("App listening at http://%s:%s", host, port);
 });

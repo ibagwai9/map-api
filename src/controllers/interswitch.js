@@ -236,6 +236,7 @@ const handleInvoice = (req, res) => {
         amountPaid !== 0 &&
         amountPaid !== 0.0
       ) {
+
         db.sequelize
           .query(
             `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
@@ -248,9 +249,6 @@ const handleInvoice = (req, res) => {
             if (resp && resp.length && resp[0].length) {
               console.log({ amountPaid, amount: resp[0][0].dr });
               const createdAt = resp[0][0].created_at;
-              console.log({ createdAt });
-              console.log("createdAt");
-              console.log("createdAt here");
               if (
                 createdAt &&
                 moment(createdAt).isBefore(moment().subtract(1, "months"))
