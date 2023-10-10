@@ -1,7 +1,23 @@
-const { getTaxPayer } = require("../controllers/segment");
+const { postContactUs, getTaxPayers, addDepartment } = require("../controllers/segment");
 const passport = require("passport");
 
 module.exports = (app) => {
-  // app.post("/segment", postSegment);
-  app.get("/get-tax-payer",passport.authenticate("jwt", { session: false }), getTaxPayer);
+  app.get(
+    "/get-tax-payer",
+    passport.authenticate("jwt", { session: false }),
+    getTaxPayers
+  );
+  app.post(
+    "/post-contact-us",
+    passport.authenticate("jwt", { session: false }),
+    postContactUs
+  );
+  
+  // app.post(
+  //   "/add-departments",
+  //   passport.authenticate("jwt", { session: false }),
+  //   addDepartment
+  // );
+  
+
 };

@@ -1,67 +1,111 @@
-ALTER TABLE `users` CHANGE `accessTo` `accessTo` VARCHAR(4000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
-UPDATE `users` SET `accessTo` = 'MDA Reports, Tax Payers, Tax Setup, Tax Admins, TAX,  NON TAX, VEHICLES, LAND, LGA' WHERE `users`.`role` IN('admin','developer');
-DROP PROCEDURE `kigra_taxes`;
+CREATE TABLE `contact_us` ( `id` INT NOT NULL AUTO_INCREMENT , `fullname` VARCHAR(100) NULL DEFAULT NULL , `email` VARCHAR(60) NULL DEFAULT NULL , `message` VARCHAR(2000) NOT NULL , `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `inserted_by` VARCHAR(80) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
 DELIMITER $$
-CREATE  PROCEDURE `kigra_taxes`(IN `query_type` VARCHAR(100), IN `in_id` INT, IN `in_tax_code` VARCHAR(100), IN `in_tax_parent_code` VARCHAR(100), IN `in_description` VARCHAR(100), IN `in_tax_fee` VARCHAR(10), IN `in_sector` VARCHAR(100), IN `in_input_type` VARCHAR(50))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `contact_us`(IN `query_type` VARCHAR(50), IN `in_fullname` VARCHAR(100), IN `in_email` VARCHAR(70), IN `in_massage` VARCHAR(2000), IN `in_insert_by` VARCHAR(100))
 BEGIN
-  IF query_type='create' THEN    
-    INSERT INTO `taxes` (`tax_code`, `tax_parent_code`, `title`, `tax_fee`,`sector`,default_input) VALUES
-  (in_tax_code,in_tax_parent_code,in_description,in_tax_fee,in_sector,in_input_type) ;
-    ELSEIF query_type = 'update-tax' THEN
-    -- Update an existing tax record based on the provided parameters.
-    UPDATE `taxes`
-    SET
-      `tax_code` = IFNULL(in_tax_code, `tax_code`),
-      `tax_parent_code` = IFNULL(in_tax_parent_code, `tax_parent_code`),
-      `title` = IFNULL(in_description, `title`),
-      `tax_fee` = IFNULL(in_tax_fee, `tax_fee`),
-      `sector` = IFNULL(in_sector, `sector`),
-      default_input= IFNULL(in_input_type, `default_input`)
-    WHERE
-      `id` = in_id;
-     ELSEIF query_type = 'delete'  THEN
-     DELETE FROM taxes WHERE  `id` = in_id;
-      
-    ELSEIF query_type = 'select-all'  THEN
-SELECT * FROM `taxes` x WHERE x.sector=in_sector;
-    ELSEIF query_type = 'select-sector-taxes'  THEN
-      SELECT * FROM `taxes` x WHERE  x.sector=in_sector AND tax_fee>0;
+if query_type = 'insert' THEN
+INSERT INTO `contact_us`( `fullname`, `email`, `message`, `inserted_by`) VALUES (in_fullname,in_email,in_massage, in_insert_by);
 
-    ELSEIF query_type = 'select-heads'  THEN
-SELECT * FROM `taxes` x WHERE   x.title!=''
-AND x.tax_fee IS NULL  AND x.sector=in_sector;
-    ELSEIF query_type = 'select-main'  THEN
-
-      SELECT * FROM `taxes` x WHERE   x.tax_parent_code !='' AND x.title='' AND x.sector=in_sector;
-   ELSEIF query_type = 'select-sub'  THEN
-
-      IF in_sector IS NOT NULL THEN
-  SELECT * FROM `taxes` x WHERE x.sector=in_sector AND x.tax_fee IS NOT NULL;
-ELSE
-      SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code;
-END IF;
-ELSEIF query_type = 'selected-sub'  THEN
-IF in_sector IS NOT NULL THEN
-  SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code AND x.sector=in_sector AND x.tax_fee IS NOT NULL AND x.tax_fee!='';
-ELSE
-      SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code;
-END IF;
-ELSEIF query_type = 'select' AND in_tax_code IS NOT NULL OR in_tax_parent_code IS NOT NULL THEN
-      IF in_tax_parent_code IS NOT NULL THEN
-SELECT * FROM `taxes` WHERE tax_parent_code =in_tax_parent_code AND  title IS NOT NULL;
-ELSEIF in_tax_code IS NOT NULL THEN
-SELECT * FROM `taxes` WHERE tax_code =in_tax_code;
-
-END IF;
-ELSEIF  query_type='select-mdas' THEN
-SELECT * FROM mdas_1;
-ELSEIF query_type='select-healthcares' THEN
-SELECT * FROM `state_health_facilities` WHERE ownership_code =1 LIMIT 50;
-ELSEIF query_type='select-high-institutions' THEN
-SELECT * FROM `educ_institutions`;
-ELSEIF query_type='presumptive' THEN
-	SELECT * FROM presumptive_taxes;
-END IF;
+end IF;
 END$$
 DELIMITER ;
 
+-- //
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100))
+BEGIN
+  
+    DECLARE Tax_ID INT;
+        CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
+
+    IF in_query_type = 'insert' THEN
+        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, rank, TaxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank, @Tax_ID); 
+        
+        INSERT INTO `tax_payers`(`name`, `username`, `email`, `role`, `bvn`, `tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `state`, `lga`, `address`) 
+        VALUES (in_name,in_username,in_email,in_role,in_bvn,in_org_tin,@Tax_ID,in_org_name,in_rc,in_account_type,in_phone,in_state,in_lga,in_address);
+        
+        CALL in_number_generator('update', NULL, 'application_number', @Tax_ID,@void);
+    
+    ELSEIF in_query_type='create-admin' THEN
+       INSERT INTO users (name, username, email, password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID, rank)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, @Tax_ID, in_rank); 
+        
+        
+    ELSEIF  in_query_type = 'update-admin' THEN
+        -- Update columns based on input parameters, maintaining initial values if not provided
+        UPDATE users
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            password = IFNULL(in_password, password),
+            role = IFNULL(in_role, role),
+            account_type = IFNULL(in_account_type, account_type),
+            phone = IFNULL(in_phone, phone),
+            accessTo = IFNULL(in_accessTo, accessTo),
+            mda_name = IFNULL(in_mda_name, mda_name),
+            mda_code = IFNULL(in_mda_code, mda_code),
+            department = IFNULL(in_department, department)
+        WHERE id = in_id;
+    ELSEIF in_query_type = 'update-taxpayer' THEN
+        -- Update columns based on input parameters, maintaining initial values if not provided
+        UPDATE tax_payers
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            role = IFNULL(in_role, role),
+            bvn = IFNULL(in_bvn, bvn),
+            org_tin = IFNULL(in_org_tin, org_tin),
+            tin = IFNULL(in_tin, tin),
+            org_name = IFNULL(in_org_name, org_name),
+            rc = IFNULL(in_rc, rc),
+            account_type = IFNULL(in_account_type, account_type),
+            phone = IFNULL(in_phone, phone),
+            state = IFNULL(in_state, state),
+            lga = IFNULL(in_lga, lga),
+            address = IFNULL(in_address, address),
+            office_address = IFNULL(in_office_address, office_address),
+            accessTo = IFNULL(in_accessTo, accessTo),
+           rank = IFNULL(in_rank, rank)  
+        WHERE user_id = in_id;
+        -- SELECT statement here if needed
+    ELSEIF in_query_type = 'update' THEN
+        -- Update columns based on input parameters, maintaining initial values if not provided
+        UPDATE users
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            password = IFNULL(in_password, password),
+            role = IFNULL(in_role, role),
+            account_type = IFNULL(in_account_type, account_type),
+            phone = IFNULL(in_phone, phone)
+        WHERE id = in_id;
+    ELSEIF in_query_type = 'delete' THEN
+        DELETE FROM users WHERE id = in_id;
+    ELSEIF in_query_type = 'select-user' THEN
+        SELECT * FROM `users` u WHERE   u.phone LIKE CONCAT('%', in_id, '%') OR u.email LIKE CONCAT('%', in_id, '%'); 
+    ELSEIF in_query_type = 'select-tax-payer' THEN
+        SELECT * FROM `tax_payers` u 
+        WHERE u.taxID LIKE CONCAT('%', in_id, '%') 
+        OR u.nin LIKE CONCAT('%', in_id, '%') 
+        OR u.org_tin  LIKE CONCAT('%', in_id, '%')   
+        OR u.email  LIKE CONCAT('%', in_id, '%')  
+        OR u.office_email  LIKE CONCAT('%', in_id, '%')  
+        OR u.office_phone  LIKE CONCAT('%', in_id, '%')  
+        OR u.phone  LIKE CONCAT('%', in_id, '%'); 
+    END IF;
+END$$
+DELIMITER ;
+
+
+ALTER TABLE `users` ADD `user_status` VARCHAR(50) NULL DEFAULT NULL AFTER `updatedAt`;
+CREATE TABLE `department` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `description` varchar(100) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4
+INSERT INTO `department`(`description`, `type`) VALUES ('Survey Department','LAND'),('GIS','LAND'),('Physical Planning','LAND'),('Special Assignment Dept. Contravention','LAND'),('SLTR','LAND'),('DEEPS','LAND'),('Land Department','LAND')

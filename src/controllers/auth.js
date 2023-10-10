@@ -1,9 +1,10 @@
 const db = require("../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { send } = require("../services/smsApi");
+const transport = require("../config/nodemailer");
 
 module.exports.SignUp = (req, res) => {
-  console.log(req.body);
   const {
     username = "",
     password = "",
@@ -26,7 +27,13 @@ module.exports.SignUp = (req, res) => {
     lga = "",
     address = "",
     department = "",
+    mda_name = "",
+    mda_code = "",
+    rank = "",
+    contact_phone = "",
+    // user_status = "approved",
   } = req.body;
+  console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
     let maxId = result[0][0].id;
@@ -34,7 +41,7 @@ module.exports.SignUp = (req, res) => {
     db.sequelize
       .query(
         `SELECT * from users
-     where email="${email}"`
+     where phone="${contact_phone}"`
       )
       .then((resp) => {
         console.log(resp[0]);
@@ -42,7 +49,7 @@ module.exports.SignUp = (req, res) => {
           console.log("user exist");
           return res
             .status(400)
-            .json({ success: false, msg: "email already registered" });
+            .json({ success: false, msg: "Phone Number already registered" });
         } else {
           bcrypt.genSalt(10, (err, salt) => {
             bcrypt.hash(password, salt, (err, hash) => {
@@ -51,7 +58,7 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :accessTo)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank)",
                   {
                     replacements: {
                       query_type: "insert",
@@ -68,20 +75,29 @@ module.exports.SignUp = (req, res) => {
                       company_name,
                       rc,
                       account_type,
-                      phone,
+                      phone: contact_phone,
                       office_phone,
                       state,
                       lga,
                       address,
                       office_address,
                       accessTo,
+                      mda_name,
+                      mda_code,
+                      department,
+                      rank,
+                      // user_status,
                     },
                   }
                 )
                 .then(
                   (userResp) => {
                     db.sequelize
-                      .query(`SELECT * from users where email="${email}"`)
+                      .query(`SELECT * from users where email='${email}'`, {
+                        replacements: {
+                          phone,
+                        },
+                      })
                       .then((resultR) => {
                         //   res.json({
                         //   status: "success",
@@ -97,7 +113,7 @@ module.exports.SignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                           process.env.JWT_SECRET_KEY,
+                          process.env.JWT_SECRET_KEY,
                           {
                             expiresIn: 84300,
                           },
@@ -113,6 +129,47 @@ module.exports.SignUp = (req, res) => {
                             });
                           }
                         );
+                        if (phone) {
+                          send(
+                            phone,
+                            `Welcome to KIRMAS\nYour Tax ID is ${user.taxID}`,
+                            (resp) => {
+                              console.log("SMS sent");
+                              console.log(resp);
+                            },
+                            (err) => {
+                              console.log("SMS not sent");
+                              console.log(err);
+                            }
+                          );
+                        }
+                        if (email) {
+                          transport
+                            .sendMail({
+                              from: "KIRMAS",
+                              to: email,
+                              subject: "Welcome",
+                              html: ` <center>
+                              <img src='https://mdas.kigra.gov.ng/images/knlogo.png'
+                              height='80px' width='80px' />
+                            </center>
+                    
+                            <h3>Warm welcome,</h3>
+                            <h4>Thank you for registering with KIRMAS</h4>
+                    
+                            <p>Your Tax ID is ${user.taxID}.</p>      
+                            <p>Do let us know if you are experiencing any difficulty at any point. Thank you.</p>
+                            <br />
+                    
+                            <p>Best regards.</p>
+                            <p>KIRMAS Support</p>`,
+                            })
+                            .then((info) => {
+                              console.log("Message sent: %s", info.messageId);
+                            })
+                            .catch((err) => console.log("Error", err));
+                        }
+
                         // .then((resultR) => {
                         //   //   res.json({
                         //   //   status: "success",
@@ -126,7 +183,7 @@ module.exports.SignUp = (req, res) => {
                         //   };
                         //   jwt.sign(
                         //     payload,
-                        //      process.env.JWT_SECRET_KEY,
+                        //     "secret",
                         //     {
                         //       expiresIn: "1d",
                         //     },
@@ -174,6 +231,7 @@ module.exports.SignIn = async (req, res) => {
           { username },
           { email: username },
           { taxID: username },
+          { phone: username },
         ],
       },
     });
@@ -191,6 +249,7 @@ module.exports.SignIn = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        phone: user.username,
       };
       jwt.sign(
         payload,
@@ -373,7 +432,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
                       };
                       jwt.sign(
                         payload,
-                         process.env.JWT_SECRET_KEY,
+                        process.env.JWT_SECRET_KEY,
                         {
                           expiresIn: "1d",
                         },
@@ -453,7 +512,7 @@ module.exports.TreasuryAppSignUp = (req, res) => {
                         };
                         jwt.sign(
                           payload,
-                           process.env.JWT_SECRET_KEY,
+                          process.env.JWT_SECRET_KEY,
                           {
                             expiresIn: "1d",
                           },
@@ -515,7 +574,7 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 
             jwt.sign(
               payload,
-               process.env.JWT_SECRET_KEY,
+              process.env.JWT_SECRET_KEY,
               {
                 expiresIn: "1d",
               },
@@ -553,10 +612,16 @@ module.exports.TreasuryAppSignIn = (req, res) => {
 module.exports.verifyTokenTreasuryApp = (req, res) => {
   // const {verifyToken} = req.params
   const authToken = req.headers["authorization"];
-  const token = authToken.split(" ")[1];
-  console.log(authToken);
 
-  jwt.verify(token,  process.env.JWT_SECRET_KEY, (err, decoded) => {
+  if (!authToken || !authToken.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      msg: "Invalid or missing token",
+    });
+  }
+  const token = authToken.split(" ")[1];
+
+  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     if (err) {
       return res.json({
         success: false,
@@ -582,7 +647,7 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
   });
 };
 
-module.exports.verifyToken = (req, res) => {
+module.exports.verifyToken = async function (req, res) {
   const authToken = req.headers["authorization"];
 
   if (!authToken || !authToken.startsWith("Bearer ")) {
@@ -594,42 +659,39 @@ module.exports.verifyToken = (req, res) => {
 
   const token = authToken.slice(7); // Remove "Bearer " from the token string
 
-  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({
-        success: false,
-        msg: "Failed to authenticate token",
-      });
-    }
-
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const { email } = decoded;
 
-    db.User.findAll({
+    const user = await db.User.findOne({
       where: {
         email,
       },
-    })
-      .then((user) => {
-        if (!user) {
-          return res.status(404).json({
-            success: false,
-            msg: "User not found",
-          });
-        }
+    });
 
-        res.json({
-          success: true,
-          user,
-        });
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).json({
-          success: false,
-          msg: "Internal server error",
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found",
       });
-  });
+    }
+
+    const tax_accounts = await db.sequelize.query(
+      `SELECT * FROM tax_payers WHERE user_id=${user.id}`
+    );
+
+    res.json({
+      success: true,
+      user,
+      tax_accounts: tax_accounts[0],
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({
+      success: false,
+      msg: "Failed to authenticate token",
+    });
+  }
 };
 
 // module.exports.verifyToken = (req, res) => {
@@ -686,7 +748,7 @@ module.exports.searchUser = (req, res) => {
 
   db.sequelize
     .query(
-      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :accessTo)",
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank)",
       {
         replacements: {
           query_type,
@@ -711,6 +773,11 @@ module.exports.searchUser = (req, res) => {
           address: "",
           office_address: "",
           accessTo: "",
+          mda_name: "",
+          mda_code: "",
+          department: "",
+          rank: "",
+          // user_status: "approved",
         },
       }
     )
@@ -723,13 +790,14 @@ module.exports.searchUser = (req, res) => {
     });
 };
 
-
 module.exports.getAdmins = (req, res) => {
-  const { query_type = "select-user", id = "" } = req.query;
+  const { query_type = "select-user", id = "", mda_code = null } = req.query;
 
   db.sequelize
     .query(
-      "SELECT * FROM users u WHERE u.role IN('admin', 'agent');",
+      `SELECT u.*, NULL AS password FROM users u WHERE u.role IN('admin', 'agent') ${
+        mda_code ? `AND mda_code='${mda_code}'` : ""
+      } ;`
     )
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
@@ -737,5 +805,146 @@ module.exports.getAdmins = (req, res) => {
     .catch((error) => {
       console.error({ error });
       res.status(500).json({ error, msg: "Error occured" });
+    });
+};
+
+module.exports.UpdateTaxPayer = (req, res) => {
+  const {
+    user_id = null,
+    username = "",
+    org_name = "",
+    name = "",
+    email = "",
+    org_email = "",
+    role = "user",
+    accessTo = "",
+    bvn = "",
+    office_address = "",
+    rc = "",
+    tin = "",
+    org_tin = "",
+    account_type = "",
+    phone = "",
+    office_phone = "",
+    state = "",
+    lga = "",
+    password = null,
+    address = "",
+    query_type = "update-taxpayer",
+    mda_name = "",
+    mda_code = "",
+    department = "",
+    rank = "",
+    // user_status = "approved",
+  } = req.body;
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      if (err) throw err;
+      let newPass = hash;
+      db.sequelize
+        .query(
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank);",
+          {
+            replacements: {
+              user_id,
+              query_type,
+              org_name,
+              name,
+              username,
+              email,
+              org_email,
+              password: password ? newPass : null,
+              role,
+              bvn,
+              tin,
+              org_tin,
+              org_name,
+              rc,
+              account_type,
+              phone,
+              office_phone,
+              state,
+              lga,
+              address,
+              office_address,
+              accessTo,
+              mda_name,
+              mda_code,
+              department,
+              rank,
+              // user_status,
+            },
+          }
+        )
+        .then((resp) => res.json({ success: true, data: resp }))
+        .catch((error) => {
+          console.error({ error });
+          res.status(500).json({ error, msg: "Error occured" });
+        });
+    });
+  });
+};
+
+module.exports.getTaxPayer = (req, res) => {
+  const { user_id } = req.query;
+
+  // First, try to find the record in the tax_payers table
+  db.sequelize
+    .query("SELECT * FROM tax_payers WHERE user_id=:user_id", {
+      replacements: {
+        user_id,
+      },
+    })
+    .then((resp) => {
+      const taxPayerData = resp[0][0];
+
+      if (taxPayerData) {
+        // If a record is found in tax_payers, return it
+        res.json({ success: true, data: taxPayerData });
+      } else {
+        // If no record is found in tax_payers, try to find it in the users table
+        db.sequelize
+          .query("SELECT * FROM users WHERE user_id=:user_id", {
+            replacements: {
+              user_id,
+            },
+          })
+          .then((userResp) => {
+            const userData = userResp[0][0];
+            if (userData) {
+              // If a record is found in users, return it
+              res.json({ success: true, data: userData });
+            } else {
+              // If no record is found in either table, return an error message
+              res.status(404).json({ msg: "User not found" });
+            }
+          })
+          .catch((error) => {
+            console.error({ error });
+            res.status(500).json({ error, msg: "Error occurred" });
+          });
+      }
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
+};
+
+module.exports.getTaxPayerInfo = (req, res) => {
+  const { user_id } = req.query;
+  db.sequelize
+    .query("SELECT * FROM tax_payers WHERE id=:user_id", {
+      replacements: {
+        user_id,
+      },
+    })
+    .then((resp) => {
+      const taxPayerData = resp[0][0];
+      res.json({ success: true, data: taxPayerData });
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
     });
 };
