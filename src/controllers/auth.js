@@ -810,7 +810,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     name = "",
     email = "",
     org_email = "",
-    role = "user",
+    role = "admin",
     accessTo = "",
     bvn = "",
     office_address = "",
