@@ -93,11 +93,14 @@ module.exports.SignUp = (req, res) => {
                 .then(
                   (userResp) => {
                     db.sequelize
-                      .query(`SELECT * from users where email='${email}'`, {
-                        replacements: {
-                          phone,
-                        },
-                      })
+                      .query(
+                        `SELECT * from users where phone="${contact_phone}"`,
+                        {
+                          replacements: {
+                            phone,
+                          },
+                        }
+                      )
                       .then((resultR) => {
                         //   res.json({
                         //   status: "success",
