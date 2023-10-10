@@ -1,9 +1,10 @@
-const { 
-  getTrx, 
-  postTrx, 
-  getQRCode, 
-  getPaymentSummary 
-} =  require("../controllers/transactions");
+const {
+  getTrx,
+  postTrx,
+  getQRCode,
+  getPaymentSummary,
+  callTransactionList,
+} = require("../controllers/transactions");
 const passport = require("passport");
 
 const {requireAuth} = require("../config/config.js")
@@ -13,6 +14,11 @@ const {requireAuth} = require("../config/config.js")
     app.get('/transactions/retrieve',passport.authenticate("jwt", { session: false }), getTrx)
     app.get('/transactions/get-qr-code',passport.authenticate("jwt", { session: false }), getQRCode)
     app.get('/get-payment-summary',passport.authenticate("jwt", { session: false }), getPaymentSummary) 
+    app.get(
+      "/get-transaction-details",
+      passport.authenticate("jwt", { session: false }),
+      callTransactionList
+    ); 
     
     // app.get('/get-tertiary-trx',
     // // passport.authenticate("jwt", { session: false }),

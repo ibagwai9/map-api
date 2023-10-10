@@ -3,6 +3,7 @@ const QRCode = require("qrcode");
 const moment = require("moment");
 const { default: axios } = require("axios");
 require("dotenv").config();
+const today = moment().format("YYYY-MM-DD");
 
 const getInvoiceDetails = async (refNo) => {
   try {
@@ -401,6 +402,40 @@ const insertTertiaryData = async (inst) => {
   }
 };
 
+const callTransactionList = (req, res) => {
+  
+  const {
+    department = null,
+    role = null,
+    mda_name = null,
+    agent_id = null,
+    from = today,
+    to = today,
+  } = req.query;
+
+  db.sequelize
+    .query(
+      `CALL selectTransactions(:department, :role, :mda_name,:agent_id,:from,:to)`,
+      {
+        replacements: {
+          department,
+          role,
+          mda_name,
+          agent_id,
+          from,
+          to,
+        },
+      }
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: "Error occurred" });
+    });
+};
+
 module.exports = {
   getQRCode,
   getTrx,
@@ -409,4 +444,5 @@ module.exports = {
   getPaymentSummary,
   getInvoiceDetails,
   getTertiary,
+  callTransactionList,
 };
