@@ -115,7 +115,7 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
     tax_fee = null,
     sector = null,
     default_input = "checked",
-    uom=null
+    uom = null,
   } = data;
 
   db.sequelize
@@ -131,7 +131,7 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
           tax_fee,
           sector,
           default_input,
-          uom
+          uom,
         },
       }
     )
@@ -211,15 +211,16 @@ module.exports.getLGAs = (req, res) => {
     });
 };
 
-
 module.exports.getMDAs = (req, res) => {
   db.sequelize
-    .query("SELECT x.mda_name, x.mda_code FROM `taxes` x WHERE x.mda_name IS NOT NULL GROUP BY x.mda_name")
+    .query(
+      "SELECT x.mda_name, x.mda_code FROM `taxes` x WHERE x.mda_name IS NOT NULL GROUP BY x.mda_name"
+    )
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
     .catch((error) => {
-      console.log({error});
+      console.log({ error });
       res
         .status(500)
         .json({ success: false, error: "Unable to fetch Lga list" });
@@ -227,14 +228,16 @@ module.exports.getMDAs = (req, res) => {
 };
 
 module.exports.getMdaDepartments = (req, res) => {
-  const {mda_code=null}=req.query
-    db.sequelize
-    .query(`SELECT * FROM taxes x WHERE x.mda_code LIKE '%${mda_code}%' AND x.is_department=1`)
+  const { mda_code = null } = req.query;
+  db.sequelize
+    .query(
+      `SELECT * FROM taxes x WHERE x.mda_code LIKE '%${mda_code}%' AND x.is_department=1`
+    )
     .then((resp) => {
       res.json({ success: true, data: resp[0] });
     })
     .catch((error) => {
-      console.log({error});
+      console.log({ error });
       res
         .status(500)
         .json({ success: false, error: "Unable to get Departments." });
