@@ -12,6 +12,7 @@ const {
   getAdmins,
   UpdateTaxPayer,
   getTaxPayer,
+  getTaxPayerInfo,
 } = require("../controllers/auth");
 
 module.exports = (app) => {
@@ -49,5 +50,10 @@ module.exports = (app) => {
     "/users/get-tax-payer",
     passport.authenticate("jwt", { session: false }),
     getTaxPayer
+  );
+  app.get(
+    "/users/get-tax-payer-info",
+    passport.authenticate("jwt", { session: false }),
+    getTaxPayerInfo
   );
 };

@@ -30,6 +30,7 @@ module.exports.SignUp = (req, res) => {
     mda_name = "",
     mda_code = "",
     rank = "",
+    // user_status = "approved",
   } = req.body;
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
@@ -83,6 +84,7 @@ module.exports.SignUp = (req, res) => {
                       mda_code,
                       department,
                       rank,
+                      // user_status,
                     },
                   }
                 )
@@ -769,6 +771,7 @@ module.exports.searchUser = (req, res) => {
           mda_code: "",
           department: "",
           rank: "",
+          // user_status: "approved",
         },
       }
     )
@@ -807,7 +810,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     name = "",
     email = "",
     org_email = "",
-    role = "user",
+    role = "admin",
     accessTo = "",
     bvn = "",
     office_address = "",
@@ -826,6 +829,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     mda_code = "",
     department = "",
     rank = "",
+    // user_status = "approved",
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -862,6 +866,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               mda_code,
               department,
               rank,
+              // user_status,
             },
           }
         )
@@ -886,33 +891,26 @@ module.exports.getTaxPayer = (req, res) => {
     })
     .then((resp) => {
       const taxPayerData = resp[0][0];
+      res.json({ success: true, data: taxPayerData });
+    })
 
-      if (taxPayerData) {
-        // If a record is found in tax_payers, return it
-        res.json({ success: true, data: taxPayerData });
-      } else {
-        // If no record is found in tax_payers, try to find it in the users table
-        db.sequelize
-          .query("SELECT * FROM users WHERE user_id=:user_id", {
-            replacements: {
-              user_id,
-            },
-          })
-          .then((userResp) => {
-            const userData = userResp[0][0];
-            if (userData) {
-              // If a record is found in users, return it
-              res.json({ success: true, data: userData });
-            } else {
-              // If no record is found in either table, return an error message
-              res.status(404).json({ msg: "User not found" });
-            }
-          })
-          .catch((error) => {
-            console.error({ error });
-            res.status(500).json({ error, msg: "Error occurred" });
-          });
-      }
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
+};
+
+module.exports.getTaxPayerInfo = (req, res) => {
+  const { user_id } = req.query;
+  db.sequelize
+    .query("SELECT * FROM tax_payers WHERE id=:user_id", {
+      replacements: {
+        user_id,
+      },
+    })
+    .then((resp) => {
+      const taxPayerData = resp[0][0];
+      res.json({ success: true, data: taxPayerData });
     })
     .catch((error) => {
       console.error({ error });
