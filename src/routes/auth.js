@@ -51,9 +51,9 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     getTaxPayer
   );
-app.get(
-  "/users/get-tax-payer-info",
-  passport.authenticate("jwt", { session: false }),
-  getTaxPayerInfo
-);
+  app.get(
+    "/users/get-tax-payer-info",
+    passport.authenticate("jwt", { session: false }),
+    getTaxPayerInfo
+  );
 };

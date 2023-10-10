@@ -5,7 +5,7 @@ const {
 } = require("../controllers/interswitch");
 const land = require("../controllers/land-interswitch");
 const tax = require("../controllers/tax-interswitch");
-const nontax = require("../controllers/nontax-interswitch");
+const lga = require("../controllers/lga-interswitch");
 
 module.exports = (app) => {
   app.post(
@@ -16,6 +16,6 @@ module.exports = (app) => {
   app.post("/invoice", handleInvoice); //Tax/None tax, Motor Lisense
   app.post("/tax/invoices", handleInvoice); //Tax/None tax, Motor Lisense
   app.post("/nontax/invoices", handleInvoice); //Tax/None tax, Motor Lisense
-  app.post("/lga-invoices", handleInvoice); 
+  app.post("/lga-invoices", lga.handleInvoice); // LGA INVOICE
   app.post("/land-use-charges", handleInvoice);
 };

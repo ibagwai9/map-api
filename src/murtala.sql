@@ -102,10 +102,10 @@ DELIMITER ;
 
 
 ALTER TABLE `users` ADD `user_status` VARCHAR(50) NULL DEFAULT NULL AFTER `updatedAt`;
-CREATE TABLE `department` (
+CREATE TABLE `departments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `description` varchar(100) NOT NULL,
   `type` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4
-INSERT INTO `department`(`description`, `type`) VALUES ('Survey Department','LAND'),('GIS','LAND'),('Physical Planning','LAND'),('Special Assignment Dept. Contravention','LAND'),('SLTR','LAND'),('DEEPS','LAND'),('Land Department','LAND')
+INSERT INTO `departments`(`description`, `type`) VALUES ('Survey Department','LAND'),('GIS','LAND'),('Physical Planning','LAND'),('Special Assignment Dept. Contravention','LAND'),('SLTR','LAND'),('DEEDS','LAND'),('Land Department','LAND')
