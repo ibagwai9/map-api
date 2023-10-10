@@ -225,7 +225,7 @@ module.exports.SignIn = async (req, res) => {
       where: {
         [db.Sequelize.Op.or]: [
           { username },
-          { email: username },
+          { phone: username },
           { taxID: username },
         ],
       },
