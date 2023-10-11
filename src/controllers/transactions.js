@@ -8,9 +8,8 @@ const today = moment().format("YYYY-MM-DD");
 const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
-        JOIN users b on a.user_id=b.id 
-        where 
+      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
+      JOIN tax_payers b on a.user_id=b.user_id  where
         a.reference_number='${refNo}' AND a.transaction_type='invoice'`
     );
     console.log(reqData[0]);
@@ -46,7 +45,10 @@ const callHandleTaxTransaction = async (replacements) => {
         :service_category,
         :sector,
         :start_date, 
-        :end_date)`,
+        :end_date,
+        :taxPayer,
+        :dateFrom,
+        :dateTo)`,
       {
         replacements,
       }
@@ -74,6 +76,7 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
+    dateFrom=null, dateTo=null, taxPayer=null
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -117,6 +120,7 @@ const postTrx = async (req, res) => {
       sector,
       start_date,
       end_date,
+      dateFrom, dateTo, taxPayer
     };
 
     try {

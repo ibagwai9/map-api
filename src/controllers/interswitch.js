@@ -88,7 +88,10 @@ const handleInvoiceValidation = async (reqJson, res) => {
         .then((results) => {
           console.log(results);
           if (results && results.length) {
-            let firstName = results[0].name;
+            let firstName =
+              results[0].account_type === "org"
+                ? results[0].org_name
+                : results[0].name;
             let user_id = results[0].user_id;
             if (user_id === null) {
               res.set("Content-Type", "text/xml");
@@ -234,7 +237,6 @@ const handleInvoice = (req, res) => {
         amountPaid !== 0 &&
         amountPaid !== 0.0
       ) {
-
         db.sequelize
           .query(
             `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
@@ -319,8 +321,8 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                  dateSettled
-                ).format("YYYY-MM-DD")}", 
+                          dateSettled
+                        ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)
