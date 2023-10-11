@@ -952,7 +952,7 @@ module.exports.getTaxPayers = (req, res) => {
 module.exports.getTaxPayerInfo = (req, res) => {
   const { user_id } = req.query;
   db.sequelize
-    .query(`SELECT * FROM tax_payers t  WHERE t.taxID=$'{user_id}'`, {
+    .query(`SELECT * FROM tax_payers t  WHERE t.taxID='${user_id}'`, {
       replacements: {
         user_id,
       },
