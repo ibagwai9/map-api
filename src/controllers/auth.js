@@ -925,6 +925,7 @@ module.exports.getTaxPayer = (req, res) => {
     });
 };
 
+
 module.exports.getTaxPayerInfo = (req, res) => {
   const { user_id } = req.query;
   db.sequelize

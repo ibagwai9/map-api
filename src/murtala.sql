@@ -109,3 +109,27 @@ CREATE TABLE `departments` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4
 INSERT INTO `departments`(`description`, `type`) VALUES ('Survey Department','LAND'),('GIS','LAND'),('Physical Planning','LAND'),('Special Assignment Dept. Contravention','LAND'),('SLTR','LAND'),('DEEDS','LAND'),('Land Department','LAND')
+
+
+
+-----
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `selectTransactions`(IN `user_department` VARCHAR(255), IN `user_role` VARCHAR(255), IN `in_mda_name` VARCHAR(255), IN `user_agent_id` VARCHAR(20), IN `in_from` VARCHAR(20), IN `in_to` VARCHAR(20))
+BEGIN
+  IF user_role = 'admin' AND in_mda_name IS NOT NULL THEN
+    SELECT *, SUM(dr) AS total_amt FROM tax_transactions WHERE mda_name=in_mda_name AND status != 'saved' AND date(created_at) BETWEEN in_from and in_to
+    GROUP BY service_category;
+    
+  ELSEIF user_department IS NOT NULL THEN
+    SELECT * FROM tax_transactions
+    WHERE department = user_department AND status != 'saved' AND date(created_at) BETWEEN in_from and in_to;
+    
+  ELSEIF user_role = 'agent' THEN
+    SELECT * FROM tax_transactions
+    WHERE agent_id = user_agent_id AND status != 'saved' AND date(created_at) BETWEEN in_from and in_to;
+  END IF;
+END$$
+DELIMITER ;
+
+
