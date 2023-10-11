@@ -60,6 +60,6 @@ module.exports = (app) => {
   app.get(
     "/users/get-tax-payer-info",
     passport.authenticate("jwt", { session: false }),
-    getTaxPayerInfo
+    getTaxPayer
   );
 };
