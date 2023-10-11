@@ -94,12 +94,7 @@ module.exports.SignUp = (req, res) => {
                   (userResp) => {
                     db.sequelize
                       .query(
-                        `SELECT * from users where phone="${contact_phone}"`,
-                        {
-                          replacements: {
-                            phone,
-                          },
-                        }
+                        `SELECT * from users where phone="${contact_phone}"`
                       )
                       .then((resultR) => {
                         //   res.json({
@@ -113,6 +108,7 @@ module.exports.SignUp = (req, res) => {
                           id: user.id,
                           username: user.username,
                           email: user.email,
+                          taxID: user.taxID,
                         };
                         jwt.sign(
                           payload,
