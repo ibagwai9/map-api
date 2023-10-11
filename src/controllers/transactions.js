@@ -76,7 +76,9 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
-    dateFrom=null, dateTo=null, taxPayer=null
+    dateFrom = null,
+    dateTo = null,
+    taxPayer = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -120,7 +122,9 @@ const postTrx = async (req, res) => {
       sector,
       start_date,
       end_date,
-      dateFrom, dateTo, taxPayer
+      dateFrom,
+      dateTo,
+      taxPayer,
     };
 
     try {
