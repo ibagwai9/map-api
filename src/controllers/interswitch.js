@@ -88,6 +88,20 @@ const handleInvoiceValidation = async (reqJson, res) => {
         .then((results) => {
           console.log(results);
           if (results && results.length) {
+            const startDate = moment(results[0].date_from);
+            const endDate = moment(results[0].date_to);
+
+            const startFormatted = startDate.format("MMM, YY");
+            const endFormatted = endDate.format("MMM, YY");
+
+            const isWithinOneMonth = startDate.isSame(endDate, "month");
+
+            const formattedRange = isWithinOneMonth
+              ? startFormatted
+              : `${startFormatted} - ${endFormatted}`;
+
+            // let firstName = results[0].name;
+            console.log(results[0]);
             let firstName =
               results[0].account_type === "org"
                 ? results[0].org_name
@@ -115,12 +129,11 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
                 <FirstName>${firstName}</FirstName>
-                <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${results[0].dr}</Amount>
                 <PaymentItems>
                   <Item>
-                      <ProductName>${results[0].description}</ProductName>
+                      <ProductName>${firstName} ${results[0].description} ${formattedRange}</ProductName>
                       <ProductCode>${results[0].item_code}</ProductCode>
                       <Quantity>1</Quantity>
                       <Price>${results[0].dr}</Price>
@@ -321,8 +334,8 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                          dateSettled
-                        ).format("YYYY-MM-DD")}", 
+                  dateSettled
+                ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)

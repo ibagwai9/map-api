@@ -228,61 +228,77 @@ module.exports.SignIn = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = await db.User.findOne({
+    const user = await db.User.findAll({
       where: {
         [db.Sequelize.Op.or]: [
           { username },
-          { email: username },
-          { taxID: username },
           { phone: username },
+          { taxID: username },
+          { email: username },
         ],
       },
     });
+    console.log(user);
     if (!user) {
       return res.status(400).json({
         success: false,
         msg: "User does not exist",
       });
+    } else if (user.length > 1) {
+      return res.status(400).json({
+        success: false,
+        msg: "Login with your Tax Number or Tax_ID",
+      });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user[0].password);
+    try {
+      // const tax_accounts = await db.sequelize.query(
+      //   `SELECT * FROM tax_payers WHERE user_id=${user[0].id}`
+      // );
 
-    if (isMatch) {
-      const payload = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        phone: user.username,
-      };
-      jwt.sign(
-        payload,
-        process.env.JWT_SECRET_KEY, // Use an environment variable for the secret key
-        {
-          expiresIn: 86400,
-        },
-        (err, token) => {
-          if (err) {
-            console.error(err);
-            return res
-              .status(500)
-              .json({ success: false, msg: "Server error" });
+      if (isMatch) {
+        const payload = {
+          id: user[0].id,
+          username: user[0].username,
+          email: user[0].email,
+          phone: user[0].username,
+          tax_accounts: [],
+        };
+        // if (user[0].account_type === "user") {
+        //   payload.tax_accounts = tax_accounts;
+        // }
+
+        jwt.sign(
+          payload,
+          process.env.JWT_SECRET_KEY, // Use an environment variable for the secret key
+          {
+            expiresIn: 86400,
+          },
+          (err, token) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, msg: "Server error" });
+            }
+            res.json({
+              success: true,
+              msg: "Successfully logged in",
+              token: "Bearer " + token,
+              user: user[0],
+              tax_accounts: [],
+            });
           }
-
-          res.json({
-            success: true,
-            msg: "Successfully logged in",
-            token: "Bearer " + token,
-            user,
-          });
-        }
-      );
-    } else {
-      return res
-        .status(400)
-        .json({ success: false, msg: "Authentication failed" });
+        );
+      } else {
+        return res
+          .status(400)
+          .json({ success: false, msg: "Authentication failed" });
+      }
+    } catch (err) {
+      console.log(err);
     }
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ success: false, msg: "Server error" });
   }
 };
@@ -893,7 +909,7 @@ module.exports.getTaxPayer = (req, res) => {
 
   // First, try to find the record in the tax_payers table
   db.sequelize
-    .query("SELECT * FROM tax_payers WHERE user_id=:user_id", {
+    .query("SELECT * FROM tax_payers WHERE taxID=:user_id", {
       replacements: {
         user_id,
       },
@@ -909,11 +925,34 @@ module.exports.getTaxPayer = (req, res) => {
     });
 };
 
+module.exports.getTaxPayers = (req, res) => {
+  const { user_id } = req.query;
+
+  // First, try to find the record in the tax_payers table
+  db.sequelize
+    .query(
+      `SELECT * FROM tax_payers WHERE taxID LIKE '%${user_id}%' OR name LIKE '%${user_id}%' OR org_name LIKE '%${user_id}%' OR phone LIKE '%${user_id}%' LIMIT 20`,
+      {
+        replacements: {
+          user_id,
+        },
+      }
+    )
+    .then((resp) => {
+      const taxPayerData = resp[0];
+      res.json({ success: true, data: taxPayerData });
+    })
+
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
+};
 
 module.exports.getTaxPayerInfo = (req, res) => {
   const { user_id } = req.query;
   db.sequelize
-    .query("SELECT * FROM tax_payers WHERE id=:user_id", {
+    .query("SELECT * FROM tax_payers WHERE taxID=:user_id", {
       replacements: {
         user_id,
       },

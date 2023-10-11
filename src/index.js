@@ -77,10 +77,10 @@ cron.schedule("0 2 * * *", () => {
 });
 
 // cron.schedule("* * * * *", () => {
-cron.schedule("40 18 * * *", () => {
-  console.log("Herrrrrr");
-  addHospitalData();
-});
+// cron.schedule("40 18 * * *", () => {
+//   console.log("Herrrrrr");
+//   addHospitalData();
+// });
 
 app.use(helmet.xContentTypeOptions());
 

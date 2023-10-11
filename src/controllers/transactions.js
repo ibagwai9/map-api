@@ -9,8 +9,8 @@ const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
-      JOIN tax_payers b on a.user_id=b.user_id  where
-        a.reference_number='${refNo}' AND a.transaction_type='invoice'`
+      JOIN tax_payers b on a.user_id=b.taxID
+       where   a.reference_number='${refNo}' AND a.transaction_type='invoice'`
     );
     console.log(reqData[0]);
     return reqData[0];
@@ -76,7 +76,9 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
-    dateFrom=null, dateTo=null, taxPayer=null
+    dateFrom = null,
+    dateTo = null,
+    taxPayer = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -120,7 +122,9 @@ const postTrx = async (req, res) => {
       sector,
       start_date,
       end_date,
-      dateFrom, dateTo, taxPayer
+      dateFrom,
+      dateTo,
+      taxPayer,
     };
 
     try {
@@ -253,13 +257,13 @@ async function getQRCode(req, res) {
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
 
-    const user = await db.User.findOne({
-      where: { id: payment[0][0].user_id },
-    });
+    const user = await db.sequelize.query(
+      `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0].user_id}`
+    );
 
-    const name = user.dataValues.name || "Invslid";
-    const phoneNumber = user.dataValues.phone || "Invalid";
-    console.log({ user: user.dataValues.id });
+    const name =
+      user[0].account_type === "org" ? user[0].org_name : user[0].name;
+    const phoneNumber = user[0].phone || "Invalid";
 
     const url = `https://kirmas.kn.gov.ng/payment-${
       status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
@@ -407,7 +411,10 @@ const insertTertiaryData = async (inst) => {
 };
 
 const callTransactionList = (req, res) => {
+<<<<<<< HEAD
 
+=======
+>>>>>>> db4b7dde8714cf46d14426ff970add1b41208268
   const {
     department = null,
     role = null,

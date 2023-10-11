@@ -1,6 +1,8 @@
 CREATE TABLE `contact_us` ( `id` INT NOT NULL AUTO_INCREMENT , `fullname` VARCHAR(100) NULL DEFAULT NULL , `email` VARCHAR(60) NULL DEFAULT NULL , `message` VARCHAR(2000) NOT NULL , `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `inserted_by` VARCHAR(80) NULL DEFAULT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+DROP  PROCEDURE IF EXISTS `contact_us`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `contact_us`(IN `query_type` VARCHAR(50), IN `in_fullname` VARCHAR(100), IN `in_email` VARCHAR(70), IN `in_massage` VARCHAR(2000), IN `in_insert_by` VARCHAR(100))
+CREATE  PROCEDURE `contact_us`(IN `query_type` VARCHAR(50), IN `in_fullname` VARCHAR(100), IN `in_email` VARCHAR(70), IN `in_massage` VARCHAR(2000), IN `in_insert_by` VARCHAR(100))
 BEGIN
 if query_type = 'insert' THEN
 INSERT INTO `contact_us`( `fullname`, `email`, `message`, `inserted_by`) VALUES (in_fullname,in_email,in_massage, in_insert_by);
@@ -10,9 +12,9 @@ END$$
 DELIMITER ;
 
 -- //
-
+DROP  PROCEDURE IF EXISTS `user_accounts`;
 DELIMITER $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100))
+CREATE  PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100))
 BEGIN
   
     DECLARE Tax_ID INT;
@@ -107,12 +109,14 @@ CREATE TABLE `departments` (
   `description` varchar(100) NOT NULL,
   `type` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4
+);
 INSERT INTO `departments`(`description`, `type`) VALUES ('Survey Department','LAND'),('GIS','LAND'),('Physical Planning','LAND'),('Special Assignment Dept. Contravention','LAND'),('SLTR','LAND'),('DEEDS','LAND'),('Land Department','LAND')
 
 
 
 -----
+
+DROP  PROCEDURE IF EXISTS `selectTransactions`;
 
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `selectTransactions`(IN `user_department` VARCHAR(255), IN `user_role` VARCHAR(255), IN `in_mda_name` VARCHAR(255), IN `user_agent_id` VARCHAR(20), IN `in_from` VARCHAR(20), IN `in_to` VARCHAR(20), IN `query_type` VARCHAR(50))
