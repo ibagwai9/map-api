@@ -411,6 +411,10 @@ const insertTertiaryData = async (inst) => {
 };
 
 const callTransactionList = (req, res) => {
+<<<<<<< HEAD
+
+=======
+>>>>>>> db4b7dde8714cf46d14426ff970add1b41208268
   const {
     department = null,
     role = null,
@@ -418,11 +422,12 @@ const callTransactionList = (req, res) => {
     agent_id = null,
     from = today,
     to = today,
+    query_type ='',
   } = req.query;
 
   db.sequelize
     .query(
-      `CALL selectTransactions(:department, :role, :mda_name,:agent_id,:from,:to)`,
+      `CALL selectTransactions(:department, :role, :mda_name,:agent_id,:from,:to,:query_type)`,
       {
         replacements: {
           department,
@@ -431,6 +436,7 @@ const callTransactionList = (req, res) => {
           agent_id,
           from,
           to,
+          query_type,
         },
       }
     )
