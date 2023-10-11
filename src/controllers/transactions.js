@@ -8,7 +8,7 @@ const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
       `SELECT a.user_id, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
-        JOIN users b on a.user_id=b.id 
+        JOIN tax_payers b on a.user_id=b.taxID
         where 
         a.reference_number='${refNo}' AND a.transaction_type='invoice'`
     );

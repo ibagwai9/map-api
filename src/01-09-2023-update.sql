@@ -599,3 +599,6 @@ ELSE
 END IF;
 END$$
 DELIMITER ;
+
+ALTER TABLE `tax_transactions` ADD `date_from` DATE NULL DEFAULT NULL AFTER `sector`,
+ADD `date_to` DATE NULL DEFAULT NULL AFTER `date_from`

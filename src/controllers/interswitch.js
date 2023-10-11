@@ -112,7 +112,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
                 <FirstName>${firstName}</FirstName>
-                <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${results[0].dr}</Amount>
                 <PaymentItems>
@@ -234,7 +233,6 @@ const handleInvoice = (req, res) => {
         amountPaid !== 0 &&
         amountPaid !== 0.0
       ) {
-
         db.sequelize
           .query(
             `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
