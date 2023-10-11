@@ -909,7 +909,7 @@ module.exports.getTaxPayer = (req, res) => {
 
   // First, try to find the record in the tax_payers table
   db.sequelize
-    .query(`SELECT * FROM tax_payers t WHERE t.taxID='${user_id}`, {
+    .query(`SELECT * FROM tax_payers t WHERE t.taxID='${user_id}'`, {
       replacements: {
         user_id,
       },

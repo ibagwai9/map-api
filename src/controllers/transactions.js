@@ -95,7 +95,7 @@ const postTrx = async (req, res) => {
       query_type: `insert_${transaction_type}`,
       item_code,
       user_id,
-      agent_id,
+      agent_id: agent_id ? agent_id : null,
       description,
       amount,
       transaction_date,
