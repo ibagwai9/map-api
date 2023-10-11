@@ -958,6 +958,7 @@ module.exports.getTaxPayerInfo = (req, res) => {
       },
     })
     .then((resp) => {
+      console.log(resp[0]);
       const taxPayerData = resp[0][0];
       res.json({ success: true, data: taxPayerData });
     })
