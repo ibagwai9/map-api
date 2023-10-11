@@ -249,13 +249,13 @@ async function getQRCode(req, res) {
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
 
-    const user = await db.User.findOne({
-      where: { id: payment[0][0].user_id },
-    });
+    const user = await db.sequelize.query(
+      `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0].user_id}`
+    );
 
-    const name = user.dataValues.name || "Invslid";
-    const phoneNumber = user.dataValues.phone || "Invalid";
-    console.log({ user: user.dataValues.id });
+    const name =
+      user[0].account_type === "org" ? user[0].org_name : user[0].name;
+    const phoneNumber = user[0].phone || "Invalid";
 
     const url = `https://kirmas.kn.gov.ng/payment-${
       status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
@@ -403,7 +403,6 @@ const insertTertiaryData = async (inst) => {
 };
 
 const callTransactionList = (req, res) => {
-  
   const {
     department = null,
     role = null,

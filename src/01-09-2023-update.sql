@@ -601,4 +601,206 @@ END$$
 DELIMITER ;
 
 ALTER TABLE `tax_transactions` ADD `date_from` DATE NULL DEFAULT NULL AFTER `sector`,
-ADD `date_to` DATE NULL DEFAULT NULL AFTER `date_from`
+ADD `date_to` DATE NULL DEFAULT NULL AFTER `date_from`;
+
+--- 11/10/2023
+
+DROP PROCEDURE IF EXISTS `HandleTaxTransaction`;
+DELIMITER $$
+CREATE  PROCEDURE `HandleTaxTransaction`(
+IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), 
+IN `p_user_id` VARCHAR(9), 
+IN `p_agent_id` VARCHAR(9), 
+IN `p_mda_name` VARCHAR(300), 
+IN `p_mda_code` VARCHAR(50), 
+IN `p_item_code` VARCHAR(50), 
+IN `p_rev_code` VARCHAR(50), 
+IN `p_description` VARCHAR(500), 
+IN `p_nin_id` VARCHAR(12), 
+IN `p_tin` VARCHAR(12), 
+IN `p_paid_by` VARCHAR(50), 
+IN `p_confirmed_by` VARCHAR(50), 
+IN `p_payer_acct_no` VARCHAR(10), 
+IN `p_payer_bank_name` VARCHAR(50), 
+IN `p_amount` DECIMAL(10,2), 
+IN `p_transaction_date` DATE, 
+IN `p_transaction_type` ENUM('payment','invoice','transaction'), 
+IN `p_status` VARCHAR(20), 
+IN `p_reference_number` VARCHAR(50), 
+IN `p_department` VARCHAR(150), 
+IN `p_service_category` VARCHAR(150), 
+IN `p_sector` VARCHAR(50), 
+IN `p_start_date` DATE, 
+IN `p_end_date` DATE)
+BEGIN
+  IF p_query_type = 'insert_payment' THEN
+    -- Insert a payment transaction
+    INSERT INTO tax_transactions (
+        user_id,
+        item_code,
+        mda_name,
+        mda_code,
+        rev_code,
+        description,
+        nin_id,
+        tin,
+        agent_id,
+        paid_by,
+        confirmed_by,
+        payer_acct_no,
+        payer_bank_name,
+        cr,
+        dr,
+        transaction_date,
+        transaction_type,
+        status,
+        reference_number,
+        department, 
+        service_category,
+        sector,
+        date_from,
+        date_to
+
+    ) VALUES (
+        p_user_id,
+        p_item_code,
+        p_mda_name,
+        p_mda_code,
+        p_rev_code,
+        p_description,
+        p_nin_id,
+        p_tin,
+        p_agent_id,
+        p_paid_by,
+        p_confirmed_by,
+        p_payer_acct_no,
+        p_payer_bank_name,
+        p_amount,
+        0,
+        p_transaction_date,
+        p_transaction_type,
+        p_status,
+        p_reference_number,
+        p_department, 
+        p_service_category,
+        p_sector,
+        p_start_date,
+        p_end_date
+    );
+  ELSEIF p_query_type = 'view_payment' THEN
+    -- View payment transaction
+    SELECT * FROM tax_transactions WHERE reference_number = p_reference_number;
+  ELSEIF p_query_type = 'insert_invoice' THEN
+    -- Insert an invoice transaction
+       INSERT INTO tax_transactions (
+        user_id,
+        item_code,
+        mda_name,
+        mda_code,
+        rev_code,
+        description,
+        nin_id,
+        tin,
+        agent_id,
+        paid_by,
+        confirmed_by,
+        payer_acct_no,
+        payer_bank_name,
+        cr,
+        dr,
+        transaction_date,
+        transaction_type,
+        status,
+        reference_number,
+        department, 
+        service_category,
+        sector,
+        date_from,
+        date_to
+
+    ) VALUES (
+        p_user_id,
+        p_item_code,
+        p_mda_name,
+        p_mda_code,
+        p_rev_code,
+        p_description,
+        p_nin_id,
+        p_tin,
+        p_agent_id,
+        p_paid_by,
+        p_confirmed_by,
+        p_payer_acct_no,
+        p_payer_bank_name,
+        0,
+        p_amount,
+        p_transaction_date,
+        p_transaction_type,
+        p_status,
+        p_reference_number,
+        p_department, 
+        p_service_category,
+        p_sector,
+        p_start_date,
+        p_end_date
+    );
+   ELSEIF p_query_type = 'check_balance' THEN
+    -- Query user's balance based on their user_id
+    SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
+    FROM tax_transactions
+    WHERE user_id = p_user_id;
+ 
+ ELSEIF p_query_type = 'view_payer_ledger' THEN
+    -- View payer's ledger for invoice transactions
+    IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr 
+        FROM tax_transactions y 
+        WHERE y.user_id = p_user_id  
+            AND DATE(y.transaction_date) BETWEEN DATE(p_start_date) AND DATE(p_end_date)
+        GROUP BY y.reference_number;
+    ELSE
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr 
+        FROM tax_transactions y 
+        WHERE y.user_id = p_user_id  
+        GROUP BY y.reference_number;
+    END IF;
+
+  ELSEIF p_query_type = 'approve_payment' THEN
+    -- Approve a payment transaction
+    UPDATE tax_transactions
+    SET status = 'approved', confirmed_by = p_confirmed_by, confirmed_on = NOW()
+    WHERE reference_number = p_reference_number AND status = 'pending';
+ELSEIF p_query_type = 'view_invoice' THEN
+  SELECT * FROM tax_transactions x WHERE x.reference_number  = p_reference_number;
+ELSE
+  -- Invalid query_type
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Invalid query_type';
+END IF;
+END$$
+DELIMITER ;
+
+
+ALTER TABLE `finance`.`tax_transactions` DROP FOREIGN KEY `tax_transactions_ibfk_1`;

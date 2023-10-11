@@ -88,6 +88,14 @@ const handleInvoiceValidation = async (reqJson, res) => {
         .then((results) => {
           console.log(results);
           if (results && results.length) {
+            const startDate = moment(results[0].date_from);
+            const endDate = moment(results[0].date_to);
+
+            const startFormatted = startDate.format("MMM, YY");
+            const endFormatted = endDate.format("MMM, YY");
+
+            const formattedRange = `${startFormatted} - ${endFormatted}`;
+
             let firstName = results[0].name;
             let user_id = results[0].user_id;
             if (user_id === null) {
@@ -116,7 +124,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <Amount>${results[0].dr}</Amount>
                 <PaymentItems>
                   <Item>
-                      <ProductName>${results[0].description}</ProductName>
+                      <ProductName>${firstName} ${results[0].description} ${formattedRange}</ProductName>
                       <ProductCode>${results[0].item_code}</ProductCode>
                       <Quantity>1</Quantity>
                       <Price>${results[0].dr}</Price>
