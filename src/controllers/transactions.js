@@ -8,10 +8,9 @@ const today = moment().format("YYYY-MM-DD");
 const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
-        JOIN tax_payers b on a.user_id=b.taxID
-        where 
-        a.reference_number='${refNo}' AND a.transaction_type='invoice'`
+      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr, a.description, b.name FROM tax_transactions a 
+      JOIN tax_payers b on a.user_id=b.taxID
+       where   a.reference_number='${refNo}' AND a.transaction_type='invoice'`
     );
     console.log(reqData[0]);
     return reqData[0];

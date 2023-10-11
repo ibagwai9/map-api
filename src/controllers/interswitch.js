@@ -94,9 +94,18 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const startFormatted = startDate.format("MMM, YY");
             const endFormatted = endDate.format("MMM, YY");
 
-            const formattedRange = `${startFormatted} - ${endFormatted}`;
+            const isWithinOneMonth = startDate.isSame(endDate, "month");
 
-            let firstName = results[0].name;
+            const formattedRange = isWithinOneMonth
+              ? startFormatted
+              : `${startFormatted} - ${endFormatted}`;
+
+            // let firstName = results[0].name;
+            console.log(results[0]);
+            let firstName =
+              results[0].account_type === "org"
+                ? results[0].org_name
+                : results[0].name;
             let user_id = results[0].user_id;
             if (user_id === null) {
               res.set("Content-Type", "text/xml");
