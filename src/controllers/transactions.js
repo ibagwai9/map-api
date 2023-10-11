@@ -45,7 +45,10 @@ const callHandleTaxTransaction = async (replacements) => {
         :service_category,
         :sector,
         :start_date, 
-        :end_date)`,
+        :end_date,
+        :taxPayer,
+        :dateFrom,
+        :dateTo)`,
       {
         replacements,
       }
@@ -73,6 +76,7 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
+    dateFrom=null, dateTo=null, taxPayer=null
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -116,6 +120,7 @@ const postTrx = async (req, res) => {
       sector,
       start_date,
       end_date,
+      dateFrom, dateTo, taxPayer
     };
 
     try {
