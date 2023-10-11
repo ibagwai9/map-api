@@ -804,3 +804,7 @@ DELIMITER ;
 
 
 ALTER TABLE `finance`.`tax_transactions` DROP FOREIGN KEY `tax_transactions_ibfk_1`;
+
+ALTER TABLE `tax_payers` ADD UNIQUE(`taxID`);
+
+ALTER TABLE `users` ADD UNIQUE(`taxID`);
