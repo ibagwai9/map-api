@@ -696,7 +696,7 @@ module.exports.verifyToken = async function (req, res) {
     }
 
     const tax_accounts = await db.sequelize.query(
-      `SELECT * FROM tax_payers WHERE user_id=${user.id}`
+      `SELECT * FROM tax_payers WHERE taxID='${user.taxID}'`
     );
 
     res.json({
