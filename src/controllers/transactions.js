@@ -25,6 +25,7 @@ const callHandleTaxTransaction = async (replacements) => {
       `CALL HandleTaxTransaction( :query_type, 
         :user_id, 
         :agent_id,
+        :tax_payer,
         :org_name,
         :mda_code,
         :item_code,    
@@ -40,6 +41,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_date,
         :transaction_type,
         :status,
+        :ipis_no,
         :reference_number,
         :department,
         :service_category,
@@ -74,6 +76,7 @@ const postTrx = async (req, res) => {
     payer_bank_name = null,
     start_date = null,
     end_date = null,
+    tax_payer = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -89,6 +92,7 @@ const postTrx = async (req, res) => {
       mda_name = null,
       service_category = null,
       transaction_type,
+      ipis_no = null,
       sector = null,
     } = tax;
     const refNo = moment().format("YYMMDDhhmmssS");
@@ -97,11 +101,13 @@ const postTrx = async (req, res) => {
       item_code,
       user_id,
       agent_id: agent_id ? agent_id : null,
+      tax_payer,
       description,
       amount,
       transaction_date,
       transaction_type,
       status: "saved",
+      ipis_no,
       reference_number: refNo,
       rev_code: economic_code,
       mda_code: mda_code,
@@ -168,6 +174,7 @@ const getTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
+    tax_payer = null,
     item_code = null,
     status = null,
     description = null,
@@ -189,6 +196,7 @@ const getTrx = async (req, res) => {
     department = null,
     service_category = null,
     ref_no = null,
+    ipis_no = null,
     sector = null,
     tax_station = null,
     reference_number = null,
@@ -216,6 +224,8 @@ const getTrx = async (req, res) => {
     query_type,
     start_date,
     end_date,
+    ipis_no,
+    tax_payer,
     department,
     tax_station,
     service_category,
@@ -229,7 +239,7 @@ const getTrx = async (req, res) => {
     console.error("Error executing stored procedure:", error);
     res.status(500).json({
       success: false,
-      message: "Error executing stored procedure: " + JSON.stringify(error),
+      message: "Error executing stored procedurex",
     });
   }
 };

@@ -224,7 +224,7 @@ module.exports.SignIn = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = await db.User.findAll({
+    const users = await db.User.findAll({
       where: {
         [db.Sequelize.Op.or]: [
           { username },
@@ -234,40 +234,36 @@ module.exports.SignIn = async (req, res) => {
         ],
       },
     });
-    console.log(user);
-    if (!user) {
-      return res.status(400).json({
+
+    if (users.length < 1) {
+      return res.status(404).json({
         success: false,
         msg: "User does not exist",
       });
-    } else if (user.length > 1) {
-      return res.status(400).json({
-        success: false,
-        msg: "Login with your Tax Number or Tax_ID",
-      });
-    }
+    } else if (users.length > 1) {
+      // If multiple users are found, iterate through them to find the one with a matching password
+      let matchedUser = null;
+      for (const user of users) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (isMatch) {
+          matchedUser = user;
+          break; // Exit the loop if a match is found
+        }
+      }
 
-    const isMatch = await bcrypt.compare(password, user[0].password);
-    try {
-      // const tax_accounts = await db.sequelize.query(
-      //   `SELECT * FROM tax_payers WHERE user_id=${user[0].id}`
-      // );
-
-      if (isMatch) {
+      if (matchedUser) {
+        // If a user with a matching password is found, proceed with authentication
         const payload = {
-          id: user[0].id,
-          username: user[0].username,
-          email: user[0].email,
-          phone: user[0].username,
+          id: matchedUser.id,
+          username: matchedUser.username,
+          email: matchedUser.email,
+          phone: matchedUser.username,
           tax_accounts: [],
         };
-        // if (user[0].account_type === "user") {
-        //   payload.tax_accounts = tax_accounts;
-        // }
 
         jwt.sign(
           payload,
-          process.env.JWT_SECRET_KEY, // Use an environment variable for the secret key
+          process.env.JWT_SECRET_KEY,
           {
             expiresIn: 86400,
           },
@@ -281,18 +277,52 @@ module.exports.SignIn = async (req, res) => {
               success: true,
               msg: "Successfully logged in",
               token: "Bearer " + token,
-              user: user[0],
+              user: matchedUser,
               tax_accounts: [],
             });
           }
         );
       } else {
-        return res
-          .status(400)
-          .json({ success: false, msg: "Authentication failed" });
+        return res.status(400).json({ success: false, msg: "Wrong Password" });
       }
-    } catch (err) {
-      console.log(err);
+    } else {
+      // Only one user found, proceed with authentication
+      const user = users[0];
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (isMatch) {
+        const payload = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          phone: user.username,
+          tax_accounts: [],
+        };
+
+        jwt.sign(
+          payload,
+          process.env.JWT_SECRET_KEY,
+          {
+            expiresIn: 86400,
+          },
+          (err, token) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({ success: false, msg: "Server error" });
+            }
+            res.json({
+              success: true,
+              msg: "Successfully logged in",
+              token: "Bearer " + token,
+              user: user,
+              tax_accounts: [],
+            });
+          }
+        );
+      } else {
+        return res.status(400).json({ success: false, msg: "Wrong Password" });
+      }
     }
   } catch (error) {
     return res.status(500).json({ success: false, msg: "Server error" });
