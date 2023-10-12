@@ -43,6 +43,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :reference_number,
         :department,
         :service_category,
+        :tax_station,
         :sector,
         :start_date, 
         :end_date)`,
@@ -64,7 +65,7 @@ const postTrx = async (req, res) => {
     agent_id = null,
     tax_list = [],
     transaction_date,
-    reference_number,
+    tax_station = null,
     nin_id = null,
     tin = null,
     paid_by = null,
@@ -90,7 +91,7 @@ const postTrx = async (req, res) => {
       transaction_type,
       sector = null,
     } = tax;
-
+    const refNo = moment().format("YYMMDDhhmmssS");
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -101,7 +102,7 @@ const postTrx = async (req, res) => {
       transaction_date,
       transaction_type,
       status: "saved",
-      reference_number,
+      reference_number: refNo,
       rev_code: economic_code,
       mda_code: mda_code,
       nin_id,
@@ -113,6 +114,7 @@ const postTrx = async (req, res) => {
       payer_bank_name,
       department,
       service_category: service_category ? service_category : tax_parent_code,
+      tax_station,
       sector,
       start_date,
       end_date,
@@ -121,7 +123,7 @@ const postTrx = async (req, res) => {
     try {
       console.log({ params });
       const results = await callHandleTaxTransaction(params);
-      return { success: true, data: results };
+      return { success: true, data: results, ref_no: refNo };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
       return {
@@ -188,6 +190,7 @@ const getTrx = async (req, res) => {
     service_category = null,
     ref_no = null,
     sector = null,
+    tax_station = null,
     reference_number = null,
   } = req.query;
 
@@ -214,6 +217,7 @@ const getTrx = async (req, res) => {
     start_date,
     end_date,
     department,
+    tax_station,
     service_category,
     sector,
   };
