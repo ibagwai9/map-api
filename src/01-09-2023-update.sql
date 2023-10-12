@@ -821,13 +821,14 @@ DELIMITER $$
 CREATE  PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100))
 BEGIN
   
-    DECLARE Tax_ID INT DEFAULT NULL;
+    DECLARE Tax_ID, ins_user_id INT DEFAULT NULL;
        
 
     IF in_query_type = 'insert' THEN
         INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, `rank`, TaxID)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank, @Tax_ID); 
-      
+        SET ins_user_id = LAST_INSERT_ID();
+        
         IF in_account_type = 'individual' OR in_account_type ='org' THEN 
 
             CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
@@ -836,6 +837,7 @@ BEGIN
             VALUES (in_name,in_username,in_email,in_role,in_bvn,in_org_tin,@Tax_ID,in_org_name,in_rc,in_account_type,in_phone,in_state,in_lga,in_address);
             
             CALL in_number_generator('update', NULL, 'application_number', @Tax_ID,@void);
+            UPDATE users SET taxID=@Tax_ID WHERE id = ins_user_id;
         END IF;
     ELSEIF in_query_type='create-admin' THEN
        INSERT INTO users (name, username, email, password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID, `rank`)
