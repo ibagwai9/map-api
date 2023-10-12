@@ -923,11 +923,10 @@ module.exports.getTaxPayer = (req, res) => {
 
 module.exports.getTaxPayers = (req, res) => {
   const { user_id } = req.query;
-
   // First, try to find the record in the tax_payers table
   db.sequelize
     .query(
-      `SELECT * FROM tax_payers WHERE taxID LIKE '%${user_id}%' OR name LIKE '%${user_id}%' OR org_name LIKE '%${user_id}%' OR phone LIKE '%${user_id}%' LIMIT 20`,
+      `SELECT * FROM tax_payers WHERE taxID LIKE '%${user_id}%' OR name LIKE '%${user_id}%' OR org_name LIKE '%${user_id}%' OR phone LIKE '%${user_id}%' LIMIT 50`,
       {
         replacements: {
           user_id,
