@@ -190,6 +190,7 @@ const getTrx = async (req, res) => {
     service_category = null,
     ref_no = null,
     sector = null,
+    tax_station = null,
     reference_number = null,
   } = req.query;
 
@@ -216,6 +217,7 @@ const getTrx = async (req, res) => {
     start_date,
     end_date,
     department,
+    tax_station,
     service_category,
     sector,
   };
