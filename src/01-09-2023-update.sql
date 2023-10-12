@@ -436,6 +436,7 @@ IN `p_status` VARCHAR(20),
 IN `p_reference_number` VARCHAR(50), 
 IN `p_department` VARCHAR(150), 
 IN `p_service_category` VARCHAR(150), 
+IN `p_tax_station` VARCHAR(50), 
 IN `p_sector` VARCHAR(50), 
 IN `p_start_date` DATE, 
 IN `p_end_date` DATE)
@@ -629,6 +630,7 @@ IN `p_status` VARCHAR(20),
 IN `p_reference_number` VARCHAR(50), 
 IN `p_department` VARCHAR(150), 
 IN `p_service_category` VARCHAR(150), 
+IN `p_tax_station` VARCHAR(50), 
 IN `p_sector` VARCHAR(50), 
 IN `p_start_date` DATE, 
 IN `p_end_date` DATE)
@@ -657,6 +659,7 @@ BEGIN
         reference_number,
         department, 
         service_category,
+        tax_station,
         sector,
         date_from,
         date_to
@@ -683,6 +686,7 @@ BEGIN
         p_reference_number,
         p_department, 
         p_service_category,
+        p_tax_station,
         p_sector,
         p_start_date,
         p_end_date
@@ -714,6 +718,7 @@ BEGIN
         reference_number,
         department, 
         service_category,
+        tax_station,
         sector,
         date_from,
         date_to
@@ -740,6 +745,7 @@ BEGIN
         p_reference_number,
         p_department, 
         p_service_category,
+        p_tax_station,
         p_sector,
         p_start_date,
         p_end_date
