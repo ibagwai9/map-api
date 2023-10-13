@@ -2,7 +2,7 @@
 const axios = require("axios");
 const crypto = require("crypto");
 var parseString = require("xml2js").parseString;
-const { getInvoiceDetails } = require("./transactions");
+const { getInvoiceDetailsLGA } = require("./transactions");
 const db = require("../models");
 const moment = require("moment");
 const merchantMacKey =
@@ -84,11 +84,30 @@ const handleInvoiceValidation = async (reqJson, res) => {
     // reqJson.customerinformationrequest.merchantreference[0];
 
     if (merchantreference === code) {
-      getInvoiceDetails(custreference)
+      getInvoiceDetailsLGA(custreference)
         .then((results) => {
           console.log(results);
           if (results && results.length) {
-            let firstName = results[0].name;
+            const startDate = moment(results[0].date_from);
+            const endDate = moment(results[0].date_to);
+            const taxList = results.filter((item) => item.dr > 0);
+            const amount = taxList.reduce((a, b) => a + b.dr, 0);
+
+            const startFormatted = startDate.format("MMM, YY");
+            const endFormatted = endDate.format("MMM, YY");
+
+            const isWithinOneMonth = startDate.isSame(endDate, "month");
+
+            const formattedRange = isWithinOneMonth
+              ? startFormatted
+              : `${startFormatted} - ${endFormatted}`;
+
+            // let firstName = results[0].name;
+            console.log(results[0]);
+            let firstName =
+              results[0].account_type === "org"
+                ? results[0].org_name
+                : results[0].name;
             let user_id = results[0].user_id;
             if (user_id === null) {
               res.set("Content-Type", "text/xml");
@@ -112,12 +131,11 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
                 <FirstName>${firstName}</FirstName>
-                <Email>${results[0].email}</Email>
                 <Phone>${results[0].phone}</Phone>
-                <Amount>${results[0].dr}</Amount>
+                <Amount>${amount}</Amount>
                 <PaymentItems>
                   <Item>
-                      <ProductName>${results[0].description}</ProductName>
+                      <ProductName>${firstName} ${results[0].description} ${formattedRange}</ProductName>
                       <ProductCode>${results[0].item_code}</ProductCode>
                       <Quantity>1</Quantity>
                       <Price>${results[0].dr}</Price>
@@ -234,7 +252,6 @@ const handleInvoice = (req, res) => {
         amountPaid !== 0 &&
         amountPaid !== 0.0
       ) {
-
         db.sequelize
           .query(
             `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
@@ -319,8 +336,8 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                  dateSettled
-                ).format("YYYY-MM-DD")}", 
+                          dateSettled
+                        ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)
