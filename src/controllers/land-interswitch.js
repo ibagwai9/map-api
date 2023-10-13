@@ -295,7 +295,6 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
-                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
                         </Payment>
