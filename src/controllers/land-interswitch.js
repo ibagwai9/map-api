@@ -126,6 +126,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
         </Customers>
     </CustomerInformationResponse>`);
             } else {
+              // console.log
               const xmlString = `
               <PaymentItems>
                 ${results
@@ -133,6 +134,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                   .map(
                     (product) => `
                   <Item>
+                  
                     <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
