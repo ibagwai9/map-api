@@ -8,12 +8,12 @@ require("dotenv").config();
 const basename = path.basename(__filename);
 
 const config = {
-  username: "root",
-  password: "",
-  database:"finance_2db",
-  host: "localhost",
-  port:    3307,
-  dialect: "mysql",
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  host: process.env.DB_HOST,
+  port:   process.env.DB_PORT ,
+  dialect: process.env.DB_DIALECT,
   pool: {
     max: 5,
     min: 0,

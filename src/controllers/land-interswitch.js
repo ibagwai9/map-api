@@ -126,7 +126,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
         </Customers>
     </CustomerInformationResponse>`);
             } else {
-              // console.log
+              console.log(results);
               const xmlString = `
               <PaymentItems>
                 ${results
@@ -134,7 +134,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
                   .map(
                     (product) => `
                   <Item>
-                  
                     <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
@@ -351,8 +350,8 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                  dateSettled
-                ).format("YYYY-MM-DD")}", 
+                          dateSettled
+                        ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)
@@ -400,7 +399,6 @@ const handleInvoice = (req, res) => {
                   <Payment>
                   <PaymentLogId>${logId}</PaymentLogId>
                   <CustReference>${referenceNo}</CustReference>
-                      <PaymentLogId>0</PaymentLogId>
                       <Status>1</Status>
                   </Payment>
               </Payments>
@@ -415,7 +413,6 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
-                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>Customer Reference not found or invalid</StatusMessage>
                         </Payment>
