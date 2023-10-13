@@ -356,7 +356,6 @@ CREATE  PROCEDURE `institution_transactions`(
     IN `in_phone` VARCHAR(15),
     IN `start_date` VARCHAR(15),
     IN `end_date` VARCHAR(15)
-
 )
 BEGIN 
     IF query_type = 'insert' THEN
@@ -609,9 +608,10 @@ ADD `date_to` DATE NULL DEFAULT NULL AFTER `date_from`;
 DROP PROCEDURE IF EXISTS `HandleTaxTransaction`;
 DELIMITER $$
 CREATE  PROCEDURE `HandleTaxTransaction`(
-IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','approve_payment'), 
+IN `p_query_type` ENUM('view_invoice','view_payment','insert_payment','insert_invoice','check_balance','view_payer_ledger','view_agent_history','approve_payment'), 
 IN `p_user_id` VARCHAR(9), 
 IN `p_agent_id` VARCHAR(9), 
+IN `p_tax_payer` VARCHAR(100), 
 IN `p_mda_name` VARCHAR(300), 
 IN `p_mda_code` VARCHAR(50), 
 IN `p_item_code` VARCHAR(50), 
@@ -627,6 +627,7 @@ IN `p_amount` DECIMAL(10,2),
 IN `p_transaction_date` DATE, 
 IN `p_transaction_type` ENUM('payment','invoice','transaction'), 
 IN `p_status` VARCHAR(20), 
+IN `p_ipis_no` VARCHAR(20), 
 IN `p_reference_number` VARCHAR(50), 
 IN `p_department` VARCHAR(150), 
 IN `p_service_category` VARCHAR(150), 
@@ -647,6 +648,7 @@ BEGIN
         nin_id,
         tin,
         agent_id,
+        tax_payer,
         paid_by,
         confirmed_by,
         payer_acct_no,
@@ -656,6 +658,7 @@ BEGIN
         transaction_date,
         transaction_type,
         status,
+        ipis_no,
         reference_number,
         department, 
         service_category,
@@ -674,6 +677,7 @@ BEGIN
         p_nin_id,
         p_tin,
         p_agent_id,
+        p_tax_payer,
         p_paid_by,
         p_confirmed_by,
         p_payer_acct_no,
@@ -683,6 +687,7 @@ BEGIN
         p_transaction_date,
         p_transaction_type,
         p_status,
+        p_ipis_no,
         p_reference_number,
         p_department, 
         p_service_category,
@@ -706,6 +711,7 @@ BEGIN
         nin_id,
         tin,
         agent_id,
+        tax_payer,
         paid_by,
         confirmed_by,
         payer_acct_no,
@@ -715,6 +721,7 @@ BEGIN
         transaction_date,
         transaction_type,
         status,
+        ipis_no,
         reference_number,
         department, 
         service_category,
@@ -733,6 +740,7 @@ BEGIN
         p_nin_id,
         p_tin,
         p_agent_id,
+        p_tax_payer,
         p_paid_by,
         p_confirmed_by,
         p_payer_acct_no,
@@ -742,6 +750,7 @@ BEGIN
         p_transaction_date,
         p_transaction_type,
         p_status,
+        p_ipis_no,
         p_reference_number,
         p_department, 
         p_service_category,
@@ -755,7 +764,6 @@ BEGIN
     SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
     FROM tax_transactions
     WHERE user_id = p_user_id;
- 
  ELSEIF p_query_type = 'view_payer_ledger' THEN
     -- View payer's ledger for invoice transactions
     IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
@@ -790,6 +798,53 @@ BEGIN
             ) AS dr 
         FROM tax_transactions y 
         WHERE y.user_id = p_user_id  
+        GROUP BY y.reference_number;
+    END IF;
+ ELSEIF p_query_type = 'view_agent_history' THEN
+    -- View payer's ledger for invoice transactions
+    IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr,
+            (
+                SELECT SUM(x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS cr  
+
+        FROM tax_transactions y 
+        WHERE y.agent_id = p_agent_id
+            AND DATE(y.transaction_date) BETWEEN DATE(p_start_date) AND DATE(p_end_date)
+        GROUP BY y.reference_number;
+    ELSE
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr ,
+            (
+                SELECT SUM(x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS cr 
+        FROM tax_transactions y 
+        WHERE y.agent = p_agent_id 
         GROUP BY y.reference_number;
     END IF;
 
@@ -917,3 +972,23 @@ BEGIN
     END IF;
 END$$
 DELIMITER ;
+
+ALTER TABLE `tax_transactions` ADD `ipis_no` VARCHAR(12) NULL DEFAULT NULL AFTER `status`;
+
+ALTER TABLE `tax_transactions` ADD INDEX(`reference_number`);
+
+
+
+ALTER TABLE `tax_transactions` CHANGE `tax_station` `tax_station` VARCHAR(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
+
+ALTER TABLE `tax_transactions` ADD `tax_payer` VARCHAR(150) NULL DEFAULT NULL AFTER `user_id`;
+
+UPDATE `tax_transactions` tx
+SET tx.`tax_payer` = (
+    SELECT CASE
+        WHEN t.account_type = 'org' THEN t.org_name
+        ELSE t.name
+    END
+    FROM tax_payers t
+    WHERE t.taxID = tx.`user_id`
+);
