@@ -91,7 +91,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const startDate = moment(results[0].date_from);
             const endDate = moment(results[0].date_to);
             const taxList = results.filter((item) => item.dr > 0);
-            const amount = taxList.reduce((a, b) => a + b.dr, 0);
+            const amount = parseFloat(
+              taxList.reduce((a, b) => a + parseFloat(b.dr), 0).toFixed(2)
+            ).toFixed(2);
 
             const startFormatted = startDate.format("MMM, YY");
             const endFormatted = endDate.format("MMM, YY");
@@ -109,6 +111,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 ? results[0].org_name
                 : results[0].name;
             let user_id = results[0].user_id;
+
             if (user_id === null) {
               res.set("Content-Type", "text/xml");
               res.send(`<CustomerInformationResponse>
@@ -123,6 +126,26 @@ const handleInvoiceValidation = async (reqJson, res) => {
         </Customers>
     </CustomerInformationResponse>`);
             } else {
+              const xmlString = `
+              <PaymentItems>
+                ${results
+                  .filter((item) => item.cr > 0)
+                  .map(
+                    (product) => `
+                  <Item>
+                    <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
+                    <ProductCode>${product.item_code}</ProductCode>
+                    <Quantity>1</Quantity>
+                    <Price>${product.cr}</Price>
+                    <Subtotal>${amount}</Subtotal>
+                    <Tax>0</Tax>
+                    <Total>${product.cr}</Total>
+                  </Item>
+                `
+                  )
+                  .join("")}
+              </PaymentItems>
+              `;
               // let lastName = results[0].name.split(" ")[1]
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
@@ -133,17 +156,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <FirstName>${firstName}</FirstName>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
-                <PaymentItems>
-                  <Item>
-                      <ProductName>${firstName} ${results[0].description} ${formattedRange}</ProductName>
-                      <ProductCode>${results[0].item_code}</ProductCode>
-                      <Quantity>1</Quantity>
-                      <Price>${results[0].dr}</Price>
-                      <Subtotal>${results[0].dr}</Subtotal>
-                      <Tax>0</Tax>
-                      <Total>${results[0].dr}</Total>
-                  </Item>
-              </PaymentItems>
+                ${xmlString}
             </Customer>
         </Customers>
     </CustomerInformationResponse>`;
