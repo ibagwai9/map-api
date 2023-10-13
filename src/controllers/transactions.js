@@ -411,10 +411,7 @@ const insertTertiaryData = async (inst) => {
 };
 
 const callTransactionList = (req, res) => {
-<<<<<<< HEAD
 
-=======
->>>>>>> db4b7dde8714cf46d14426ff970add1b41208268
   const {
     department = null,
     role = null,
