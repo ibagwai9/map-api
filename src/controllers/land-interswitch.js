@@ -296,7 +296,6 @@ const handleInvoice = (req, res) => {
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
                         <CustReference>${referenceNo}</CustReference>
-                            <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
                         </Payment>
@@ -320,7 +319,6 @@ const handleInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
-                        <PaymentLogId>${logId}</PaymentLogId>
                             <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>Invalid Customer Reference</StatusMessage>
@@ -392,8 +390,6 @@ const handleInvoice = (req, res) => {
               <Payments>
                   <Payment>
                   <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
-                      <PaymentLogId>0</PaymentLogId>
                       <Status>1</Status>
                   </Payment>
               </Payments>
@@ -408,7 +404,6 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
-                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>Customer Reference not found or invalid</StatusMessage>
                         </Payment>
@@ -424,7 +419,6 @@ const handleInvoice = (req, res) => {
               <Payment>
                   <Status>1</Status>
                   <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
                   <StatusMessage>Please provide a valid amount</StatusMessage>
               </Payment>
           </Payments>
@@ -436,7 +430,6 @@ const handleInvoice = (req, res) => {
       <PaymentNotificationResponse>
           <Payments>
               <Payment>
-                  <PaymentLogId>0</PaymentLogId>
                   <Status>1</Status>
                   <StatusMessage>Please provide a valid Customer Reference</StatusMessage>
               </Payment>
