@@ -892,8 +892,6 @@ BEGIN
         INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, `rank`,`status` TaxID)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank,in_status @Tax_ID); 
         SET ins_user_id = LAST_INSERT_ID();
-
-       
         
        IF in_account_type = 'individual' OR in_account_type = 'org' THEN
     
