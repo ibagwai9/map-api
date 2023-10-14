@@ -31,7 +31,7 @@ module.exports.SignUp = (req, res) => {
     mda_code = "",
     rank = "",
     contact_phone = "",
-    // user_status = "approved",
+    status = "active",
   } = req.body;
   console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
@@ -58,7 +58,7 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status)",
                   {
                     replacements: {
                       query_type: "insert",
@@ -86,7 +86,7 @@ module.exports.SignUp = (req, res) => {
                       mda_code,
                       department,
                       rank,
-                      // user_status,
+                      status,
                     },
                   }
                 )
@@ -793,7 +793,7 @@ module.exports.searchUser = (req, res) => {
 
   db.sequelize
     .query(
-      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank)",
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status)",
       {
         replacements: {
           query_type,
@@ -822,7 +822,7 @@ module.exports.searchUser = (req, res) => {
           mda_code: "",
           department: "",
           rank: "",
-          // user_status: "approved",
+          status: "active",
         },
       }
     )
@@ -880,7 +880,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     mda_code = "",
     department = "",
     rank = "",
-    // user_status = "approved",
+    status = "active",
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -888,7 +888,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status);",
           {
             replacements: {
               user_id,
@@ -917,14 +917,15 @@ module.exports.UpdateTaxPayer = (req, res) => {
               mda_code,
               department,
               rank,
-              // user_status,
+              status,
             },
           }
         )
         .then((resp) => res.json({ success: true, data: resp }))
         .catch((error) => {
           console.error({ error });
-          res.status(500).json({ error, msg: "Error occured" });
+          // Send the error message from the database or procedure to the user
+          res.status(500).json({ success: false, msg: error.message });
         });
     });
   });
