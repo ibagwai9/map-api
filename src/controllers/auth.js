@@ -212,7 +212,24 @@ module.exports.SignUp = (req, res) => {
                     console.log(_er);
                     res.status(500).json({ success: false, msg: _er });
                   }
-                );
+                )
+                .catch((error) => {
+                  console.log({ error });
+                  // Catch the exact error
+                  if (
+                    error instanceof SequelizeDatabaseError &&
+                    error.parent.code === "ER_SIGNAL_EXCEPTION"
+                  ) {
+                    res
+                      .status(500)
+                      .json({ success: false, msg: error.parent.sqlMessage });
+                  } else {
+                    // Catch other errors
+                    res
+                      .status(500)
+                      .json({ success: false, msg: error.message });
+                  }
+                });
             });
           });
         }
@@ -924,8 +941,17 @@ module.exports.UpdateTaxPayer = (req, res) => {
         .then((resp) => res.json({ success: true, data: resp }))
         .catch((error) => {
           console.error({ error });
-          // Send the error message from the database or procedure to the user
-          res.status(500).json({ success: false, msg: error.message });
+          if (
+            error instanceof SequelizeDatabaseError &&
+            error.parent.code === "ER_SIGNAL_EXCEPTION"
+          ) {
+            res
+              .status(500)
+              .json({ success: false, msg: error.parent.sqlMessage });
+          } else {
+            // Catch other errors
+            res.status(500).json({ success: false, msg: error.message });
+          }
         });
     });
   });
