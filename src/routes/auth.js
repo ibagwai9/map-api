@@ -43,7 +43,7 @@ module.exports = (app) => {
   );
   app.post(
     "/auths/-post-users",
-    passport.authenticate("jwt", { session: false }),
+    // passport.authenticate("jwt", { session: false }),
     UpdateTaxPayer
   );
 
