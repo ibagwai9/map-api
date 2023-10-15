@@ -876,30 +876,64 @@ ALTER TABLE `tax_payers` ADD UNIQUE(`taxID`);
 ALTER TABLE `users` ADD UNIQUE(`taxID`);
 
 
+ALTER TABLE `users` CHANGE `user_status` `status` VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
+
 DROP PROCEDURE IF EXISTS `user_accounts`;
 
 DELIMITER $$
-CREATE  PROCEDURE `user_accounts`(IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100))
+CREATE  PROCEDURE `user_accounts` (IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100), IN `in_status` VARCHAR(20))
 BEGIN
   
     DECLARE Tax_ID, ins_user_id INT DEFAULT NULL;
-       
+    
+    DECLARE reord_exists INT;   
 
     IF in_query_type = 'insert' THEN
-        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, `rank`, TaxID)
-        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank, @Tax_ID); 
+        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, `rank`,`status` TaxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank,in_status @Tax_ID); 
         SET ins_user_id = LAST_INSERT_ID();
         
-        IF in_account_type = 'individual' OR in_account_type ='org' THEN 
-
-            CALL in_number_generator('select', NULL, 'application_number', NULL,@Tax_ID);
+       IF in_account_type = 'individual' OR in_account_type = 'org' THEN
+    
+    IF in_account_type = 'org' THEN
+        SELECT COUNT(*) INTO reord_exists FROM tax_payers WHERE org_name = in_org_name;
         
-            INSERT INTO `tax_payers`(`name`, `username`, `email`, `role`, `bvn`, `tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `state`, `lga`, `address`) 
-            VALUES (in_name,in_username,in_email,in_role,in_bvn,in_org_tin,@Tax_ID,in_org_name,in_rc,in_account_type,in_phone,in_state,in_lga,in_address);
-            
-            CALL in_number_generator('update', NULL, 'application_number', @Tax_ID,@void);
-            UPDATE users SET taxID=@Tax_ID WHERE id = ins_user_id;
+        IF reord_exists > 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Organization name already exists, please reset your password';
         END IF;
+    ELSE
+        SELECT COUNT(*) INTO reord_exists FROM tax_payers WHERE org_email = in_org_email;
+        
+        IF reord_exists > 0 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Organization email already exists, please reset your password';
+        ELSE
+            SELECT COUNT(*) INTO reord_exists FROM tax_payers WHERE email = in_email;
+            
+            IF reord_exists > 0 THEN
+                SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Contact email already exists, please reset your password';
+            ELSE
+                SELECT COUNT(*) INTO reord_exists FROM tax_payers WHERE phone = in_phone;
+                
+                IF reord_exists > 0 THEN
+                    SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Contact phone already exists, please reset your password';
+                END IF;
+            END IF;
+        END IF;
+    END IF;
+
+    CALL in_number_generator('select', NULL, 'application_number', NULL, @Tax_ID);
+
+    INSERT INTO `tax_payers`(`name`, `username`, `email`, `role`, `bvn`, `tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `state`, `lga`, `address`) 
+    VALUES (in_name, in_username, in_email, in_role, in_bvn, in_org_tin, @Tax_ID, in_org_name, in_rc, in_account_type, in_phone, in_state, in_lga, in_address);
+
+    CALL in_number_generator('update', NULL, 'application_number', @Tax_ID, @void);
+    UPDATE users SET taxID = @Tax_ID WHERE id = ins_user_id;
+END IF;
+
     ELSEIF in_query_type='create-admin' THEN
        INSERT INTO users (name, username, email, password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID, `rank`)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, @Tax_ID, in_rank); 

@@ -130,8 +130,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 ${results
                   .filter((item) => item.cr > 0)
                   .map(
-                    (product) => `
-                  <Item>
+                    (product) => `<Item>
                     <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
