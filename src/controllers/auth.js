@@ -252,58 +252,14 @@ module.exports.SignIn = async (req, res) => {
       },
     });
 
-    if (users.length < 1) {
+    if (!users.length) {
       return res.status(404).json({
         success: false,
         msg: "User does not exist",
       });
-    } else if (users.length > 1) {
-      // If multiple users are found, iterate through them to find the one with a matching password
-      let matchedUser = null;
-      for (const user of users) {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (isMatch) {
-          matchedUser = user;
-          break; // Exit the loop if a match is found
-        }
-      }
-
-      if (matchedUser) {
-        // If a user with a matching password is found, proceed with authentication
-        const payload = {
-          id: matchedUser.id,
-          username: matchedUser.username,
-          email: matchedUser.email,
-          phone: matchedUser.username,
-          tax_accounts: [],
-        };
-
-        jwt.sign(
-          payload,
-          process.env.JWT_SECRET_KEY,
-          {
-            expiresIn: 86400,
-          },
-          (err, token) => {
-            if (err) {
-              return res
-                .status(500)
-                .json({ success: false, msg: "Server error" });
-            }
-            res.json({
-              success: true,
-              msg: "Successfully logged in",
-              token: "Bearer " + token,
-              user: matchedUser,
-              tax_accounts: [],
-            });
-          }
-        );
-      } else {
-        return res.status(400).json({ success: false, msg: "Wrong Password" });
-      }
     } else {
       // Only one user found, proceed with authentication
+      console.log(users)
       const user = users[0];
       const isMatch = await bcrypt.compare(password, user.password);
 
