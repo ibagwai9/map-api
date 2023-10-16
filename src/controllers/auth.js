@@ -890,7 +890,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     office_phone = "",
     state = "",
     lga = "",
-    password = null,
+    password = "",
     address = "",
     query_type = "update-taxpayer",
     mda_name = "",
