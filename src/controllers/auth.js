@@ -266,9 +266,10 @@ module.exports.SignIn = async (req, res) => {
       if (isMatch) {
         const payload = {
           id: user.id,
+          taxID: user.taxID,
           username: user.username,
           email: user.email,
-          phone: user.username,
+          phone: user.phone,
           tax_accounts: [],
         };
 
@@ -679,11 +680,16 @@ module.exports.verifyToken = async function (req, res) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const { email } = decoded;
+    const { phone, taxID } = decoded;
 
     const user = await db.User.findOne({
       where: {
-        email,
+        [db.Sequelize.Op.or]: [
+          // { username },
+          { phone: phone },
+          { taxID: taxID },
+          // { email: username },
+        ],
       },
     });
 
