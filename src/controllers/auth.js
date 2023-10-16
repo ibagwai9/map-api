@@ -244,10 +244,10 @@ module.exports.SignIn = async (req, res) => {
     const users = await db.User.findAll({
       where: {
         [db.Sequelize.Op.or]: [
-          { username },
+          // { username },
           { phone: username },
           { taxID: username },
-          { email: username },
+          // { email: username },
         ],
       },
     });
