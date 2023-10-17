@@ -41,7 +41,12 @@ module.exports.SignUp = (req, res) => {
     db.sequelize
       .query(
         `SELECT * from users
-     where phone="${contact_phone}"`
+     where phone=:contact_phone`,
+        {
+          replacements: {
+            contact_phone,
+          },
+        }
       )
       .then((resp) => {
         console.log(resp[0]);
@@ -260,7 +265,7 @@ module.exports.SignIn = async (req, res) => {
     } else if (users.length > 1) {
       // If multiple users are found, iterate through them to find the one with a matching password
       let matchedUser = null;
-      console.log(users)
+      console.log(users);
       for (const user of users) {
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
