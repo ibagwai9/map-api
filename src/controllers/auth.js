@@ -260,6 +260,7 @@ module.exports.SignIn = async (req, res) => {
     } else if (users.length > 1) {
       // If multiple users are found, iterate through them to find the one with a matching password
       let matchedUser = null;
+      console.log(users)
       for (const user of users) {
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {

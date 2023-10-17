@@ -24,6 +24,7 @@ module.exports = (app) => {
   app.post("/budget-app/sign_in", TreasuryAppSignIn);
   app.post("/budget-app/sign_up", BudgetAppSignUp);
   app.get("/treasury-app/verify-token", verifyTokenTreasuryApp);
+  app.get('/user/forgot-password',)
   app.post("/register-kigra");
   app.get("/users", passport.authenticate("jwt", { session: false }), getUsers);
   app.get(
