@@ -14,6 +14,9 @@ const {
   getTaxPayer,
   getTaxPayerInfo,
   getTaxPayers,
+  forgotPassword,
+  codeVerification,
+  generateNewPassword,
 } = require("../controllers/auth");
 
 module.exports = (app) => {
@@ -24,7 +27,10 @@ module.exports = (app) => {
   app.post("/budget-app/sign_in", TreasuryAppSignIn);
   app.post("/budget-app/sign_up", BudgetAppSignUp);
   app.get("/treasury-app/verify-token", verifyTokenTreasuryApp);
-  app.get('/user/forgot-password',)
+  app.get('/user/forgot-password',forgotPassword);
+  app.get('/user/code-verification',codeVerification);
+  app.post("/user/generate-new-password",generateNewPassword)
+  // app.get('/user/forgot-password',)
   app.post("/register-kigra");
   app.get("/users", passport.authenticate("jwt", { session: false }), getUsers);
   app.get(
