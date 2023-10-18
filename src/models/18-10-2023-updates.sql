@@ -401,3 +401,11 @@ SELECT
         GROUP BY y.reference_number;  
 END IF;
 END;
+
+ALTER TABLE `tax_transactions` ADD `branch_address` VARCHAR(50)
+ NULL DEFAULT NULL AFTER `payer_bank_name`, ADD `bank_branch` VARCHAR(50)
+ NULL DEFAULT NULL AFTER `branch_address`, ADD `bank_cbn_code` VARCHAR(5)
+ NULL DEFAULT NULL AFTER `bank_branch`;
+
+ ALTER TABLE `tax_transactions` CHANGE `payer_bank_name` `bank_name` VARCHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL;
+
