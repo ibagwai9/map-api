@@ -294,6 +294,7 @@ module.exports.getLGAs = (req, res) => {
       res.json({ success: true, result: resp[0] });
     })
     .catch((error) => {
+      console.error({ error });
       res
         .status(500)
         .json({ success: false, error: "Unable to fetch Lga list" });
@@ -301,18 +302,33 @@ module.exports.getLGAs = (req, res) => {
 };
 
 module.exports.getMDAs = (req, res) => {
+  const moment = require("moment");
+  const today = moment().format("YYYY-MM-DD");
+  const {
+    query_type = "all",
+    mda_code = null,
+    start_date = moment(today).add("M", -1).format("YYYY-MM-DD"),
+    end_date = today,
+  } = req.query;
+
   db.sequelize
-    .query(
-      "SELECT x.mda_name, x.mda_code FROM `taxes` x WHERE x.mda_name IS NOT NULL GROUP BY x.mda_name"
-    )
+    .query("CALL mda_queries(:query_type, :mda_code, :start_date, :end_date)", {
+      replacements: {
+        query_type,
+        mda_code,
+        start_date,
+        end_date,
+      },
+    })
     .then((resp) => {
-      res.json({ success: true, data: resp[0] });
+      res.json({
+        success: true,
+        data: resp,
+      });
     })
     .catch((error) => {
       console.log({ error });
-      res
-        .status(500)
-        .json({ success: false, error: "Unable to fetch Lga list" });
+      res.status(500).json({ success: false, error: "Transaction faild" });
     });
 };
 

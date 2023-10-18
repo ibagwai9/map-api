@@ -48,20 +48,16 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     getLGARevenues
   );
-  
+
   app.get(
     "/get/mdas",
     // passport.authenticate("jwt", { session: false }),
     getMDAs
   );
-  
+
   app.get(
     "/get/mda-departments",
     passport.authenticate("jwt", { session: false }),
     getMdaDepartments
   );
-
-
-
-
 };
