@@ -1,9 +1,8 @@
 const request = require("request");
 
-const smsAPIKey =
-  "FgROMRDs93kpR7bZEryWis5sPBfd4imuBIP3fZ9xECMUrVsaKpcg8qKAPTVU";
+const smsAPIKey = process.env.smsAPIKey;
 
-const smsAPIurl = "https://www.bulksmsnigeria.com/api/v1/sms";
+const smsAPIurl = process.env.smsAPIurl;
 
 exports.send = (phone, message, callback = (f) => f, err = (f) => f) => {
   var options = {
