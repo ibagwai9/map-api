@@ -47,15 +47,10 @@ const callHandleTaxTransaction = async (replacements) => {
         :description,
         :nin_id,
         :tin,
-        :paid_by,
-        :confirmed_by,
-        :payer_acct_no,
-        :payer_bank_name,
         :amount,
         :transaction_date,
         :transaction_type,
         :status,
-        :ipis_no,
         :reference_number,
         :department,
         :service_category,
@@ -90,7 +85,7 @@ const postTrx = async (req, res) => {
     paid_by = null,
     confirmed_by = null,
     payer_acct_no = null,
-    payer_bank_name = null,
+    bank_name = null,
     start_date = null,
     end_date = null,
     tax_payer = null,
@@ -114,7 +109,29 @@ const postTrx = async (req, res) => {
       mda_var = null,
       mda_val = null,
     } = tax;
-    const refNo = moment().format("YYMMDDhhmmssS");
+    const refNo = moment().format("YYMMDDhhssS");
+    let code = null;
+
+    switch (sector) {
+      case "TAX":
+        code = "112" + refNo;
+        break;
+      case "NON TAX":
+        code = "224" + refNo;
+        break;
+      case "LAND":
+        code = "336" + refNo;
+        break;
+      case "VEHICLE":
+        code = "448" + refNo;
+        break;
+      case "LGA":
+        code = "565" + refNo;
+        break;
+      default:
+        code = "100" + refNo;
+    }
+
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -127,7 +144,7 @@ const postTrx = async (req, res) => {
       transaction_type,
       status: "saved",
       ipis_no,
-      reference_number: refNo,
+      reference_number: code,
       rev_code: economic_code,
       mda_code: mda_code,
       nin_id,
@@ -136,7 +153,7 @@ const postTrx = async (req, res) => {
       paid_by,
       confirmed_by,
       payer_acct_no,
-      payer_bank_name,
+      bank_name,
       department,
       service_category: service_category ? service_category : tax_parent_code,
       tax_station,
@@ -150,7 +167,7 @@ const postTrx = async (req, res) => {
     try {
       console.log({ params });
       const results = await callHandleTaxTransaction(params);
-      return { success: true, data: results, ref_no: refNo };
+      return { success: true, data: results, ref_no: code };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
       return {
@@ -210,7 +227,7 @@ const getTrx = async (req, res) => {
     paid_by = null,
     confirmed_by = null,
     payer_acct_no = null,
-    payer_bank_name = null,
+    bank_name = null,
     query_type = null,
     start_date = null,
     end_date = null,
@@ -243,7 +260,6 @@ const getTrx = async (req, res) => {
     paid_by,
     confirmed_by,
     payer_acct_no,
-    payer_bank_name,
     query_type,
     start_date,
     end_date,
