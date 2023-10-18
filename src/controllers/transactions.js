@@ -61,8 +61,11 @@ const callHandleTaxTransaction = async (replacements) => {
         :service_category,
         :tax_station,
         :sector,
+        :mda_var,
+        :mda_val,
         :start_date, 
-        :end_date)`,
+        :end_date
+        )`,
       {
         replacements,
       }
@@ -108,6 +111,8 @@ const postTrx = async (req, res) => {
       transaction_type,
       ipis_no = null,
       sector = null,
+      mda_var = null,
+      mda_val = null,
     } = tax;
     const refNo = moment().format("YYMMDDhhmmssS");
     const params = {
@@ -138,6 +143,8 @@ const postTrx = async (req, res) => {
       sector,
       start_date,
       end_date,
+      mda_var,
+      mda_val,
     };
 
     try {
@@ -214,6 +221,8 @@ const getTrx = async (req, res) => {
     sector = null,
     tax_station = null,
     reference_number = null,
+    mda_var = null,
+    mda_val = null,
   } = req.query;
 
   const params = {
@@ -244,6 +253,8 @@ const getTrx = async (req, res) => {
     tax_station,
     service_category,
     sector,
+    mda_var,
+    mda_val,
   };
 
   try {
@@ -473,5 +484,5 @@ module.exports = {
   getInvoiceDetails,
   getTertiary,
   callTransactionList,
-  getInvoiceDetailsLGA
+  getInvoiceDetailsLGA,
 };
