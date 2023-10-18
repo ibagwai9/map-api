@@ -1,7 +1,6 @@
 // controllers/transactionController.js
 const axios = require("axios");
 const crypto = require("crypto");
-var parseString = require("xml2js").parseString;
 const { getInvoiceDetailsLGA } = require("./transactions");
 const db = require("../models");
 const moment = require("moment");
@@ -99,8 +98,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const formattedRange = isWithinOneMonth
               ? startFormatted
               : `${startFormatted} - ${endFormatted}`;
-
-            // let firstName = results[0].name;
             console.log(results[0]);
             let firstName =
               results[0].account_type === "org"
@@ -137,7 +134,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
                   </Item>`
                   )
                   .join("")}</PaymentItems>`;
-              // let lastName = results[0].name.split(" ")[1]
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
@@ -198,9 +194,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
     }
   }
 };
-
-// const proc
-
 const getInvoice = async (referenceNo) => {
   const sector = await db.sequelize.query(
     `SELECT  *  FROM tax_transactions WHERE reference_number = '${referenceNo}' LIMIT 1`
@@ -352,18 +345,11 @@ const handleInvoice = (req, res) => {
                   WHERE reference_number="${referenceNo}"`)
                       );
                     }
-                    // pp.paymentitems.forEach((ppaymentItem) => {
-                    //   ppaymentItem.forEach((pppp) => {})
-                    // })
                   });
                 });
 
                 Promise.all(asyncRequestList)
-                  .then((ok) => {
-                    console.log("ok", ok);
-                    // let logId =
-                    //   reqJson?.paymentnotificationrequest?.payments[0][0]
-                    //     ?.paymentlogid || Date.now()
+                  .then(() => {
                     res.set("Content-Type", "text/xml");
                     res.send(`
           <PaymentNotificationResponse>
@@ -389,7 +375,6 @@ const handleInvoice = (req, res) => {
               </Payments>
           </PaymentNotificationResponse>`);
                   });
-                // res.send(reqJson)
               }
             } else {
               res.set("Content-Type", "text/xml");
