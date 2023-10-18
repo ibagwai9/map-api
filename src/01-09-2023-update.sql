@@ -1,5 +1,6 @@
 DELIMITER $$
 CREATE  PROCEDURE `user_accounts`(
+    
     IN `in_query_type` VARCHAR(20), 
     IN `in_id` VARCHAR(255),
     IN `in_name` VARCHAR(255),
@@ -76,9 +77,7 @@ BEGIN
             state = IFNULL(in_state, state),
             lga = IFNULL(in_lga, lga),
             address = IFNULL(in_address, address),
-            office_address = IFNULL(in_office_address, office_address),
-            accessTo = IFNULL(in_accessTo, accessTo),
-           `rank` = IFNULL(in_rank, `rank`)  
+            office_address = IFNULL(in_office_address, office_address)
         WHERE user_id = in_id;
         -- SELECT statement here if needed
     ELSEIF in_query_type = 'update' THEN
@@ -89,8 +88,6 @@ BEGIN
             username = IFNULL(in_username, username),
             email = IFNULL(in_email, email),
             password = IFNULL(in_password, password),
-            role = IFNULL(in_role, role),
-            account_type = IFNULL(in_account_type, account_type),
             phone = IFNULL(in_phone, phone)
         WHERE id = in_id;
     ELSEIF in_query_type = 'delete' THEN
@@ -881,7 +878,33 @@ ALTER TABLE `users` CHANGE `user_status` `status` VARCHAR(20) CHARACTER SET utf8
 DROP PROCEDURE IF EXISTS `user_accounts`;
 
 DELIMITER $$
-CREATE  PROCEDURE `user_accounts` (IN `in_query_type` VARCHAR(20), IN `in_id` VARCHAR(255), IN `in_name` VARCHAR(255), IN `in_username` VARCHAR(255), IN `in_email` VARCHAR(255), IN `in_office_email` VARCHAR(255), IN `in_password` VARCHAR(255), IN `in_role` VARCHAR(255), IN `in_bvn` VARCHAR(11), IN `in_tin` VARCHAR(11), IN `in_org_tin` VARCHAR(11), IN `in_org_name` VARCHAR(200), IN `in_rc` VARCHAR(11), IN `in_account_type` VARCHAR(20), IN `in_phone` VARCHAR(15), IN `in_office_phone` VARCHAR(15), IN `in_state` VARCHAR(20), IN `in_lga` VARCHAR(100), IN `in_address` VARCHAR(200), IN `in_office_address` VARCHAR(200), IN `in_mda_name` VARCHAR(150), IN `in_mda_code` VARCHAR(150), IN `in_department` VARCHAR(150), IN `in_accessTo` VARCHAR(300), IN `in_rank` VARCHAR(100), IN `in_status` VARCHAR(20))
+CREATE  PROCEDURE `user_accounts` (
+    IN `in_query_type` VARCHAR(20), 
+IN `in_id` VARCHAR(255), 
+IN `in_name` VARCHAR(255), 
+IN `in_username` VARCHAR(255), 
+IN `in_email` VARCHAR(255), 
+IN `in_office_email` VARCHAR(255), 
+IN `in_password` VARCHAR(255), 
+IN `in_role` VARCHAR(255), 
+IN `in_bvn` VARCHAR(11), 
+IN `in_tin` VARCHAR(11), 
+IN `in_org_tin` VARCHAR(11), 
+IN `in_org_name` VARCHAR(200), 
+IN `in_rc` VARCHAR(11), 
+IN `in_account_type` VARCHAR(20), 
+IN `in_phone` VARCHAR(15), 
+IN `in_office_phone` VARCHAR(15), 
+IN `in_state` VARCHAR(20), 
+IN `in_lga` VARCHAR(100), 
+IN `in_address` VARCHAR(200), 
+IN `in_office_address` VARCHAR(200), 
+IN `in_mda_name` VARCHAR(150), 
+IN `in_mda_code` VARCHAR(150), 
+IN `in_department` VARCHAR(150), 
+IN `in_accessTo` VARCHAR(300), 
+IN `in_rank` VARCHAR(100), 
+IN `in_status` VARCHAR(20))
 BEGIN
   
     DECLARE Tax_ID, ins_user_id INT DEFAULT NULL;

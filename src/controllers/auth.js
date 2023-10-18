@@ -1,4 +1,5 @@
 const db = require("../models");
+const { SequelizeDatabaseError } = require("sequelize");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { send, SMSTemplate } = require("../services/smsApi");
@@ -32,6 +33,7 @@ module.exports.SignUp = (req, res) => {
     rank = "",
     contact_phone = "",
     status = "active",
+    taxID = null,
   } = req.body;
   console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
@@ -63,7 +65,7 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID)",
                   {
                     replacements: {
                       query_type: "insert",
@@ -92,6 +94,7 @@ module.exports.SignUp = (req, res) => {
                       department,
                       rank,
                       status,
+                      taxID,
                     },
                   }
                 )
@@ -956,7 +959,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     name = "",
     email = "",
     org_email = "",
-    role = "admin",
+    role = "user",
     accessTo = "",
     bvn = "",
     office_address = "",
@@ -976,6 +979,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     department = "",
     rank = "",
     status = "active",
+    taxID = null,
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -983,7 +987,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID);",
           {
             replacements: {
               user_id,
@@ -1013,23 +1017,16 @@ module.exports.UpdateTaxPayer = (req, res) => {
               department,
               rank,
               status,
+              taxID,
             },
           }
         )
         .then((resp) => res.json({ success: true, data: resp }))
         .catch((error) => {
           console.error({ error });
-          if (
-            error instanceof SequelizeDatabaseError &&
-            error.parent.code === "ER_SIGNAL_EXCEPTION"
-          ) {
-            res
-              .status(500)
-              .json({ success: false, msg: error.parent.sqlMessage });
-          } else {
-            // Catch other errors
-            res.status(500).json({ success: false, msg: error.message });
-          }
+
+          // Catch other errors
+          res.status(500).json({ success: false, msg: "Error occured" });
         });
     });
   });
