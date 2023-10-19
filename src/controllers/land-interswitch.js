@@ -78,6 +78,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
       default:
         code = "6405";
     }
+
     if (merchantreference === code) {
       getInvoiceDetailsLGA(custreference)
         .then((results) => {
@@ -98,6 +99,8 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const formattedRange = isWithinOneMonth
               ? startFormatted
               : `${startFormatted} - ${endFormatted}`;
+
+            // let firstName = results[0].name;
             console.log(results[0]);
             let firstName =
               results[0].account_type === "org"
@@ -123,7 +126,8 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 ${results
                   .filter((item) => item.cr > 0)
                   .map(
-                    (product) => `<Item>
+                    (product) => `
+                  <Item>
                     <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
@@ -194,6 +198,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
     }
   }
 };
+
+// const proc
+
 const getInvoice = async (referenceNo) => {
   const sector = await db.sequelize.query(
     `SELECT  *  FROM tax_transactions WHERE reference_number = '${referenceNo}' LIMIT 1`
@@ -208,7 +215,6 @@ const getInvoice = async (referenceNo) => {
 
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
-
   if (reqJson.customerinformationrequest) {
     handleInvoiceValidation(reqJson, res);
   } else if (reqJson.paymentnotificationrequest) {
@@ -219,13 +225,14 @@ const handleInvoice = (req, res) => {
         ? reqJson.paymentnotificationrequest.payments[0].payment[0]
             .custreference
         : null;
+    // console.log(referenceNo)
+    // console.log(reqJson.paymentnotificationrequest.payments[0].payment[0].custreference)
     if (referenceNo) {
       const amountPaid =
         reqJson.paymentnotificationrequest.payments[0].payment[0].amount[0];
       const logId =
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0];
-      console.log(amountPaid);
       const bank_branch =
         reqJson.paymentnotificationrequest.payments[0].payment[0].branchname[0];
 
@@ -240,10 +247,6 @@ const handleInvoice = (req, res) => {
       const payer_acct_no =
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .collectionsaccount[0];
-      console.log(
-        { bank_name, bank_cbn_code, bank_branch, branch_address },
-        " "
-      );
       if (
         amountPaid &&
         amountPaid !== "0" &&
@@ -285,6 +288,7 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
                         </Payment>
@@ -316,8 +320,11 @@ const handleInvoice = (req, res) => {
                 </PaymentNotificationResponse>`);
                 }
               } else {
+                // console.log(resp)
                 reqJson.paymentnotificationrequest.payments.forEach((p) => {
                   p.payment.forEach((pp) => {
+                    // console.log(pp)
+                    // const invoiceId = pp.custreference[0]
                     const interswitchRef = pp.paymentreference[0];
                     const modeOfPayment = pp.paymentmethod[0];
                     const paymentDate = pp.paymentdate[0];
@@ -349,7 +356,7 @@ const handleInvoice = (req, res) => {
                 });
 
                 Promise.all(asyncRequestList)
-                  .then(() => {
+                  .then((ok) => {
                     res.set("Content-Type", "text/xml");
                     res.send(`
           <PaymentNotificationResponse>
@@ -369,7 +376,6 @@ const handleInvoice = (req, res) => {
               <Payments>
                   <Payment>
                   <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
                       <Status>1</Status>
                   </Payment>
               </Payments>
@@ -428,6 +434,7 @@ const handleInvoice = (req, res) => {
       </Customers>
   </Response>`);
   }
+  // })
 };
 
 module.exports = {
