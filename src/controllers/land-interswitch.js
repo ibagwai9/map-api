@@ -78,6 +78,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
       default:
         code = "6405";
     }
+
     if (merchantreference === code) {
       getInvoiceDetailsLGA(custreference)
         .then((results) => {
@@ -98,6 +99,8 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const formattedRange = isWithinOneMonth
               ? startFormatted
               : `${startFormatted} - ${endFormatted}`;
+
+            // let firstName = results[0].name;
             console.log(results[0]);
             let firstName =
               results[0].account_type === "org"
@@ -123,7 +126,8 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 ${results
                   .filter((item) => item.cr > 0)
                   .map(
-                    (product) => `<Item>
+                    (product) => `
+                  <Item>
                     <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
@@ -208,7 +212,6 @@ const getInvoice = async (referenceNo) => {
 
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
-
   if (reqJson.customerinformationrequest) {
     handleInvoiceValidation(reqJson, res);
   } else if (reqJson.paymentnotificationrequest) {
@@ -225,7 +228,6 @@ const handleInvoice = (req, res) => {
       const logId =
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0];
-      console.log(amountPaid);
       const bank_branch =
         reqJson.paymentnotificationrequest.payments[0].payment[0].branchname[0];
 
@@ -240,10 +242,6 @@ const handleInvoice = (req, res) => {
       const payer_acct_no =
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .collectionsaccount[0];
-      console.log(
-        { bank_name, bank_cbn_code, bank_branch, branch_address },
-        " "
-      );
       if (
         amountPaid &&
         amountPaid !== "0" &&
@@ -285,6 +283,7 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
+                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
                         </Payment>
@@ -349,7 +348,7 @@ const handleInvoice = (req, res) => {
                 });
 
                 Promise.all(asyncRequestList)
-                  .then(() => {
+                  .then((ok) => {
                     res.set("Content-Type", "text/xml");
                     res.send(`
           <PaymentNotificationResponse>
@@ -369,7 +368,6 @@ const handleInvoice = (req, res) => {
               <Payments>
                   <Payment>
                   <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
                       <Status>1</Status>
                   </Payment>
               </Payments>
@@ -428,6 +426,7 @@ const handleInvoice = (req, res) => {
       </Customers>
   </Response>`);
   }
+  // })
 };
 
 module.exports = {
