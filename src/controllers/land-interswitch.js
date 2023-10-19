@@ -198,9 +198,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
     }
   }
 };
-
-// const proc
-
 const getInvoice = async (referenceNo) => {
   const sector = await db.sequelize.query(
     `SELECT  *  FROM tax_transactions WHERE reference_number = '${referenceNo}' LIMIT 1`
@@ -225,8 +222,6 @@ const handleInvoice = (req, res) => {
         ? reqJson.paymentnotificationrequest.payments[0].payment[0]
             .custreference
         : null;
-    // console.log(referenceNo)
-    // console.log(reqJson.paymentnotificationrequest.payments[0].payment[0].custreference)
     if (referenceNo) {
       const amountPaid =
         reqJson.paymentnotificationrequest.payments[0].payment[0].amount[0];
@@ -320,11 +315,8 @@ const handleInvoice = (req, res) => {
                 </PaymentNotificationResponse>`);
                 }
               } else {
-                // console.log(resp)
                 reqJson.paymentnotificationrequest.payments.forEach((p) => {
                   p.payment.forEach((pp) => {
-                    // console.log(pp)
-                    // const invoiceId = pp.custreference[0]
                     const interswitchRef = pp.paymentreference[0];
                     const modeOfPayment = pp.paymentmethod[0];
                     const paymentDate = pp.paymentdate[0];
