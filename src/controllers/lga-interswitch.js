@@ -1,6 +1,7 @@
 // controllers/transactionController.js
 const axios = require("axios");
 const crypto = require("crypto");
+var parseString = require("xml2js").parseString;
 const { getInvoiceDetailsLGA } = require("./transactions");
 const db = require("../models");
 const moment = require("moment");
@@ -125,13 +126,11 @@ const handleInvoiceValidation = async (reqJson, res) => {
         </Customers>
     </CustomerInformationResponse>`);
             } else {
-              const xmlString = `
-              <PaymentItems>
+              const xmlString = `<PaymentItems>
                 ${results
                   .filter((item) => item.cr > 0)
                   .map(
-                    (product) => `
-                  <Item>
+                    (product) => `<Item>
                     <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
@@ -139,12 +138,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
                     <Subtotal>${product.cr}</Subtotal>
                     <Tax>0</Tax>
                     <Total>${product.cr}</Total>
-                  </Item>
-                `
+                  </Item>`
                   )
-                  .join("")}
-              </PaymentItems>
-              `;
+                  .join("")}</PaymentItems>`;
               // let lastName = results[0].name.split(" ")[1]
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
@@ -257,6 +253,24 @@ const handleInvoice = (req, res) => {
         reqJson.paymentnotificationrequest.payments[0].payment[0]
           .paymentlogid[0];
       console.log(amountPaid);
+      const bank_branch =
+        reqJson.paymentnotificationrequest.payments[0].payment[0].branchname[0];
+
+      const branch_address =
+        reqJson.paymentnotificationrequest.payments[0].payment[0].location[0];
+      const bank_name =
+        reqJson.paymentnotificationrequest.payments[0].payment[0]
+          .paymentitems[0].paymentitem[0].leadbankname[0];
+      const bank_cbn_code =
+        reqJson.paymentnotificationrequest.payments[0].payment[0]
+          .paymentitems[0].paymentitem[0].leadbankcbncode[0];
+      const payer_acct_no =
+        reqJson.paymentnotificationrequest.payments[0].payment[0]
+          .collectionsaccount[0];
+      console.log(
+        { bank_name, bank_cbn_code, bank_branch, branch_address },
+        " "
+      );
       if (
         amountPaid &&
         amountPaid !== "0" &&
@@ -298,8 +312,6 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
-                        <CustReference>${referenceNo}</CustReference>
-                            <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>The amount is not correct.</StatusMessage>
                         </Payment>
@@ -323,8 +335,6 @@ const handleInvoice = (req, res) => {
                 <PaymentNotificationResponse>
                     <Payments>
                         <Payment>
-                        <PaymentLogId>${logId}</PaymentLogId>
-                        <CustReference>${referenceNo}</CustReference>
                             <PaymentLogId>${logId}</PaymentLogId>
                             <Status>1</Status>
                             <StatusMessage>Invalid Customer Reference</StatusMessage>
@@ -347,7 +357,7 @@ const handleInvoice = (req, res) => {
                     if (isReversal === "False") {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
-                SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
+                SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
                   dateSettled
                 ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
@@ -397,7 +407,6 @@ const handleInvoice = (req, res) => {
                   <Payment>
                   <PaymentLogId>${logId}</PaymentLogId>
                   <CustReference>${referenceNo}</CustReference>
-                      <PaymentLogId>0</PaymentLogId>
                       <Status>1</Status>
                   </Payment>
               </Payments>
@@ -412,7 +421,6 @@ const handleInvoice = (req, res) => {
                     <Payments>
                         <Payment>
                         <PaymentLogId>${logId}</PaymentLogId>
-                        <CustReference>${referenceNo}</CustReference>
                             <Status>1</Status>
                             <StatusMessage>Customer Reference not found or invalid</StatusMessage>
                         </Payment>
@@ -426,10 +434,8 @@ const handleInvoice = (req, res) => {
       <PaymentNotificationResponse>
           <Payments>
               <Payment>
-                  <PaymentLogId>0</PaymentLogId>
                   <Status>1</Status>
                   <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
                   <StatusMessage>Please provide a valid amount</StatusMessage>
               </Payment>
           </Payments>
@@ -441,7 +447,6 @@ const handleInvoice = (req, res) => {
       <PaymentNotificationResponse>
           <Payments>
               <Payment>
-                  <PaymentLogId>0</PaymentLogId>
                   <Status>1</Status>
                   <StatusMessage>Please provide a valid Customer Reference</StatusMessage>
               </Payment>
