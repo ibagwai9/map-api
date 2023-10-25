@@ -209,22 +209,31 @@ const getInvoice = async (referenceNo) => {
     return null;
   }
 };
-const allowedList = ["41.223.145.174", "154.72.34.174"];
+function formatIPv6MappedIPv4(ipv6MappedIPv4) {
+  // Check if the input is in the "::ffff:" format
+  if (ipv6MappedIPv4.startsWith("::ffff:")) {
+    // Extract the IPv4 address part
+    const ipv4Address = ipv6MappedIPv4.replace("::ffff:", "");
+    return ipv4Address;
+  } else {
+    // Return the input as is (assuming it's already in IPv4 format)
+    return ipv6MappedIPv4;
+  }
+}
+const allowedList = ["41.223.145.174", "154.72.34.174","10.1.17.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
   // const clientIP = req.ip;
   const clientIP = req.ip; // Get the client's IP address
 
   // Check if the client's IP address matches any allowed IP in either IPv4 or IPv6 format
-  const isAllowed = allowedList.some((allowedIP) => {
-    return clientIP.endsWith(allowedIP);
-  });
+  const isAllowed = formatIPv6MappedIPv4(clientIP)
   console.log("req.ip");
   console.log(clientIP);
   console.log(clientIP);
   console.log(clientIP);
   console.log("req.ip");
-  if (isAllowed) {
+  if (allowedList.includes(isAllowed)) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
     } else if (reqJson.paymentnotificationrequest) {
