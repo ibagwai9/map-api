@@ -220,17 +220,16 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
     return ipv6MappedIPv4;
   }
 }
-const allowedList = ["41.223.145.174", "154.72.34.174","10.1.17.174"];
+const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
   // const clientIP = req.ip;
   const clientIP = req.ip; // Get the client's IP address
-
-  // Check if the client's IP address matches any allowed IP in either IPv4 or IPv6 format
+  
   const isAllowed = formatIPv6MappedIPv4(clientIP)
   console.log("req.ip");
-  console.log(clientIP);
-  console.log(clientIP);
+  console.log(isAllowed);
+  console.log(isAllowed);
   console.log("req.ip");
   if (allowedList.includes(isAllowed)) {
     if (reqJson.customerinformationrequest) {
