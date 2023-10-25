@@ -223,15 +223,15 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
 const allowedList = ["41.223.145.174", "154.72.34.174","10.1.29.97"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
-  console.log(req);
+  // console.log(req);
   // const clientIP = req.ip;
-  const clientIP = req.connection.remoteAddress; // Get the client's IP address
+   const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;; // Get the client's IP address
   
   const isAllowed = formatIPv6MappedIPv4(clientIP)
   console.log("req.ip");
-  console.log(req.connection.remoteAddress);
-  console.log(req.connection.remoteAddress);
-  console.log(req.connection.remoteAddress);
+  console.log(clientIP);
+  console.log(clientIP);
+  console.log(clientIP);
   console.log(isAllowed);
   console.log("req.ip");
   if (allowedList.includes(isAllowed)) {
