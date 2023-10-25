@@ -212,13 +212,19 @@ const getInvoice = async (referenceNo) => {
 const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
-  const clientIP = req.ip;
+  // const clientIP = req.ip;
+  const clientIP = req.ip; // Get the client's IP address
+
+  // Check if the client's IP address matches any allowed IP in either IPv4 or IPv6 format
+  const isAllowed = allowedList.some((allowedIP) => {
+    return clientIP.endsWith(allowedIP);
+  });
   console.log("req.ip");
-  console.log(req.ip);
-  console.log(req.ip);
-  console.log(req.ip);
+  console.log(clientIP);
+  console.log(clientIP);
+  console.log(clientIP);
   console.log("req.ip");
-  if (allowedList.includes(clientIP)) {
+  if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
     } else if (reqJson.paymentnotificationrequest) {
@@ -434,6 +440,9 @@ const handleInvoice = (req, res) => {
         </Customers>
     </Response>`);
     }
+  }else {
+    console.log(`Denied IP: ${clientIP}`);
+    res.status(403).send("Access Denied");
   }
 };
 
