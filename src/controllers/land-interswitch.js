@@ -229,7 +229,9 @@ const handleInvoice = (req, res) => {
   
   const isAllowed = formatIPv6MappedIPv4(clientIP)
   console.log("req.ip");
-  console.log(isAllowed);
+  console.log(req.connection.remoteAddress);
+  console.log(req.connection.remoteAddress);
+  console.log(req.connection.remoteAddress);
   console.log(isAllowed);
   console.log("req.ip");
   if (allowedList.includes(isAllowed)) {
