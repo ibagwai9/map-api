@@ -25,12 +25,11 @@ const { getTertiary } = require("./controllers/transactions");
 const { institutions } = require("./config/institutions");
 const { addHospitalData } = require("./controllers/transactions-hpt");
 // make express look in the public directory for assets (css/js/img)
-const allowedList = [
-  "41.223.145.174" , "154.72.34.174" // IP range
-  // Add more IP addresses or ranges as needed
-];
+// const allowedList = [
+//   "41.223.145.174" , "154.72.34.174" 
+// ];
 
-app.use(ipAccessControl({ allowedList, denyMessage: "Access Denied" }));
+// app.use(ipAccessControl({ allowedList, denyMessage: "Access Denied" }));
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/uploads", express.static(path.join(__dirname, "src/uploads")));
