@@ -231,7 +231,6 @@ const handleInvoice = (req, res) => {
   console.log("req.ip");
   console.log(clientIP);
   console.log(clientIP);
-  console.log(clientIP);
   console.log("req.ip");
   if (allowedList.includes(isAllowed)) {
     if (reqJson.customerinformationrequest) {
