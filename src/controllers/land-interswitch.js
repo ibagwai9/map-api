@@ -213,7 +213,11 @@ const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
   const clientIP = req.ip;
+  console.log("req.ip");
   console.log(req.ip);
+  console.log(req.ip);
+  console.log(req.ip);
+  console.log("req.ip");
   if (allowedList.includes(clientIP)) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
