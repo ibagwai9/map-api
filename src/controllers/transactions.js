@@ -321,9 +321,7 @@ async function getQRCode(req, res) {
       transaction_date
     ).format(
       "DD/MM/YYYY HH:mm:ss"
-    )}\n with TransactionID ${refno}\nValidation No.: ${interswitch_ref}\nby TaxPayer : ${name}\nFor ${description}\n${
-      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-    } ID: ${refno}\nUrl: ${url}`;
+    )}\n with TransactionID ${refno}\nValidation No.: ${interswitch_ref}\nby TaxPayer : ${name}\nFor ${description}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
