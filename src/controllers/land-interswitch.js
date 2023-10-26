@@ -75,6 +75,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
       case "NON TAX":
         code = "6601";
         break;
+      case "LAND":
+        code = "6913";
+        break;
       default:
         code = "6405";
     }
@@ -220,20 +223,21 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
     return ipv6MappedIPv4;
   }
 }
-const allowedList = ["41.223.145.174", "154.72.34.174","102.91.69.118"];
+const allowedList = [
+  "41.223.145.174",
+  "154.72.34.174",
+  "102.91.69.118",
+  "102.91.49.95",
+  "102.91.46.9",
+];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
   // console.log(req);
   // const clientIP = req.ip;
-   const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress;; // Get the client's IP address
-  
-  const isAllowed = allowedList.includes(clientIP)
-  console.log("req.ip");
-  console.log(clientIP);
-  console.log(clientIP);
-  console.log(clientIP);
-  console.log(isAllowed);
-  console.log("req.ip");
+  const clientIP =
+    req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
+
+  const isAllowed = allowedList.includes(clientIP);
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
@@ -450,7 +454,7 @@ const handleInvoice = (req, res) => {
         </Customers>
     </Response>`);
     }
-  }else {
+  } else {
     console.log(`Denied IP: ${clientIP}`);
     res.status(403).send("Access Denied");
   }
