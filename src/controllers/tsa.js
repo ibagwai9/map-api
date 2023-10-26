@@ -303,7 +303,7 @@ module.exports.getLGAs = (req, res) => {
 
 module.exports.getMDAs = (req, res) => {
   const moment = require("moment");
-  const today = moment().format("YYYY-MM-DD");
+  const today = moment();
   const {
     query_type = "all",
     mda_code = null,
