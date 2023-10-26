@@ -296,12 +296,15 @@ async function getQRCode(req, res) {
     );
 
     const transaction_date =
-      payment[0] && payment[0].length
-        ? payment[0][0].transaction_date
-        : "Invalid";
-
+      payment[0] && payment[0].length ? payment[0][0].updated_at : "Invalid";
+    const interswitch_ref =
+      payment[0] && payment[0].length ? payment[0][0].interswitch_ref : "N/A";
+    const description =
+      payment[0] && payment[0].length ? payment[0][0].description : "";
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
+    const paymentAmount =
+      payment[0] && payment[0].length ? payment[0][0].paymentAmount : 0;
 
     const user = await db.sequelize.query(
       `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0].user_id}`
@@ -309,17 +312,16 @@ async function getQRCode(req, res) {
 
     const name =
       user[0].account_type === "org" ? user[0].org_name : user[0].name;
-    const phoneNumber = user[0].phone || "Invalid";
 
     const url = `https://kirmas.kn.gov.ng/payment-${
       status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
     }?ref_no=${refno}`;
     // Create a payload string with the payer's information
-    const payload = `Date:${moment(transaction_date).format(
-      "DD/MM/YYYY"
-    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
-      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-    } ID: ${refno}\nUrl: ${url}`;
+    const payload = `${paymentAmount} was paid on ${moment(
+      transaction_date
+    ).format(
+      "DD/MM/YYYY HH:mm:ss"
+    )}\n with TransactionID ${refno}\nValidation No.: ${interswitch_ref}\nby TaxPayer : ${name}\nFor ${description}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response

@@ -303,12 +303,12 @@ module.exports.getLGAs = (req, res) => {
 
 module.exports.getMDAs = (req, res) => {
   const moment = require("moment");
-  const today = moment().format("YYYY-MM-DD");
+  const today = moment();
   const {
     query_type = "all",
     mda_code = null,
-    start_date = moment(today).add("M", -1).format("YYYY-MM-DD"),
-    end_date = today,
+    start_date = today.startOf("month").format("YYYY-MM-DD"),
+    end_date = today.endOf("month").format("YYYY-MM-DD"),
   } = req.query;
 
   db.sequelize
