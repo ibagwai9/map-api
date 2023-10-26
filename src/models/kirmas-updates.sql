@@ -1,0 +1,1 @@
+ALTER TABLE `tax_transactions` ADD `qty` INT(4) NOT NULL DEFAULT '1' AFTER `dr`;
