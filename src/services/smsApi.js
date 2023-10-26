@@ -12,7 +12,7 @@ exports.send = (phone, message, callback = (f) => f, err = (f) => f) => {
 
   request(options, function (error, response) {
     if (error) err(error);
-    callback(response.body);
+    callback(response?.body);
   });
 };
 
