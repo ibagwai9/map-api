@@ -4,6 +4,7 @@ const {
   getQRCode,
   getPaymentSummary,
   callTransactionList,
+  printReport,
 } = require("../controllers/transactions");
 const passport = require("passport");
 
@@ -19,6 +20,7 @@ const {requireAuth} = require("../config/config.js")
       passport.authenticate("jwt", { session: false }),
       callTransactionList
     ); 
+    app.post('/transactions/update-print-count', passport.authenticate('jwt', { session:false }, printReport))
     
     // app.get('/get-tertiary-trx',
     // // passport.authenticate("jwt", { session: false }),

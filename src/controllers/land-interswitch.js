@@ -223,7 +223,14 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
     return ipv6MappedIPv4;
   }
 }
+<<<<<<< HEAD
 const allowedList = ["41.223.145.174", "154.72.34.174"];
+=======
+const allowedList = [
+  "41.223.145.174",
+  "154.72.34.174",
+];
+>>>>>>> 545e3bd246d8541c99391fe653a9e3ba10d68dcb
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
   // console.log(req);
