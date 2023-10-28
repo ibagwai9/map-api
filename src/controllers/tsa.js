@@ -307,19 +307,24 @@ module.exports.getMDAs = (req, res) => {
   const {
     query_type = "all",
     mda_code = null,
+    sector = null,
     start_date = today.startOf("month").format("YYYY-MM-DD"),
     end_date = today.endOf("month").format("YYYY-MM-DD"),
   } = req.query;
 
   db.sequelize
-    .query("CALL mda_queries(:query_type, :mda_code, :start_date, :end_date)", {
-      replacements: {
-        query_type,
-        mda_code,
-        start_date,
-        end_date,
-      },
-    })
+    .query(
+      "CALL mda_queries(:query_type, :mda_code, :sector, :start_date, :end_date)",
+      {
+        replacements: {
+          query_type,
+          mda_code,
+          sector,
+          start_date,
+          end_date,
+        },
+      }
+    )
     .then((resp) => {
       res.json({
         success: true,
