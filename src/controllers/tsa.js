@@ -116,11 +116,28 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
     sector = null,
     default_input = "checked",
     uom = null,
+    is_department = null,
+    department = null,
+    mda_name = null,
+    mda_code = null,
   } = data;
 
   db.sequelize
     .query(
-      `CALL kigra_taxes(:query_type, :id, :tax_code, :tax_parent_code, :title, :tax_fee, :sector, :default_input,:uom)`,
+      `CALL kigra_taxes(
+        :query_type,
+        :id,
+        :tax_code,
+        :tax_parent_code,
+        :title,
+        :tax_fee,
+        :sector,
+        :default_input,
+        :uom,
+        :is_department,
+        :department,
+        :mda_name,
+        :mda_code)`,
       {
         replacements: {
           query_type,
@@ -132,6 +149,10 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
           sector,
           default_input,
           uom,
+          is_department,
+          department,
+          mda_name,
+          mda_code,
         },
       }
     )
@@ -146,19 +167,53 @@ const kigraTaxes = (data, success = (f) => f, error = (f) => f) => {
 module.exports.postKigrTaxes = (req, res) => {
   try {
     Promise.all(
-      req.body.map((tax) => {
-        return new Promise((resolve, reject) => {
-          kigraTaxes(
-            tax,
-            (resp) => {
-              resolve(resp);
-            },
-            (err) => {
-              reject(err);
-            }
-          );
-        });
-      })
+      req.body.map(
+        ({
+          query_type = null,
+          id = null,
+          title = null,
+          tax_parent_code = null,
+          parent_code = null,
+          description = null,
+          tax_code = null,
+          tax_fee = null,
+          sector = null,
+          default_input = null,
+          uom = null,
+          is_department = null,
+          department = null,
+          mda_name = null,
+          mda_code = null,
+        }) => {
+          return new Promise((resolve, reject) => {
+            kigraTaxes(
+              {
+                query_type,
+                id,
+                title,
+                tax_parent_code,
+                parent_code,
+                description,
+                tax_code,
+                tax_fee,
+                sector,
+                default_input,
+                uom,
+                is_department,
+                department,
+                mda_name,
+                mda_code,
+              },
+              (resp) => {
+                resolve(resp);
+              },
+              (err) => {
+                reject(err);
+              }
+            );
+          });
+        }
+      )
     )
       .then((results) => {
         res.json({ success: true, results });
@@ -173,8 +228,42 @@ module.exports.postKigrTaxes = (req, res) => {
 };
 
 module.exports.getKigrTaxes = (req, res) => {
+  const {
+    query_type = null,
+    id = null,
+    title = null,
+    tax_parent_code = null,
+    parent_code = null,
+    description = null,
+    tax_code = null,
+    tax_fee = null,
+    sector = null,
+    default_input = null,
+    uom = null,
+    is_department = null,
+    department = null,
+    mda_name = null,
+    mda_code = null,
+  } = req.query;
+
   kigraTaxes(
-    req.query,
+    {
+      query_type,
+      id,
+      title,
+      tax_parent_code,
+      parent_code,
+      description,
+      tax_code,
+      tax_fee,
+      sector,
+      default_input,
+      uom,
+      is_department,
+      department,
+      mda_name,
+      mda_code,
+    },
     (resp) => {
       res.json({ success: true, result: resp });
     },
@@ -205,6 +294,7 @@ module.exports.getLGAs = (req, res) => {
       res.json({ success: true, result: resp[0] });
     })
     .catch((error) => {
+      console.error({ error });
       res
         .status(500)
         .json({ success: false, error: "Unable to fetch Lga list" });
@@ -212,18 +302,38 @@ module.exports.getLGAs = (req, res) => {
 };
 
 module.exports.getMDAs = (req, res) => {
+  const moment = require("moment");
+  const today = moment();
+  const {
+    query_type = "all",
+    mda_code = null,
+    sector = null,
+    start_date = today.startOf("month").format("YYYY-MM-DD"),
+    end_date = today.endOf("month").format("YYYY-MM-DD"),
+  } = req.query;
+
   db.sequelize
     .query(
-      "SELECT x.mda_name, x.mda_code FROM `taxes` x WHERE x.mda_name IS NOT NULL GROUP BY x.mda_name"
+      "CALL mda_queries(:query_type, :mda_code, :sector, :start_date, :end_date)",
+      {
+        replacements: {
+          query_type,
+          mda_code,
+          sector,
+          start_date,
+          end_date,
+        },
+      }
     )
     .then((resp) => {
-      res.json({ success: true, data: resp[0] });
+      res.json({
+        success: true,
+        data: resp,
+      });
     })
     .catch((error) => {
       console.log({ error });
-      res
-        .status(500)
-        .json({ success: false, error: "Unable to fetch Lga list" });
+      res.status(500).json({ success: false, error: "Transaction faild" });
     });
 };
 

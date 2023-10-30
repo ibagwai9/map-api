@@ -1,7 +1,8 @@
 const db = require("../models");
+const { SequelizeDatabaseError } = require("sequelize");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { send } = require("../services/smsApi");
+const { send, SMSTemplate } = require("../services/smsApi");
 const transport = require("../config/nodemailer");
 
 module.exports.SignUp = (req, res) => {
@@ -32,6 +33,7 @@ module.exports.SignUp = (req, res) => {
     rank = "",
     contact_phone = "",
     status = "active",
+    taxID = null,
   } = req.body;
   console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
@@ -41,7 +43,12 @@ module.exports.SignUp = (req, res) => {
     db.sequelize
       .query(
         `SELECT * from users
-     where phone="${contact_phone}"`
+     where phone=:contact_phone`,
+        {
+          replacements: {
+            contact_phone,
+          },
+        }
       )
       .then((resp) => {
         console.log(resp[0]);
@@ -58,7 +65,7 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID)",
                   {
                     replacements: {
                       query_type: "insert",
@@ -87,6 +94,7 @@ module.exports.SignUp = (req, res) => {
                       department,
                       rank,
                       status,
+                      taxID,
                     },
                   }
                 )
@@ -259,7 +267,7 @@ module.exports.SignIn = async (req, res) => {
       });
     } else {
       // Only one user found, proceed with authentication
-      console.log(users)
+      console.log(users);
       const user = users[0];
       const isMatch = await bcrypt.compare(password, user.password);
 
@@ -767,6 +775,88 @@ module.exports.getUsers = (req, res) => {
     });
 };
 
+module.exports.forgotPassword = (req, res) => {
+  const { phone = "" } = req.query;
+  db.sequelize
+    .query(`SELECT * from users where phone=:phone`, {
+      replacements: {
+        phone,
+      },
+    })
+    .then((result) => {
+      res.json({ success: true, results: result[0] });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ status: "failed", err });
+    });
+};
+module.exports.forgotPassword = (req, res) => {
+  const { phone } = req.query;
+
+  db.User.findAll({
+    where: {
+      phone,
+    },
+  }).then((user) => {
+    if (!user.length) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found!" });
+    }
+    const min = 100000; // Minimum value (inclusive)
+    const max = 999999; // Maximum value (inclusive)
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    let cc = randomNumber.toString().padStart(6, "0");
+
+    db.sequelize
+      .query(`update users set code=${cc} where phone=:phone`, {
+        replacements: {
+          phone,
+        },
+      })
+      .then((user) => {
+        console.log(user);
+        if (user) {
+          send(phone, SMSTemplate(cc), () => {
+            res.json({
+              success: true,
+              message: "otp was send successfully",
+              results: { phone, code: cc },
+            });
+          }),
+            () => {
+              res.json({
+                success: false,
+                message: "otp was not send try again",
+              });
+            };
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({ success: false, message: err });
+      });
+  });
+};
+module.exports.codeVerification = (req, res) => {
+  const { phone, code } = req.query;
+  db.sequelize
+    .query(`select * from users where  code=:code and phone=:phone`, {
+      replacements: {
+        phone,
+        code,
+      },
+    })
+    .then((results) =>
+      res.json({ results: results[0], success: true, message: "valid" })
+    )
+    .catch((err) => {
+      res.status(500).json({ success: false, message: err });
+    });
+};
+
 module.exports.searchUser = (req, res) => {
   const { query_type = "select-user", id = "" } = req.query;
 
@@ -832,6 +922,35 @@ module.exports.getAdmins = (req, res) => {
     });
 };
 
+module.exports.generateNewPassword = (req, res) => {
+  const { phone = "", password = "", code = "" } = req.body;
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      if (err) throw err;
+      let newPass = hash;
+      console.log(newPass)
+      db.sequelize
+        .query(
+          "update  users set password=:newPass where phone=:phone and code =:code ",
+          {
+            replacements: {
+              newPass,
+              phone,
+              code,
+            },
+          }
+        )
+        .then((resp) => {
+          res.json({ success: true, data: resp[0] });
+        })
+        .catch((error) => {
+          console.error({ error });
+          res.status(500).json({ success: false,error, msg: "Error occured" });
+        });
+    });
+  });
+};
+
 module.exports.UpdateTaxPayer = (req, res) => {
   const {
     user_id = null,
@@ -840,7 +959,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     name = "",
     email = "",
     org_email = "",
-    role = "admin",
+    role = "user",
     accessTo = "",
     bvn = "",
     office_address = "",
@@ -860,6 +979,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     department = "",
     rank = "",
     status = "active",
+    taxID = null,
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -867,7 +987,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID);",
           {
             replacements: {
               user_id,
@@ -897,23 +1017,16 @@ module.exports.UpdateTaxPayer = (req, res) => {
               department,
               rank,
               status,
+              taxID,
             },
           }
         )
         .then((resp) => res.json({ success: true, data: resp }))
         .catch((error) => {
           console.error({ error });
-          if (
-            error instanceof SequelizeDatabaseError &&
-            error.parent.code === "ER_SIGNAL_EXCEPTION"
-          ) {
-            res
-              .status(500)
-              .json({ success: false, msg: error.parent.sqlMessage });
-          } else {
-            // Catch other errors
-            res.status(500).json({ success: false, msg: error.message });
-          }
+
+          // Catch other errors
+          res.status(500).json({ success: false, msg: "Error occured" });
         });
     });
   });

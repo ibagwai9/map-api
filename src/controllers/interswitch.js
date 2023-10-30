@@ -334,8 +334,8 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                  dateSettled
-                ).format("YYYY-MM-DD")}", 
+                          dateSettled
+                        ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)

@@ -1,7 +1,6 @@
 // controllers/transactionController.js
 const axios = require("axios");
 const crypto = require("crypto");
-var parseString = require("xml2js").parseString;
 const { getInvoiceDetailsLGA } = require("./transactions");
 const db = require("../models");
 const moment = require("moment");
@@ -76,12 +75,12 @@ const handleInvoiceValidation = async (reqJson, res) => {
       case "NON TAX":
         code = "6601";
         break;
+      case "LAND":
+        code = "6913";
+        break;
       default:
         code = "6405";
     }
-    console.log({ sector }, "tedr");
-
-    // reqJson.customerinformationrequest.merchantreference[0];
 
     if (merchantreference === code) {
       getInvoiceDetailsLGA(custreference)
@@ -130,8 +129,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 ${results
                   .filter((item) => item.cr > 0)
                   .map(
-                    (product) => `<Item>
-                    <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
+                    (product) => `
+                  <Item>
+                    <ProductName>${product.description}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
                     <Price>${product.cr}</Price>
@@ -141,7 +141,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
                   </Item>`
                   )
                   .join("")}</PaymentItems>`;
-              // let lastName = results[0].name.split(" ")[1]
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
@@ -202,9 +201,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
     }
   }
 };
-
-// const proc
-
 const getInvoice = async (referenceNo) => {
   const sector = await db.sequelize.query(
     `SELECT  *  FROM tax_transactions WHERE reference_number = '${referenceNo}' LIMIT 1`
@@ -216,496 +212,249 @@ const getInvoice = async (referenceNo) => {
     return null;
   }
 };
-
+function formatIPv6MappedIPv4(ipv6MappedIPv4) {
+  // Check if the input is in the "::ffff:" format
+  if (ipv6MappedIPv4.startsWith("::ffff:")) {
+    // Extract the IPv4 address part
+    const ipv4Address = ipv6MappedIPv4.replace("::ffff:", "");
+    return ipv4Address;
+  } else {
+    // Return the input as is (assuming it's already in IPv4 format)
+    return ipv6MappedIPv4;
+  }
+}
+const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
-  // let sampleRequest = `<customerinformationrequest>
-  //     <ServiceUsername></ServiceUsername>
-  //     <ServicePassword></ServicePassword>
-  //     <MerchantReference>6405</MerchantReference>
-  //     <CustReference>12</CustReference>
-  //     <PaymentItemCode>20230822023219864</PaymentItemCode>
-  //     <ThirdPartyCode></ThirdPartyCode>
-  //   </customerinformationrequest>`
-
   const reqJson = req.body;
+  // console.log(req);
+  // const clientIP = req.ip;
+  const clientIP =
+    req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
 
-  // parseString(sampleRequest, function (err, reqJson) {
-  // console.log(reqJson, 'cccccccccccc')
-  // console.log(JSON.stringify(reqJson))
+  const isAllowed = allowedList.includes(clientIP);
+  if (isAllowed) {
+    if (reqJson.customerinformationrequest) {
+      handleInvoiceValidation(reqJson, res);
+    } else if (reqJson.paymentnotificationrequest) {
+      const asyncRequestList = [];
+      const referenceNo =
+        reqJson.paymentnotificationrequest.payments.length &&
+        reqJson.paymentnotificationrequest.payments[0].payment.length
+          ? reqJson.paymentnotificationrequest.payments[0].payment[0]
+              .custreference
+          : null;
+      if (referenceNo) {
+        const amountPaid =
+          reqJson.paymentnotificationrequest.payments[0].payment[0].amount[0];
+        const logId =
+          reqJson.paymentnotificationrequest.payments[0].payment[0]
+            .paymentlogid[0];
+        const bank_branch =
+          reqJson.paymentnotificationrequest.payments[0].payment[0]
+            .branchname[0];
 
-  if (reqJson.customerinformationrequest) {
-    handleInvoiceValidation(reqJson, res);
-  } else if (reqJson.paymentnotificationrequest) {
-    const asyncRequestList = [];
-    // const paymentList =
-    const referenceNo =
-      reqJson.paymentnotificationrequest.payments.length &&
-      reqJson.paymentnotificationrequest.payments[0].payment.length
-        ? reqJson.paymentnotificationrequest.payments[0].payment[0]
-            .custreference
-        : null;
-    // console.log(referenceNo)
-    // console.log(reqJson.paymentnotificationrequest.payments[0].payment[0].custreference)
-    if (referenceNo) {
-      const amountPaid =
-        reqJson.paymentnotificationrequest.payments[0].payment[0].amount[0];
-      const logId =
-        reqJson.paymentnotificationrequest.payments[0].payment[0]
-          .paymentlogid[0];
-      console.log(amountPaid);
-      if (
-        amountPaid &&
-        amountPaid !== "0" &&
-        amountPaid !== "0.00" &&
-        amountPaid !== 0 &&
-        amountPaid !== 0.0
-      ) {
-        db.sequelize
-          .query(
-            `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
-            FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status IN ('saved','PAID') AND transaction_type='invoice') AS x
-            LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
-            ON 1=1
-            GROUP BY x.reference_number;`
-          )
-          .then((resp) => {
-            if (resp && resp.length && resp[0].length) {
-              console.log({ amountPaid, amount: resp[0][0].dr });
-              const createdAt = resp[0][0].created_at;
-              if (
-                createdAt &&
-                moment(createdAt).isBefore(moment().subtract(1, "months"))
-              ) {
-                res.set("Content-Type", "text/xml");
-                res.send(`
-                <PaymentNotificationResponse>
-                    <Payments>
-                        <Payment>
-                            <PaymentLogId>${logId}</PaymentLogId>
-                            <Status>2</Status>
-                            <StatusMessage>Customer Reference Expired.</StatusMessage>
-                        </Payment>
-                    </Payments>
-                </PaymentNotificationResponse>`);
-              } else if (resp[0][0].dr !== amountPaid) {
-                res.set("Content-Type", "text/xml");
-                res.send(`
-                <PaymentNotificationResponse>
-                    <Payments>
-                        <Payment>
-                        <PaymentLogId>${logId}</PaymentLogId>
-                            <Status>1</Status>
-                            <StatusMessage>The amount is not correct.</StatusMessage>
-                        </Payment>
-                    </Payments>
-                </PaymentNotificationResponse>`);
-              } else if (resp[0][0].status === "PAID") {
-                if (logId === resp[0][0].logId) {
+        const branch_address =
+          reqJson.paymentnotificationrequest.payments[0].payment[0].location[0];
+        const bank_name =
+          reqJson.paymentnotificationrequest.payments[0].payment[0]
+            .paymentitems[0].paymentitem[0].leadbankname[0];
+        const bank_cbn_code =
+          reqJson.paymentnotificationrequest.payments[0].payment[0]
+            .paymentitems[0].paymentitem[0].leadbankcbncode[0];
+        const payer_acct_no =
+          reqJson.paymentnotificationrequest.payments[0].payment[0]
+            .collectionsaccount[0];
+        if (
+          amountPaid &&
+          amountPaid !== "0" &&
+          amountPaid !== "0.00" &&
+          amountPaid !== 0 &&
+          amountPaid !== 0.0
+        ) {
+          db.sequelize
+            .query(
+              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
+              FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status IN ('saved','PAID') AND transaction_type='invoice') AS x
+              LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
+              ON 1=1
+              GROUP BY x.reference_number;`
+            )
+            .then((resp) => {
+              if (resp && resp.length && resp[0].length) {
+                console.log({ amountPaid, amount: resp[0][0].dr });
+                const createdAt = resp[0][0].created_at;
+                if (
+                  createdAt &&
+                  moment(createdAt).isBefore(moment().subtract(1, "months"))
+                ) {
                   res.set("Content-Type", "text/xml");
                   res.send(`
-                    <PaymentNotificationResponse>
-                        <Payments>
-                            <Payment>
-                            <PaymentLogId>${logId}</PaymentLogId>
-                                <Status>0</Status>
-                            </Payment>
-                        </Payments>
-                    </PaymentNotificationResponse>`);
+                  <PaymentNotificationResponse>
+                      <Payments>
+                          <Payment>
+                              <PaymentLogId>${logId}</PaymentLogId>
+                              <Status>2</Status>
+                              <StatusMessage>Customer Reference Expired.</StatusMessage>
+                          </Payment>
+                      </Payments>
+                  </PaymentNotificationResponse>`);
+                } else if (resp[0][0].dr !== amountPaid) {
+                  res.set("Content-Type", "text/xml");
+                  res.send(`
+                  <PaymentNotificationResponse>
+                      <Payments>
+                          <Payment>
+                          <PaymentLogId>${logId}</PaymentLogId>
+                          <CustReference>${referenceNo}</CustReference>
+                              <Status>1</Status>
+                              <StatusMessage>The amount is not correct.</StatusMessage>
+                          </Payment>
+                      </Payments>
+                  </PaymentNotificationResponse>`);
+                } else if (resp[0][0].status === "PAID") {
+                  if (logId === resp[0][0].logId) {
+                    res.set("Content-Type", "text/xml");
+                    res.send(`
+                      <PaymentNotificationResponse>
+                          <Payments>
+                              <Payment>
+                              <PaymentLogId>${logId}</PaymentLogId>
+                                  <Status>0</Status>
+                              </Payment>
+                          </Payments>
+                      </PaymentNotificationResponse>`);
+                  } else {
+                    res.set("Content-Type", "text/xml");
+                    res.send(`
+                  <PaymentNotificationResponse>
+                      <Payments>
+                          <Payment>
+                              <PaymentLogId>${logId}</PaymentLogId>
+                              <Status>1</Status>
+                              <StatusMessage>Invalid Customer Reference</StatusMessage>
+                          </Payment>
+                      </Payments>
+                  </PaymentNotificationResponse>`);
+                  }
                 } else {
-                  res.set("Content-Type", "text/xml");
-                  res.send(`
-                <PaymentNotificationResponse>
-                    <Payments>
-                        <Payment>
-                            <PaymentLogId>${logId}</PaymentLogId>
-                            <Status>1</Status>
-                            <StatusMessage>Invalid Customer Reference</StatusMessage>
-                        </Payment>
-                    </Payments>
-                </PaymentNotificationResponse>`);
+                  reqJson.paymentnotificationrequest.payments.forEach((p) => {
+                    p.payment.forEach((pp) => {
+                      const interswitchRef = pp.paymentreference[0];
+                      const modeOfPayment = pp.paymentmethod[0];
+                      const paymentDate = pp.paymentdate[0];
+                      const dateSettled = pp.settlementdate[0];
+                      const isReversal = pp.isreversal[0];
+
+                      if (isReversal === "False") {
+                        asyncRequestList.push(
+                          db.sequelize.query(`UPDATE tax_transactions 
+                  SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
+                    dateSettled
+                  ).format("YYYY-MM-DD")}", 
+                  paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
+                  paymentAmount="${amountPaid}"
+                  WHERE reference_number='${referenceNo}'`)
+                        );
+                      } else {
+                        asyncRequestList.push(
+                          db.sequelize.query(`UPDATE tax_transactions 
+                      SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
+                      paymentdate="${moment(paymentDate).format(
+                        "YYYY-MM-DD"
+                      )}", modeOfPayment="${modeOfPayment}", 
+                    paymentAmount="${amountPaid}"
+                    WHERE reference_number="${referenceNo}"`)
+                        );
+                      }
+                    });
+                  });
+
+                  Promise.all(asyncRequestList)
+                    .then((ok) => {
+                      res.set("Content-Type", "text/xml");
+                      res.send(`
+            <PaymentNotificationResponse>
+                <Payments>
+                    <Payment>
+                    <PaymentLogId>${logId}</PaymentLogId>
+                        <Status>0</Status>
+                    </Payment>
+                </Payments>
+            </PaymentNotificationResponse>`);
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      res.set("Content-Type", "text/xml");
+                      res.send(`
+            <PaymentNotificationResponse>
+                <Payments>
+                    <Payment>
+                    <PaymentLogId>${logId}</PaymentLogId>
+                        <Status>1</Status>
+                    </Payment>
+                </Payments>
+            </PaymentNotificationResponse>`);
+                    });
                 }
               } else {
-                // console.log(resp)
-                reqJson.paymentnotificationrequest.payments.forEach((p) => {
-                  p.payment.forEach((pp) => {
-                    // console.log(pp)
-                    // const invoiceId = pp.custreference[0]
-                    const interswitchRef = pp.paymentreference[0];
-                    const modeOfPayment = pp.paymentmethod[0];
-                    const paymentDate = pp.paymentdate[0];
-                    const dateSettled = pp.settlementdate[0];
-                    const isReversal = pp.isreversal[0];
-
-                    if (isReversal === "False") {
-                      asyncRequestList.push(
-                        db.sequelize.query(`UPDATE tax_transactions 
-                SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-                          dateSettled
-                        ).format("YYYY-MM-DD")}", 
-                paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
-                paymentAmount="${amountPaid}"
-                WHERE reference_number='${referenceNo}'`)
-                      );
-                    } else {
-                      asyncRequestList.push(
-                        db.sequelize.query(`UPDATE tax_transactions 
-                    SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
-                    paymentdate="${moment(paymentDate).format(
-                      "YYYY-MM-DD"
-                    )}", modeOfPayment="${modeOfPayment}", 
-                  paymentAmount="${amountPaid}"
-                  WHERE reference_number="${referenceNo}"`)
-                      );
-                    }
-                    // pp.paymentitems.forEach((ppaymentItem) => {
-                    //   ppaymentItem.forEach((pppp) => {})
-                    // })
-                  });
-                });
-
-                Promise.all(asyncRequestList)
-                  .then((ok) => {
-                    console.log("ok", ok);
-                    // let logId =
-                    //   reqJson?.paymentnotificationrequest?.payments[0][0]
-                    //     ?.paymentlogid || Date.now()
-                    res.set("Content-Type", "text/xml");
-                    res.send(`
-          <PaymentNotificationResponse>
-              <Payments>
-                  <Payment>
-                  <PaymentLogId>${logId}</PaymentLogId>
-                      <Status>0</Status>
-                  </Payment>
-              </Payments>
-          </PaymentNotificationResponse>`);
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                    res.set("Content-Type", "text/xml");
-                    res.send(`
-          <PaymentNotificationResponse>
-              <Payments>
-                  <Payment>
-                  <PaymentLogId>${logId}</PaymentLogId>
-                  <CustReference>${referenceNo}</CustReference>
-                      <Status>1</Status>
-                  </Payment>
-              </Payments>
-          </PaymentNotificationResponse>`);
-                  });
-                // res.send(reqJson)
+                res.set("Content-Type", "text/xml");
+                res.send(`
+                  <PaymentNotificationResponse>
+                      <Payments>
+                          <Payment>
+                          <PaymentLogId>${logId}</PaymentLogId>
+                              <Status>1</Status>
+                              <StatusMessage>Customer Reference not found or invalid</StatusMessage>
+                          </Payment>
+                      </Payments>
+                  </PaymentNotificationResponse>`);
               }
-            } else {
-              res.set("Content-Type", "text/xml");
-              res.send(`
-                <PaymentNotificationResponse>
-                    <Payments>
-                        <Payment>
-                        <PaymentLogId>${logId}</PaymentLogId>
-                            <Status>1</Status>
-                            <StatusMessage>Customer Reference not found or invalid</StatusMessage>
-                        </Payment>
-                    </Payments>
-                </PaymentNotificationResponse>`);
-            }
-          });
+            });
+        } else {
+          res.set("Content-Type", "text/xml");
+          res.send(`
+        <PaymentNotificationResponse>
+            <Payments>
+                <Payment>
+                    <Status>1</Status>
+                    <PaymentLogId>${logId}</PaymentLogId>
+                    <StatusMessage>Please provide a valid amount</StatusMessage>
+                </Payment>
+            </Payments>
+        </PaymentNotificationResponse>`);
+        }
       } else {
         res.set("Content-Type", "text/xml");
         res.send(`
-      <PaymentNotificationResponse>
-          <Payments>
-              <Payment>
-                  <Status>1</Status>
-                  <PaymentLogId>${logId}</PaymentLogId>
-                  <StatusMessage>Please provide a valid amount</StatusMessage>
-              </Payment>
-          </Payments>
-      </PaymentNotificationResponse>`);
+        <PaymentNotificationResponse>
+            <Payments>
+                <Payment>
+                    <Status>1</Status>
+                    <StatusMessage>Please provide a valid Customer Reference</StatusMessage>
+                </Payment>
+            </Payments>
+        </PaymentNotificationResponse>`);
       }
     } else {
       res.set("Content-Type", "text/xml");
-      res.send(`
-      <PaymentNotificationResponse>
-          <Payments>
-              <Payment>
-                  <Status>1</Status>
-                  <StatusMessage>Please provide a valid Customer Reference</StatusMessage>
-              </Payment>
-          </Payments>
-      </PaymentNotificationResponse>`);
+      res.send(`<Response>
+        <MerchantReference>NA</MerchantReference>
+        <Customers>
+            <Customer>
+                <Status>1</Status>
+                <CustReference>NA</CustReference>
+                <Amount>0</Amount>
+            </Customer>
+        </Customers>
+    </Response>`);
     }
   } else {
-    res.set("Content-Type", "text/xml");
-    res.send(`<Response>
-      <MerchantReference>NA</MerchantReference>
-      <Customers>
-          <Customer>
-              <Status>1</Status>
-              <CustReference>NA</CustReference>
-              <Amount>0</Amount>
-          </Customer>
-      </Customers>
-  </Response>`);
+    console.log(`Denied IP: ${clientIP}`);
+    res.status(403).send("Access Denied");
   }
-  // })
 };
-
-// const handleLgaInvoice = (req, res) => {
-//   // let sampleRequest = `<customerinformationrequest>
-//   //     <ServiceUsername></ServiceUsername>
-//   //     <ServicePassword></ServicePassword>
-//   //     <MerchantReference>6405</MerchantReference>
-//   //     <CustReference>12</CustReference>
-//   //     <PaymentItemCode>20230822023219864</PaymentItemCode>
-//   //     <ThirdPartyCode></ThirdPartyCode>
-//   //   </customerinformationrequest>`
-
-//   const reqJson = req.body;
-
-//   // parseString(sampleRequest, function (err, reqJson) {
-//   // console.log(reqJson, 'cccccccccccc')
-//   // console.log(JSON.stringify(reqJson))
-
-//   if (reqJson.customerinformationrequest) {
-//     handleInvoiceValidation(reqJson, res);
-//   } else if (reqJson.paymentnotificationrequest) {
-//     const asyncRequestList = [];
-//     // const paymentList =
-//     const referenceNo =
-//       reqJson.paymentnotificationrequest.payments.length &&
-//       reqJson.paymentnotificationrequest.payments[0].payment.length
-//         ? reqJson.paymentnotificationrequest.payments[0].payment[0]
-//             .custreference
-//         : null;
-//     // console.log(referenceNo)
-//     // console.log(reqJson.paymentnotificationrequest.payments[0].payment[0].custreference)
-//     if (referenceNo) {
-//       const amountPaid =
-//         reqJson.paymentnotificationrequest.payments[0].payment[0].amount[0];
-//       const logId =
-//         reqJson.paymentnotificationrequest.payments[0].payment[0]
-//           .paymentlogid[0];
-//       console.log(amountPaid);
-//       if (
-//         amountPaid &&
-//         amountPaid !== "0" &&
-//         amountPaid !== "0.00" &&
-//         amountPaid !== 0 &&
-//         amountPaid !== 0.0
-//       ) {
-//         db.sequelize
-//           .query(
-//             `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
-//             FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS x
-//             LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
-//             ON 1=1
-//             GROUP BY x.reference_number;`
-//           )
-//           .then((resp) => {
-//             if (resp && resp.length && resp[0].length) {
-//               console.log({ amountPaid, amount: resp[0][0].dr });
-//               const createdAt = resp[0][0].created_at;
-//               console.log({ createdAt });
-//               console.log("createdAt");
-//               console.log("createdAt here");
-//               if (
-//                 createdAt &&
-//                 moment(createdAt).isBefore(moment().subtract(1, "months"))
-//               ) {
-//                 res.set("Content-Type", "text/xml");
-//                 res.send(`
-//                 <PaymentNotificationResponse>
-//                     <Payments>
-//                         <Payment>
-//                             <PaymentLogId>${logId}</PaymentLogId>
-//                             <Status>2</Status>
-//                             <StatusMessage>Customer Reference Expired.</StatusMessage>
-//                         </Payment>
-//                     </Payments>
-//                 </PaymentNotificationResponse>`);
-//               } else if (resp[0][0].dr !== amountPaid) {
-//                 res.set("Content-Type", "text/xml");
-//                 res.send(`
-//                 <PaymentNotificationResponse>
-//                     <Payments>
-//                         <Payment>
-//                         <PaymentLogId>${logId}</PaymentLogId>
-//                         <CustReference>${referenceNo}</CustReference>
-//                             <PaymentLogId>${logId}</PaymentLogId>
-//                             <Status>1</Status>
-//                             <StatusMessage>The amount is not correct.</StatusMessage>
-//                         </Payment>
-//                     </Payments>
-//                 </PaymentNotificationResponse>`);
-//               } else if (resp[0][0].status === "PAID") {
-//                 if (logId === resp[0][0].logId) {
-//                   res.set("Content-Type", "text/xml");
-//                   res.send(`
-//                     <PaymentNotificationResponse>
-//                         <Payments>
-//                             <Payment>
-//                             <PaymentLogId>${logId}</PaymentLogId>
-//                             <CustReference>${referenceNo}</CustReference>
-//                                 <PaymentLogId>${logId}</PaymentLogId>
-//                                 <Status>0</Status>
-//                             </Payment>
-//                         </Payments>
-//                     </PaymentNotificationResponse>`);
-//                 } else {
-//                   res.set("Content-Type", "text/xml");
-//                   res.send(`
-//                 <PaymentNotificationResponse>
-//                     <Payments>
-//                         <Payment>
-//                         <PaymentLogId>${logId}</PaymentLogId>
-//                         <CustReference>${referenceNo}</CustReference>
-//                             <PaymentLogId>${logId}</PaymentLogId>
-//                             <Status>1</Status>
-//                             <StatusMessage>Invalid Customer Reference</StatusMessage>
-//                         </Payment>
-//                     </Payments>
-//                 </PaymentNotificationResponse>`);
-//                 }
-//               } else {
-//                 // console.log(resp)
-//                 reqJson.paymentnotificationrequest.payments.forEach((p) => {
-//                   p.payment.forEach((pp) => {
-//                     // console.log(pp)
-//                     // const invoiceId = pp.custreference[0]
-//                     const interswitchRef = pp.paymentreference[0];
-//                     const modeOfPayment = pp.paymentmethod[0];
-
-//                     const paymentDate = pp.paymentdate[0];
-//                     const dateSettled = pp.settlementdate[0];
-//                     const isReversal = pp.isreversal[0];
-
-//                     if (isReversal === "False") {
-//                       asyncRequestList.push(
-//                         db.sequelize.query(`UPDATE tax_transactions
-//                 SET status="PAID", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${moment(
-//                   dateSettled
-//                 ).format("YYYY-MM-DD")}",
-//                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}",
-//                 paymentAmount="${amountPaid}"
-//                 WHERE reference_number='${referenceNo}'`)
-//                       );
-//                     } else {
-//                       asyncRequestList.push(
-//                         db.sequelize.query(`UPDATE tax_transactions
-//                     SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}",
-//                     paymentdate="${moment(paymentDate).format(
-//                       "YYYY-MM-DD"
-//                     )}", modeOfPayment="${modeOfPayment}",
-//                   paymentAmount="${amountPaid}"
-//                   WHERE reference_number="${referenceNo}"`)
-//                       );
-//                     }
-//                     // pp.paymentitems.forEach((ppaymentItem) => {
-//                     //   ppaymentItem.forEach((pppp) => {})
-//                     // })
-//                   });
-//                 });
-
-//                 Promise.all(asyncRequestList)
-//                   .then((ok) => {
-//                     console.log("ok", ok);
-//                     // let logId =
-//                     //   reqJson?.paymentnotificationrequest?.payments[0][0]
-//                     //     ?.paymentlogid || Date.now()
-//                     res.set("Content-Type", "text/xml");
-//                     res.send(`
-//           <PaymentNotificationResponse>
-//               <Payments>
-//                   <Payment>
-//                   <PaymentLogId>${logId}</PaymentLogId>
-//                   <CustReference>${referenceNo}</CustReference>
-//                       <Status>0</Status>
-//                   </Payment>
-//               </Payments>
-//           </PaymentNotificationResponse>`);
-//                   })
-//                   .catch((err) => {
-//                     console.log(err);
-
-//                     res.set("Content-Type", "text/xml");
-//                     res.send(`
-//           <PaymentNotificationResponse>
-//               <Payments>
-//                   <Payment>
-//                   <PaymentLogId>${logId}</PaymentLogId>
-//                   <CustReference>${referenceNo}</CustReference>
-//                       <PaymentLogId>0</PaymentLogId>
-//                       <Status>1</Status>
-//                   </Payment>
-//               </Payments>
-//           </PaymentNotificationResponse>`);
-//                   });
-//                 // res.send(reqJson)
-//               }
-//             } else {
-//               res.set("Content-Type", "text/xml");
-//               res.send(`
-//                 <PaymentNotificationResponse>
-//                     <Payments>
-//                         <Payment>
-//                         <PaymentLogId>${logId}</PaymentLogId>
-//                         <CustReference>${referenceNo}</CustReference>
-//                             <Status>1</Status>
-//                             <StatusMessage>Customer Reference not found or invalid</StatusMessage>
-//                         </Payment>
-//                     </Payments>
-//                 </PaymentNotificationResponse>`);
-//             }
-//           });
-//       } else {
-//         res.set("Content-Type", "text/xml");
-//         res.send(`
-//       <PaymentNotificationResponse>
-//           <Payments>
-//               <Payment>
-//                   <PaymentLogId>0</PaymentLogId>
-//                   <Status>1</Status>
-//                   <PaymentLogId>${logId}</PaymentLogId>
-//                   <CustReference>${referenceNo}</CustReference>
-//                   <StatusMessage>Please provide a valid amount</StatusMessage>
-//               </Payment>
-//           </Payments>
-//       </PaymentNotificationResponse>`);
-//       }
-//     } else {
-//       res.set("Content-Type", "text/xml");
-//       res.send(`
-//       <PaymentNotificationResponse>
-//           <Payments>
-//               <Payment>
-//                   <PaymentLogId>0</PaymentLogId>
-//                   <Status>1</Status>
-//                   <StatusMessage>Please provide a valid Customer Reference</StatusMessage>
-//               </Payment>
-//           </Payments>
-//       </PaymentNotificationResponse>`);
-//     }
-//   } else {
-//     res.set("Content-Type", "text/xml");
-//     res.send(`<Response>
-//       <MerchantReference>NA</MerchantReference>
-//       <Customers>
-//           <Customer>
-//               <Status>1</Status>
-//               <CustReference>NA</CustReference>
-//               <CustomerReferenceAlternate></CustomerReferenceAlternate>
-//               <ThirdPartyCode></ThirdPartyCode>
-//               <Amount>0</Amount>
-//           </Customer>
-//       </Customers>
-//   </Response>`);
-//   }
-//   // })
-// };
 
 module.exports = {
   getTransaction,
   handleInvoice,
-  // handleLgaInvoice,
 };

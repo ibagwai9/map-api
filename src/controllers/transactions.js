@@ -47,22 +47,20 @@ const callHandleTaxTransaction = async (replacements) => {
         :description,
         :nin_id,
         :tin,
-        :paid_by,
-        :confirmed_by,
-        :payer_acct_no,
-        :payer_bank_name,
         :amount,
         :transaction_date,
         :transaction_type,
         :status,
-        :ipis_no,
         :reference_number,
         :department,
         :service_category,
         :tax_station,
         :sector,
+        :mda_var,
+        :mda_val,
         :start_date, 
-        :end_date)`,
+        :end_date
+        )`,
       {
         replacements,
       }
@@ -87,7 +85,7 @@ const postTrx = async (req, res) => {
     paid_by = null,
     confirmed_by = null,
     payer_acct_no = null,
-    payer_bank_name = null,
+    bank_name = null,
     start_date = null,
     end_date = null,
     tax_payer = null,
@@ -108,8 +106,32 @@ const postTrx = async (req, res) => {
       transaction_type,
       ipis_no = null,
       sector = null,
+      mda_var = null,
+      mda_val = null,
     } = tax;
-    const refNo = moment().format("YYMMDDhhmmssS");
+    const refNo = moment().format("YYMMDDhhssS");
+    let code = null;
+
+    switch (sector) {
+      case "TAX":
+        code = "112" + refNo;
+        break;
+      case "NON TAX":
+        code = "224" + refNo;
+        break;
+      case "LAND":
+        code = "336" + refNo;
+        break;
+      case "VEHICLE":
+        code = "448" + refNo;
+        break;
+      case "LGA":
+        code = "565" + refNo;
+        break;
+      default:
+        code = "100" + refNo;
+    }
+
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -122,7 +144,7 @@ const postTrx = async (req, res) => {
       transaction_type,
       status: "saved",
       ipis_no,
-      reference_number: refNo,
+      reference_number: code,
       rev_code: economic_code,
       mda_code: mda_code,
       nin_id,
@@ -131,19 +153,21 @@ const postTrx = async (req, res) => {
       paid_by,
       confirmed_by,
       payer_acct_no,
-      payer_bank_name,
+      bank_name,
       department,
       service_category: service_category ? service_category : tax_parent_code,
       tax_station,
       sector,
       start_date,
       end_date,
+      mda_var,
+      mda_val,
     };
 
     try {
       console.log({ params });
       const results = await callHandleTaxTransaction(params);
-      return { success: true, data: results, ref_no: refNo };
+      return { success: true, data: results, ref_no: code };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
       return {
@@ -203,7 +227,7 @@ const getTrx = async (req, res) => {
     paid_by = null,
     confirmed_by = null,
     payer_acct_no = null,
-    payer_bank_name = null,
+    bank_name = null,
     query_type = null,
     start_date = null,
     end_date = null,
@@ -214,6 +238,8 @@ const getTrx = async (req, res) => {
     sector = null,
     tax_station = null,
     reference_number = null,
+    mda_var = null,
+    mda_val = null,
   } = req.query;
 
   const params = {
@@ -234,7 +260,6 @@ const getTrx = async (req, res) => {
     paid_by,
     confirmed_by,
     payer_acct_no,
-    payer_bank_name,
     query_type,
     start_date,
     end_date,
@@ -244,6 +269,8 @@ const getTrx = async (req, res) => {
     tax_station,
     service_category,
     sector,
+    mda_var,
+    mda_val,
   };
 
   try {
@@ -269,12 +296,15 @@ async function getQRCode(req, res) {
     );
 
     const transaction_date =
-      payment[0] && payment[0].length
-        ? payment[0][0].transaction_date
-        : "Invalid";
-
+      payment[0] && payment[0].length ? payment[0][0].updated_at : "Invalid";
+    const interswitch_ref =
+      payment[0] && payment[0].length ? payment[0][0].interswitch_ref : "N/A";
+    const description =
+      payment[0] && payment[0].length ? payment[0][0].description : "";
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
+    const paymentAmount =
+      payment[0] && payment[0].length ? payment[0][0].paymentAmount : 0;
 
     const user = await db.sequelize.query(
       `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0].user_id}`
@@ -282,17 +312,16 @@ async function getQRCode(req, res) {
 
     const name =
       user[0].account_type === "org" ? user[0].org_name : user[0].name;
-    const phoneNumber = user[0].phone || "Invalid";
 
     const url = `https://kirmas.kn.gov.ng/payment-${
       status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
     }?ref_no=${refno}`;
     // Create a payload string with the payer's information
-    const payload = `Date:${moment(transaction_date).format(
-      "DD/MM/YYYY"
-    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
-      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-    } ID: ${refno}\nUrl: ${url}`;
+    const payload = `${paymentAmount} was paid on ${moment(
+      transaction_date
+    ).format(
+      "DD/MM/YYYY HH:mm:ss"
+    )}\n with TransactionID ${refno}\nValidation No.: ${interswitch_ref}\nby TaxPayer : ${name}\nFor ${description}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -449,6 +478,22 @@ const callTransactionList = (req, res) => {
     });
 };
 
+const printReport = (req, res) => {
+  const { ref_no, user_id, from, to, query_type } = req.body
+  db.sequelize.query(`CALL print_report (:query_type, :ref_no, :user_id, :from, :to)`, {
+    replacements: {
+      ref_no, user_id, from, to, query_type
+    }
+  })
+  .then((resp) => {
+    res.json({ success: true, data: resp });
+  })
+  .catch((err) => {
+    console.error(err);
+    res.json({ success: false, msg: "Error occurred" });
+  });
+}
+
 module.exports = {
   getQRCode,
   getTrx,
@@ -459,4 +504,5 @@ module.exports = {
   getTertiary,
   callTransactionList,
   getInvoiceDetailsLGA,
+  printReport
 };
