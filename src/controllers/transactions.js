@@ -430,31 +430,16 @@ const insertTertiaryData = async (inst) => {
 };
 
 const callTransactionList = (req, res) => {
-  const {
-    department = null,
-    role = null,
-    mda_name = null,
-    agent_id = null,
-    from = today,
-    to = today,
-    query_type = "",
-  } = req.query;
+  const { from = today, to = today, query_type = "" } = req.query;
 
   db.sequelize
-    .query(
-      `CALL selectTransactions(:department, :role, :mda_name,:agent_id,:from,:to,:query_type)`,
-      {
-        replacements: {
-          department,
-          role,
-          mda_name,
-          agent_id,
-          from,
-          to,
-          query_type,
-        },
-      }
-    )
+    .query(`CALL selectTransactions(:from,:to,:query_type)`, {
+      replacements: {
+        from,
+        to,
+        query_type,
+      },
+    })
     .then((resp) => {
       res.json({ success: true, data: resp });
     })
@@ -473,5 +458,5 @@ module.exports = {
   getInvoiceDetails,
   getTertiary,
   callTransactionList,
-  getInvoiceDetailsLGA
+  getInvoiceDetailsLGA,
 };
