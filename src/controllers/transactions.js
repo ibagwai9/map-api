@@ -242,6 +242,8 @@ const getTrx = async (req, res) => {
     mda_val = null,
   } = req.query;
 
+  // console.log(req.query)
+
   const params = {
     user_id,
     agent_id,
@@ -275,7 +277,30 @@ const getTrx = async (req, res) => {
 
   try {
     const data = await callHandleTaxTransaction(params);
-    res.json({ success: true, data });
+    
+    if(data && data[0].printed > 0 ) {
+      // already printed at least once
+      console.log("already printed at least once")
+      const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
+      if(user && user.length) {
+        if(user[0].length){
+          const userIsHOD = user[0][0].rank === 'Department Head';
+          if(userIsHOD) {
+            console.log("User is HOD")
+            return res.json({ success: true, data });
+          } else {
+            console.log("User is not HOD")
+            return res.json({ success: true, data: [], message: "Receipt already generated!" });
+          }
+        } else {
+          return res.json({ success: true, data: [], message: "Cannot verify user!" });
+        }
+      } else {
+        return res.json({ success: true, data: [], message: "Cannot verify user!" });
+      }
+    } else {
+      return res.json({ success: true, data });
+    }
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res.status(500).json({
@@ -494,7 +519,9 @@ const callTransactionList = (req, res) => {
 };
 
 const printReport = (req, res) => {
-  const { ref_no, user_id, from, to, query_type } = req.body
+  const today = moment().format('YYYY-MM-DD')
+  // console.log(req.body)
+  const { ref_no='', user_id='', from=today, to=today, query_type='' } = req.body
   db.sequelize.query(`CALL print_report (:query_type, :ref_no, :user_id, :from, :to)`, {
     replacements: {
       ref_no, user_id, from, to, query_type
