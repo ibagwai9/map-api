@@ -74,6 +74,7 @@ const callHandleTaxTransaction = async (replacements) => {
 
 // This can serve create invoice or payment and nothing else
 const postTrx = async (req, res) => {
+  console.log(req.body);
   const {
     user_id = null,
     agent_id = null,
