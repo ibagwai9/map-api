@@ -344,7 +344,6 @@ const handleInvoice = (req, res) => {
                       const paymentDate = pp.paymentdate[0];
                       const dateSettled = pp.settlementdate[0];
                       const isReversal = pp.isreversal[0];
-
                       if (isReversal === "False") {
                         asyncRequestList.push(
                           db.sequelize.query(`UPDATE tax_transactions 
