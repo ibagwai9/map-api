@@ -87,28 +87,26 @@ const handleInvoiceValidation = async (reqJson, res) => {
         .then((results) => {
           console.log(results);
           if (results && results.length) {
-            const startDate = moment(results[0].date_from);
-            const endDate = moment(results[0].date_to);
+            // const startDate = moment(results[0].date_from);
+            // const endDate = moment(results[0].date_to);
             const taxList = results.filter((item) => item.dr > 0);
             const amount = parseFloat(
               taxList.reduce((a, b) => a + parseFloat(b.dr), 0).toFixed(2)
             ).toFixed(2);
 
-            const startFormatted = startDate.format("MMM, YY");
-            const endFormatted = endDate.format("MMM, YY");
+            // const startFormatted = startDate.format("MMM, YY");
+            // const endFormatted = endDate.format("MMM, YY");
 
-            const isWithinOneMonth = startDate.isSame(endDate, "month");
+            // const isWithinOneMonth = startDate.isSame(endDate, "month");
 
-            const formattedRange = isWithinOneMonth
-              ? startFormatted
-              : `${startFormatted} - ${endFormatted}`;
+            // const formattedRange = isWithinOneMonth
+            //   ? startFormatted
+            //   : `${startFormatted} - ${endFormatted}`;
 
             // let firstName = results[0].name;
             console.log(results[0]);
             let firstName =
-              results[0].account_type === "org"
-                ? results[0].org_name
-                : results[0].name;
+              results[0].tax_payer
             let user_id = results[0].user_id;
 
             if (user_id === null) {
@@ -148,7 +146,6 @@ const handleInvoiceValidation = async (reqJson, res) => {
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
                 <FirstName>${firstName}</FirstName>
-                <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
                 ${xmlString}
             </Customer>

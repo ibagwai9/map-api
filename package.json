@@ -48,7 +48,8 @@
     "swagger-ui-express": "^5.0.0",
     "uuidv4": "^6.2.12",
     "validator": "^10.11.0",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "cluster": "^0.7.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.22.9",
