@@ -106,7 +106,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
             // let firstName = results[0].name;
             console.log(results[0]);
             let firstName =
-              results[0].tax_payer.replace("&","\&")
+              results[0].tax_payer?.replace("&","\\&")
             let user_id = results[0].user_id;
 
             if (user_id === null) {
