@@ -480,20 +480,25 @@ const callTransactionList = (req, res) => {
 };
 
 const printReport = (req, res) => {
-  const { ref_no, user_id, from, to, query_type } = req.body
-  db.sequelize.query(`CALL print_report (:query_type, :ref_no, :user_id, :from, :to)`, {
-    replacements: {
-      ref_no, user_id, from, to, query_type
-    }
-  })
-  .then((resp) => {
-    res.json({ success: true, data: resp });
-  })
-  .catch((err) => {
-    console.error(err);
-    res.json({ success: false, msg: "Error occurred" });
-  });
-}
+  const { ref_no, user_id, from, to, query_type } = req.body;
+  db.sequelize
+    .query(`CALL print_report (:query_type, :ref_no, :user_id, :from, :to)`, {
+      replacements: {
+        ref_no,
+        user_id,
+        from,
+        to,
+        query_type,
+      },
+    })
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: "Error occurred" });
+    });
+};
 
 module.exports = {
   getQRCode,
@@ -505,5 +510,5 @@ module.exports = {
   getTertiary,
   callTransactionList,
   getInvoiceDetailsLGA,
-  printReport
+  printReport,
 };
