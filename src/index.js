@@ -5,12 +5,11 @@ const models = require("./models");
 const multer = require("multer");
 const passportConfig = require("./config/passport");
 const helmet = require("helmet");
-const ipAccessControl = require('express-ip-access-control');
+
 const path = require("path");
 var upload = multer({ dest: "uploads/" });
 var xmlparser = require("express-xml-bodyparser");
-var cluster = require('cluster');
-const httpServer = require('http').createServer(app)
+
 const app = express();
 app.use(express.static(path.join(__dirname)));
 app.use(xmlparser());
@@ -26,11 +25,6 @@ const { getTertiary } = require("./controllers/transactions");
 const { institutions } = require("./config/institutions");
 const { addHospitalData } = require("./controllers/transactions-hpt");
 // make express look in the public directory for assets (css/js/img)
-// const allowedList = [
-//   "41.223.145.174" , "154.72.34.174" 
-// ];
-
-// app.use(ipAccessControl({ allowedList, denyMessage: "Access Denied" }));
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/uploads", express.static(path.join(__dirname, "src/uploads")));
@@ -105,45 +99,8 @@ require("./routes/segment")(app);
 require("./routes/interswitch.js")(app);
 require("./routes/budget.js")(app);
 
-
-
-
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
-  var numWorkers = require('os').cpus().length
-  console.log('Master cluster setting up ' + numWorkers + ' workers...')
-
-  for (var i = 0; i < numWorkers; i++) {
-    cluster.fork()
-  }
-
-  cluster.on('online', function (worker) {
-    console.log('Worker ' + worker.process.pid + ' is online')
-  })
-
-  cluster.on('exit', function (worker, code, signal) {
-    console.log(
-      'Worker ' +
-        worker.process.pid +
-        ' died with code: ' +
-        code +
-        ', and signal: ' +
-        signal,
-    )
-    console.log('Starting a new worker')
-    cluster.fork()
-  })
-} else {
-  //create a server
-  const server = httpServer.listen(port, function () {
-    const host = server.address().address
-    const port = server.address().port
-    console.log('host', host)
-    console.log('port', port)
-
-    console.log(`Worker ${process.pid} started on port ${port}`)
-    // console.log(process.pid + ': App listening at http://%s:%s', host, port)
-  })
-
-  
-}
+var server = app.listen(port, function () {
+  var host = server.address().address;
+  var port = server.address().port;
+  console.log("App listening at http://%s:%s", host, port);
+});
