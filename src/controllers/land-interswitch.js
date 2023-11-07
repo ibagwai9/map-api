@@ -147,7 +147,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <FirstName>${firstName.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&apos;").replace("\"", "&quot;")}</FirstName>
+                <FirstName>${firstName.replace("&","&amp;")}</FirstName>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
                 ${xmlString}
