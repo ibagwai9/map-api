@@ -676,7 +676,6 @@ module.exports.verifyTokenTreasuryApp = (req, res) => {
 
 module.exports.verifyToken = async function (req, res) {
   const authToken = req.headers["authorization"];
-
   if (!authToken || !authToken.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,

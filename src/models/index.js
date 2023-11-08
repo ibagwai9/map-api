@@ -9,11 +9,11 @@ const basename = path.basename(__filename);
 
 const config = {
   username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
+  password:"!sanda!admin!",
   database: process.env.DB_NAME,
   host: process.env.DB_HOST,
   // port:   process.env.DB_PORT,
-  dialect: process.env.DB_DIALECT,
+  dialect:'mysql',
   pool: {
     max: 5,
     min: 0,

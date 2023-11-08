@@ -131,7 +131,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
                   .map(
                     (product) => `
                   <Item>
-                    <ProductName>${firstName} ${product.description} ${formattedRange}</ProductName>
+                    <ProductName>${product.description}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
                     <Price>${product.cr}</Price>
@@ -223,13 +223,7 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
     return ipv6MappedIPv4;
   }
 }
-const allowedList = [
-  "41.223.145.174",
-  "154.72.34.174",
-  "102.91.69.118",
-  "102.91.49.95",
-  "102.91.46.9",
-];
+const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
   // console.log(req);
@@ -350,13 +344,12 @@ const handleInvoice = (req, res) => {
                       const paymentDate = pp.paymentdate[0];
                       const dateSettled = pp.settlementdate[0];
                       const isReversal = pp.isreversal[0];
-
                       if (isReversal === "False") {
                         asyncRequestList.push(
                           db.sequelize.query(`UPDATE tax_transactions 
                   SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
-                            dateSettled
-                          ).format("YYYY-MM-DD")}", 
+                    dateSettled
+                  ).format("YYYY-MM-DD")}", 
                   paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                   paymentAmount="${amountPaid}"
                   WHERE reference_number='${referenceNo}'`)
