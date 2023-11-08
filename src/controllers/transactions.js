@@ -534,8 +534,4 @@ module.exports = {
   callTransactionList,
   getInvoiceDetailsLGA,
   printReport,
-<<<<<<< HEAD
-  // getPrintingUsers
-=======
->>>>>>> 6d13dec8bf5f727e06794058053b9137ecbf1f29
 };
