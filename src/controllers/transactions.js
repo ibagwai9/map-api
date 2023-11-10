@@ -110,7 +110,7 @@ const postTrx = async (req, res) => {
       mda_var = null,
       mda_val = null,
     } = tax;
-    const refNo = moment().format("YYMMDDhhssS");
+    const refNo = moment().format("MMDDhhssS");
     let code = null;
 
     switch (sector) {
