@@ -284,10 +284,7 @@ const getTrx = async (req, res) => {
       console.log("already printed at least once")
       const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
       if(user && user.length) {
-<<<<<<< HEAD
-=======
         console.log(user, user_id)
->>>>>>> 623a6992e774d86b15715f4b77c3ef6102cc0d02
         if(user[0].length){
           const userIsHOD = user[0][0].rank === 'Department Head';
           if(userIsHOD) {
