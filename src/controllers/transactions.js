@@ -8,7 +8,7 @@ const today = moment().format("YYYY-MM-DD");
 const getInvoiceDetails = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr,GROUP_CONCAT(a.description) , b.name FROM kirmas_transactions a 
+      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, SUM(a.dr) AS dr,GROUP_CONCAT(a.description) , b.name FROM tax_transactions a 
       JOIN tax_payers b on a.user_id=b.taxID
        where   a.reference_number='${refNo}' AND a.transaction_type='invoice'`
     );
@@ -22,7 +22,7 @@ const getInvoiceDetails = async (refNo) => {
 const getInvoiceDetailsLGA = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description , b.name FROM kirmas_transactions a 
+      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description , b.name FROM tax_transactions a 
       JOIN tax_payers b on a.user_id=b.taxID
        where   a.reference_number='${refNo}'`
     );
@@ -284,7 +284,10 @@ const getTrx = async (req, res) => {
       console.log("already printed at least once")
       const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
       if(user && user.length) {
+<<<<<<< HEAD
+=======
         console.log(user, user_id)
+>>>>>>> 623a6992e774d86b15715f4b77c3ef6102cc0d02
         if(user[0].length){
           const userIsHOD = user[0][0].rank === 'Department Head';
           if(userIsHOD) {
@@ -319,7 +322,7 @@ async function getQRCode(req, res) {
   const refno = req.query.ref_no || "";
   try {
     const payment = await db.sequelize.query(
-      `SELECT * FROM kirmas_transactions WHERE reference_number =${refno} LIMIT 1;`
+      `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
     );
 
     const transaction_date =
@@ -487,6 +490,7 @@ const insertTertiaryData = async (inst) => {
 
 const callTransactionList = (req, res) => {
   const { from = today, to = today, query_type = "" } = req.query;
+
   db.sequelize
     .query(`CALL selectTransactions(:from,:to,:query_type)`, {
       replacements: {
