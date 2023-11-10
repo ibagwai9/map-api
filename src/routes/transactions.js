@@ -38,7 +38,7 @@ module.exports = (app) => {
   );
   app.post(
     "/transactions/update-print-count",
-    passport.authenticate("jwt", { session: false }, printReport)
+    passport.authenticate("jwt", { session: false }), printReport
   );
 
   // app.get('/get-tertiary-trx',

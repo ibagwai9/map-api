@@ -99,9 +99,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
 
             const isWithinOneMonth = startDate.isSame(endDate, "month");
 
-            const formattedRange = isWithinOneMonth
-              ? startFormatted
-              : `${startFormatted} - ${endFormatted}`;
+            // const formattedRange = isWithinOneMonth
+            //   ? startFormatted
+            //   : `${startFormatted} - ${endFormatted}`;
 
             // let firstName = results[0].name;
             console.log(results[0]);
@@ -147,7 +147,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <FirstName>${firstName}</FirstName>
+                <FirstName>${firstName.replace("&","&amp;")}</FirstName>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
                 ${xmlString}

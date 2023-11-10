@@ -22,6 +22,7 @@ const config = {
   },
 };
 
+
 const db = {};
 
 let sequelize;
