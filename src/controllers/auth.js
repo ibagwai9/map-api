@@ -689,7 +689,8 @@ module.exports.verifyToken = async function (req, res) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const { phone, taxID } = decoded;
 
-    const user = await db.User.findOne({
+    const user = await 
+     db.User.findOne({
       where: {
         [db.Sequelize.Op.or]: [
           // { username },
