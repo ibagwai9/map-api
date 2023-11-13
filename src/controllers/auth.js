@@ -1067,7 +1067,7 @@ module.exports.getTaxPayers = (req, res) => {
     )
     .then((resp) => {
       const taxPayerData = resp[0];
-      res.json({ success: true, data: taxPayerData });
+      res.json({ success: true, data: taxPayerData ?taxPayerData:[]});
     })
 
     .catch((error) => {

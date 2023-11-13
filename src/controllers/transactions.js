@@ -348,7 +348,8 @@ async function getQRCode(req, res) {
     );
 
     const name =
-      user[0].account_type === "org" ? user[0].org_name : user[0].name;
+      // user[0].account_type === "org" ? 
+      user[0].org_name || user[0].name;
 
     const url = `https://kirmas.kn.gov.ng/payment-${
       status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
