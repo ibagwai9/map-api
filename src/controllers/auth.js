@@ -715,7 +715,7 @@ module.exports.verifyToken = async function (req, res) {
     res.json({
       success: true,
       user,
-      tax_accounts: tax_accounts[0],
+      tax_accounts: tax_accounts[0]?tax_accounts[0]:[],
     });
   } catch (err) {
     console.error(err);
