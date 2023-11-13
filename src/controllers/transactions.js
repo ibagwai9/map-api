@@ -279,35 +279,42 @@ const getTrx = async (req, res) => {
   try {
     const data = await callHandleTaxTransaction(params);
     
-    if(data && data[0].printed > 0 ) {
-      // already printed at least once
-      console.log("already printed at least once")
-      const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
-      if(user && user.length) {
-        console.log(user, user_id)
-        if(user[0].length){
-          const userIsHOD = user[0][0].rank === 'Department Head';
-          if(userIsHOD) {
-            console.log("User is HOD")
-            return res.json({ success: true, data });
+    if(data && data.length){
+      if(data[0].printed > 0 ) {
+        // already printed at least once
+        console.log("already printed at least once")
+        const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
+        if(user && user.length) {
+          console.log(user, user_id)
+          if(user[0].length){
+            const userIsHOD = user[0][0].rank === 'Department Head';
+            if(userIsHOD) {
+              console.log("User is HOD")
+              return res.json({ success: true, data });
+            } else {
+              console.log("User is not HOD")
+              return res.json({ success: true, data: [], message: "Receipt already generated!" });
+            }
           } else {
-            console.log("User is not HOD")
-            return res.json({ success: true, data: [], message: "Receipt already generated!" });
+            return res.json({ success: true, data: [], message: "Cannot verify user!" });
           }
         } else {
           return res.json({ success: true, data: [], message: "Cannot verify user!" });
         }
       } else {
-        return res.json({ success: true, data: [], message: "Cannot verify user!" });
+      return res.json({ success: true, data });
       }
     } else {
-      return res.json({ success: true, data });
+      res.status(500).json({
+        success: false,
+        message: "Invoice not paid or not found.",
+      });
     }
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res.status(500).json({
       success: false,
-      message: "Error executing stored procedurex",
+      message: "Error executing stored procedure",
     });
   }
 };
