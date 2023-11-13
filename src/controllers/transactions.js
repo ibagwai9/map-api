@@ -22,7 +22,7 @@ const getInvoiceDetails = async (refNo) => {
 const getInvoiceDetailsLGA = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,b.org_name,b.account_type,  b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description ,a.tax_payers b.name,a.tax_payer, FROM tax_transactions a 
+      `SELECT a.user_id,b.org_name,b.account_type,  b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description ,a.tax_payer, b.name FROM tax_transactions a 
       JOIN tax_payers b on a.user_id=b.taxID
        where   a.reference_number='${refNo}'`
     );
