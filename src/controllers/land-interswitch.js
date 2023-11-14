@@ -78,6 +78,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
       case "LAND":
         code = "6913";
         break;
+      case "LGA":
+        code = "8285";
+        break;
       default:
         code = "6405";
     }
@@ -105,8 +108,8 @@ const handleInvoiceValidation = async (reqJson, res) => {
 
             // let firstName = results[0].name;
             console.log(results[0]);
-            let firstName = results[0].tax_payer || results[0].org_name
-                || results[0].name;
+            let firstName =
+              results[0].tax_payer || results[0].org_name || results[0].name;
             let user_id = results[0].user_id;
 
             if (user_id === null) {
@@ -145,7 +148,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <FirstName>${firstName.replace("&","&amp;")}</FirstName>
+                <FirstName>${firstName.replace("&", "&amp;")}</FirstName>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
                 ${xmlString}
@@ -346,8 +349,8 @@ const handleInvoice = (req, res) => {
                         asyncRequestList.push(
                           db.sequelize.query(`UPDATE tax_transactions 
                   SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
-                    dateSettled
-                  ).format("YYYY-MM-DD")}", 
+                            dateSettled
+                          ).format("YYYY-MM-DD")}", 
                   paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                   paymentAmount="${amountPaid}"
                   WHERE reference_number='${referenceNo}'`)
