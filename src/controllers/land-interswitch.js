@@ -453,8 +453,17 @@ const handleInvoice = (req, res) => {
     res.status(403).send("Access Denied");
   }
 };
+const webHook = (req, res) => {
+  const clientIP =
+    req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
+  console.log(req.body);
+  const isAllowed = allowedList.includes(clientIP);
+  if (isAllowed) {
+  }
+};
 
 module.exports = {
+  webHook,
   getTransaction,
   handleInvoice,
 };

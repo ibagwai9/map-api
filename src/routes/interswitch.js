@@ -12,4 +12,5 @@ module.exports = (app) => {
   app.post("/lga-invoices", land.handleInvoice); // LGA INVOICE
   app.post("/land-use-charges", land.handleInvoice); // LAND INVOICE
   app.post("/test-bank", land.handleInvoice); // LAND INVOICE
+  app.post("/webhook", land.webHook);
 };
