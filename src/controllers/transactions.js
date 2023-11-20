@@ -22,7 +22,7 @@ const getInvoiceDetails = async (refNo) => {
 const getInvoiceDetailsLGA = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,b.org_name,b.account_type, b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description , b.name FROM tax_transactions a 
+      `SELECT a.user_id,b.org_name,b.account_type,  b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description ,a.tax_payer, b.name FROM tax_transactions a 
       JOIN tax_payers b on a.user_id=b.taxID
        where   a.reference_number='${refNo}'`
     );
@@ -278,36 +278,57 @@ const getTrx = async (req, res) => {
 
   try {
     const data = await callHandleTaxTransaction(params);
-    
-    if(data && data[0].printed > 0 ) {
-      // already printed at least once
-      console.log("already printed at least once")
-      const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
-      if(user && user.length) {
-        console.log(user, user_id)
-        if(user[0].length){
-          const userIsHOD = user[0][0].rank === 'Department Head';
-          if(userIsHOD) {
-            console.log("User is HOD")
-            return res.json({ success: true, data });
+
+    if (data && data.length) {
+      if (data[0].printed > 0) {
+        // already printed at least once
+        console.log("already printed at least once");
+        const user = await db.sequelize.query(
+          `SELECT * FROM users WHERE id=${user_id}`
+        );
+        if (user && user.length) {
+          console.log(user, user_id);
+          if (user[0].length) {
+            const userIsHOD = user[0][0].rank === "Department Head";
+            if (userIsHOD) {
+              console.log("User is HOD");
+              return res.json({ success: true, data });
+            } else {
+              console.log("User is not HOD");
+              return res.json({
+                success: true,
+                data: [],
+                message: "Receipt already generated!",
+              });
+            }
           } else {
-            console.log("User is not HOD")
-            return res.json({ success: true, data: [], message: "Receipt already generated!" });
+            return res.json({
+              success: true,
+              data: [],
+              message: "Cannot verify user!",
+            });
           }
         } else {
-          return res.json({ success: true, data: [], message: "Cannot verify user!" });
+          return res.json({
+            success: true,
+            data: [],
+            message: "Cannot verify user!",
+          });
         }
       } else {
-        return res.json({ success: true, data: [], message: "Cannot verify user!" });
+        return res.json({ success: true, data });
       }
     } else {
-      return res.json({ success: true, data });
+      res.status(500).json({
+        success: false,
+        message: "Invoice not paid or not found.",
+      });
     }
   } catch (error) {
     console.error("Error executing stored procedure:", error);
     res.status(500).json({
       success: false,
-      message: "Error executing stored procedurex",
+      message: "Error executing stored procedure",
     });
   }
 };
@@ -332,23 +353,24 @@ async function getQRCode(req, res) {
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
     const paymentAmount =
       payment[0] && payment[0].length ? payment[0][0].paymentAmount : 0;
-
     const user = await db.sequelize.query(
       `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0].user_id}`
     );
 
     const name =
-      user[0].account_type === "org" ? user[0].org_name : user[0].name;
+      // user[0].account_type === "org" ?
+      user[0].org_name || user[0].name;
 
     const url = `https://kirmas.kn.gov.ng/payment-${
       status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
     }?ref_no=${refno}`;
     // Create a payload string with the payer's information
-    const payload = `${paymentAmount} was paid on ${moment(
-      transaction_date
-    ).format(
-      "DD/MM/YYYY HH:mm:ss"
-    )}\n with TransactionID ${refno}\nValidation No.: ${interswitch_ref}\nby TaxPayer : ${name}\nFor ${description}`;
+    const payload =
+      status === "Paid" || status === "success"
+        ? `${paymentAmount} was paid on ${moment(transaction_date).format(
+            "DD/MM/YYYY HH:mm:ss"
+          )}\nwith Transaction ID: ${refno}\nValidation No.: ${interswitch_ref}\nby TaxPayer : ${name}\nFor ${description}`
+        : `This invoice is not yet paid`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -506,22 +528,38 @@ const callTransactionList = (req, res) => {
 };
 
 const printReport = (req, res) => {
-  const today = moment().format('YYYY-MM-DD')
+  const today = moment().format("YYYY-MM-DD");
   // console.log(req.body)
-  const { ref_no='', user_id='', from=today, to=today, query_type='' } = req.body
-  db.sequelize.query(`CALL print_report (:query_type, :ref_no, :user_id, :from, :to)`, {
-    replacements: {
-      ref_no, user_id, from, to, query_type
-    }
-  })
-  .then((resp) => {
-    res.json({ success: true, data: resp });
-  })
-  .catch((err) => {
-    console.error(err);
-    res.json({ success: false, msg: "Error occurred" });
-  });
-}
+  const {
+    ref_no = "",
+    user_id = "",
+    from = today,
+    to = today,
+    query_type = "",
+  } = req.body;
+  const { sector } = req.query;
+  db.sequelize
+    .query(
+      `CALL print_report (:query_type, :ref_no, :user_id, :from, :to,:sector)`,
+      {
+        replacements: {
+          ref_no,
+          user_id,
+          from,
+          to,
+          query_type,
+          sector,
+        },
+      }
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: "Error occurred" });
+    });
+};
 
 module.exports = {
   getQRCode,

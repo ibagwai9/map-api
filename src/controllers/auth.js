@@ -689,7 +689,8 @@ module.exports.verifyToken = async function (req, res) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const { phone, taxID } = decoded;
 
-    const user = await db.User.findOne({
+    const user = await 
+     db.User.findOne({
       where: {
         [db.Sequelize.Op.or]: [
           // { username },
@@ -714,7 +715,7 @@ module.exports.verifyToken = async function (req, res) {
     res.json({
       success: true,
       user,
-      tax_accounts: tax_accounts[0],
+      tax_accounts: tax_accounts[0]?tax_accounts[0]:[],
     });
   } catch (err) {
     console.error(err);
@@ -979,6 +980,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     rank = "",
     status = "active",
     taxID = null,
+    sector=''
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -986,7 +988,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector);",
           {
             replacements: {
               user_id,
@@ -1017,6 +1019,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               rank,
               status,
               taxID,
+              sector
             },
           }
         )
@@ -1066,7 +1069,7 @@ module.exports.getTaxPayers = (req, res) => {
     )
     .then((resp) => {
       const taxPayerData = resp[0];
-      res.json({ success: true, data: taxPayerData });
+      res.json({ success: true, data: taxPayerData ?taxPayerData:[]});
     })
 
     .catch((error) => {
