@@ -278,25 +278,35 @@ const getTrx = async (req, res) => {
 
   try {
     const data = await callHandleTaxTransaction(params);
-    
-    if(data && data.length){
-      if(data[0].printed > 0 ) {
+
+    if (data && data.length) {
+      if (data[0].printed > 0) {
         // already printed at least once
-        console.log("already printed at least once")
-        const user = await db.sequelize.query(`SELECT * FROM users WHERE id=${user_id}`)
-        if(user && user.length) {
-          console.log(user, user_id)
-          if(user[0].length){
-            const userIsHOD = user[0][0].rank === 'Department Head';
-            if(userIsHOD) {
-              console.log("User is HOD")
+        console.log("already printed at least once");
+        const user = await db.sequelize.query(
+          `SELECT * FROM users WHERE id=${user_id}`
+        );
+        if (user && user.length) {
+          console.log(user, user_id);
+          if (user[0].length) {
+            const userIsHOD = user[0][0].rank === "Department Head";
+            if (userIsHOD) {
+              console.log("User is HOD");
               return res.json({ success: true, data });
             } else {
-              console.log("User is not HOD")
-              return res.json({ success: true, data: [], message: "Receipt already generated!" });
+              console.log("User is not HOD");
+              return res.json({
+                success: true,
+                data: [],
+                message: "Receipt already generated!",
+              });
             }
           } else {
-            return res.json({ success: true, data: [], message: "Cannot verify user!" });
+            return res.json({
+              success: true,
+              data: [],
+              message: "Cannot verify user!",
+            });
           }
         } else {
           return res.json({
@@ -348,7 +358,7 @@ async function getQRCode(req, res) {
     );
 
     const name =
-      // user[0].account_type === "org" ? 
+      // user[0].account_type === "org" ?
       user[0].org_name || user[0].name;
 
     const url = `https://kirmas.kn.gov.ng/payment-${
@@ -527,16 +537,21 @@ const printReport = (req, res) => {
     to = today,
     query_type = "",
   } = req.body;
+  const { sector } = req.query;
   db.sequelize
-    .query(`CALL print_report (:query_type, :ref_no, :user_id, :from, :to)`, {
-      replacements: {
-        ref_no,
-        user_id,
-        from,
-        to,
-        query_type,
-      },
-    })
+    .query(
+      `CALL print_report (:query_type, :ref_no, :user_id, :from, :to,:sector)`,
+      {
+        replacements: {
+          ref_no,
+          user_id,
+          from,
+          to,
+          query_type,
+          sector,
+        },
+      }
+    )
     .then((resp) => {
       res.json({ success: true, data: resp });
     })

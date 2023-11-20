@@ -980,6 +980,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     rank = "",
     status = "active",
     taxID = null,
+    sector=''
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -987,7 +988,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector);",
           {
             replacements: {
               user_id,
@@ -1018,6 +1019,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               rank,
               status,
               taxID,
+              sector
             },
           }
         )

@@ -13,4 +13,5 @@ module.exports = (app) => {
   app.post("/land-use-charges", land.handleInvoice); // LAND INVOICE
   app.post("/test-bank", land.handleInvoice); // LAND INVOICE
   app.post("/webhook", land.webHook);
+  app.post("/inter-response", passport.authenticate("jwt", { session: false }), land.interResponse);
 };

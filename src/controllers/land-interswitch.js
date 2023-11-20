@@ -457,13 +457,78 @@ const webHook = (req, res) => {
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
   console.log(req.body);
+  const {
+    event = "",
+    data = {
+      paymentId: 3509593,
+      remittanceAmount: 101834,
+      amount: 103500,
+      responseCode: "00",
+      responseDescription: "Approved by Financial Institution",
+      cardNumber: "506099*********7499",
+      merchantReference: "1293000000000000027",
+      paymentReference: "FBN|WEB|MX6072|03-03-2021|3509593|143441",
+      retrievalReferenceNumber: "000106923853",
+      splitAccounts: [],
+      transactionDate: 1614730600897,
+      accountNumber: null,
+      bankCode: "011",
+      token: null,
+      currencyCode: "566",
+      channel: "WEB",
+      merchantCustomerId: null,
+      merchantCustomerName: "Blessing Eyuod",
+      escrow: false,
+      nonCardProviderId: null,
+      payableCode: "9405967",
+    },
+  } = req.body;
   const isAllowed = allowedList.includes(clientIP);
   if (isAllowed) {
+    if (event === "TRANSACTION.COMPLETED") {
+      db.sequelize.query(`UPDATE tax_transactions 
+      SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
+        dateSettled
+      ).format("YYYY-MM-DD")}", 
+      paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
+      paymentAmount="${amountPaid}"
+      WHERE reference_number='${referenceNo}'`);
+    }
   }
 };
 
+const interResponse = (req, res) => {
+  const {
+    Amount = 0,
+    CardNumber = "",
+    MerchantReference = "",
+    Channel = "WEB",
+    TransactionDate = "",
+    BankCode = "",
+    PaymentId = "",
+    paymentReference = "",
+  } = req.body;
+  db.sequelize
+    .query(
+      `UPDATE tax_transactions 
+      SET status="PAID", interswitch_ref="${paymentReference}", payer_acct_no='${CardNumber}', bank_name='${Channel}', bank_branch='${BankCode}',   logId="${PaymentId}", dateSettled="${moment(
+        TransactionDate
+      ).format("YYYY-MM-DD")}", 
+      paymentdate="${TransactionDate}", modeOfPayment="CARD", 
+      paymentAmount="${Amount / 100}"
+      WHERE reference_number='${MerchantReference}'`
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: "Error occurred" });
+    });
+};
 module.exports = {
   webHook,
   getTransaction,
   handleInvoice,
+  interResponse,
 };
