@@ -1,3 +1,4 @@
+const passport = require("passport");
 const { getTransaction } = require("../controllers/interswitch");
 const land = require("../controllers/land-interswitch");
 const lga = require("../controllers/lga-interswitch");
