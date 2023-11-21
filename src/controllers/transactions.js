@@ -533,6 +533,7 @@ const printReport = (req, res) => {
   const {
     ref_no = "",
     user_id = "",
+    mda_code = "",
     from = today,
     to = today,
     query_type = "",
@@ -540,7 +541,7 @@ const printReport = (req, res) => {
   const { sector } = req.query;
   db.sequelize
     .query(
-      `CALL print_report (:query_type, :ref_no, :user_id, :from, :to,:sector)`,
+      `CALL print_report (:query_type, :ref_no, :user_id, :from, :to, :mda_code, :sector)`,
       {
         replacements: {
           ref_no,
@@ -548,6 +549,7 @@ const printReport = (req, res) => {
           from,
           to,
           query_type,
+          mda_code,
           sector,
         },
       }
