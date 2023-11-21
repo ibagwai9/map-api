@@ -15,6 +15,7 @@ module.exports.SignUp = (req, res) => {
     org_email = "",
     role = "user",
     accessTo = "",
+    sector='',
     bvn = "",
     company_name = "",
     office_address = "",
@@ -65,11 +66,12 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID,:sector)",
                   {
                     replacements: {
                       query_type: "insert",
                       org_name,
+                      sector,
                       contact_name,
                       username,
                       email,
@@ -862,10 +864,11 @@ module.exports.searchUser = (req, res) => {
 
   db.sequelize
     .query(
-      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status)",
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:sector)",
       {
         replacements: {
           query_type,
+          sector:"",
           id,
           org_name: "",
           contact_name: "",
@@ -993,6 +996,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
             replacements: {
               user_id,
               query_type,
+              sector,
               org_name,
               name,
               username,

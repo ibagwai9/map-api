@@ -538,7 +538,7 @@ const printReport = (req, res) => {
     to = today,
     query_type = "",
   } = req.body;
-  const { sector } = req.query;
+  const { sector='' } = req.query;
   db.sequelize
     .query(
       `CALL print_report (:query_type, :ref_no, :user_id, :from, :to, :mda_code, :sector)`,
