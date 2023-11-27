@@ -354,7 +354,7 @@ async function getQRCode(req, res) {
     const paymentAmount =
       payment[0] && payment[0].length ? payment[0][0].paymentAmount : 0;
     const user = await db.sequelize.query(
-      `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0].user_id}`
+      `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0]?.user_id}`
     );
 
     const name =

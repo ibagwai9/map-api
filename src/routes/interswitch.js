@@ -9,7 +9,7 @@ module.exports = (app) => {
     // passport.authenticate("jwt", { session: false }),
     getTransaction
   );
-  app.post("/invoice", land.handleInvoice); //Tax/None tax, Motor Lisense
+  app.post("/invoice", land.handleInvoice); //Tax/Non tax, Motor Lisense
   app.post("/lga-invoices", land.handleInvoice); // LGA INVOICE
   app.post("/land-use-charges", land.handleInvoice); // LAND INVOICE
   app.post("/test-bank", land.handleInvoice); // LAND INVOICE

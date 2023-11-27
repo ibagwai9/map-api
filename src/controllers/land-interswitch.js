@@ -233,7 +233,7 @@ const handleInvoice = (req, res) => {
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
 
   const isAllowed = allowedList.includes(clientIP);
-  if (isAllowed) {
+  if (!isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
     } else if (reqJson.paymentnotificationrequest) {
