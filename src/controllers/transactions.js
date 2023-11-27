@@ -110,7 +110,10 @@ const postTrx = async (req, res) => {
       mda_var = null,
       mda_val = null,
     } = tax;
-    const refNo = moment().format("YYMMDDhhssS");
+
+    let refNo = String(moment().format("YYMMDDhhmm"));
+    //cut the length to 15 digits
+    refNo = refNo.slice(0, 9 - refNo.length) + Math.floor(Math.random() * 1000);
     let code = null;
 
     switch (sector) {
@@ -533,14 +536,15 @@ const printReport = (req, res) => {
   const {
     ref_no = "",
     user_id = "",
+    mda_code = "",
     from = today,
     to = today,
     query_type = "",
   } = req.body;
-  const { sector='' } = req.query;
+  const { sector = "" } = req.query;
   db.sequelize
     .query(
-      `CALL print_report (:query_type, :ref_no, :user_id, :from, :to,:sector)`,
+      `CALL print_report (:query_type, :ref_no, :user_id, :from, :to, :mda_code, :sector)`,
       {
         replacements: {
           ref_no,
@@ -548,6 +552,7 @@ const printReport = (req, res) => {
           from,
           to,
           query_type,
+          mda_code,
           sector,
         },
       }

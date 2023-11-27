@@ -1,8 +1,6 @@
 const passport = require("passport");
 const { getTransaction } = require("../controllers/interswitch");
 const land = require("../controllers/land-interswitch");
-const lga = require("../controllers/lga-interswitch");
-
 module.exports = (app) => {
   app.post(
     "/getTransaction",
@@ -14,5 +12,9 @@ module.exports = (app) => {
   app.post("/land-use-charges", land.handleInvoice); // LAND INVOICE
   app.post("/test-bank", land.handleInvoice); // LAND INVOICE
   app.post("/webhook", land.webHook);
-  app.post("/inter-response", passport.authenticate("jwt", { session: false }), land.interResponse);
+  app.post(
+    "/inter-response",
+    passport.authenticate("jwt", { session: false }),
+    land.interResponse
+  );
 };
