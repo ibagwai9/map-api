@@ -25,6 +25,8 @@ const callHandleTaxTransaction = async (replacements) => {
       `CALL HandleTaxTransaction( :query_type, 
         :user_id, 
         :agent_id,
+        :tax_payer,
+        :phone,
         :org_name,
         :mda_code,
         :item_code,    
@@ -32,10 +34,6 @@ const callHandleTaxTransaction = async (replacements) => {
         :description,
         :nin_id,
         :tin,
-        :paid_by,
-        :confirmed_by,
-        :payer_acct_no,
-        :payer_bank_name,
         :amount,
         :transaction_date,
         :transaction_type,
@@ -43,9 +41,13 @@ const callHandleTaxTransaction = async (replacements) => {
         :reference_number,
         :department,
         :service_category,
+        :tax_station,
         :sector,
+        :mda_var,
+        :mda_val,
         :start_date, 
-        :end_date)`,
+        :end_date
+        )`,
       {
         replacements,
       }
@@ -56,7 +58,6 @@ const callHandleTaxTransaction = async (replacements) => {
     throw new Error("Error executing stored procedure: " + JSON.stringify(err));
   }
 };
-
 // This can serve create invoice or payment and nothing else
 const postTrx = async (req, res) => {
   const {
@@ -68,11 +69,15 @@ const postTrx = async (req, res) => {
     nin_id = null,
     tin = null,
     paid_by = null,
+    phone = null,
     confirmed_by = null,
     payer_acct_no = null,
     payer_bank_name = null,
     start_date = null,
     end_date = null,
+    tax_station = null,
+    mda_var = null,
+    mda_val = null,
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -97,6 +102,7 @@ const postTrx = async (req, res) => {
       user_id,
       agent_id,
       description,
+      tax_station,
       amount,
       transaction_date,
       transaction_type,
@@ -106,14 +112,18 @@ const postTrx = async (req, res) => {
       mda_code: mda_code,
       nin_id,
       tin,
+      phone,
       org_name: mda_name,
       paid_by,
+      tax_payer: paid_by,
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
       department,
       service_category: service_category ? service_category : tax_parent_code,
       sector,
+      mda_var,
+      mda_val,
       start_date,
       end_date,
     };
@@ -170,12 +180,14 @@ const getTrx = async (req, res) => {
     status = null,
     description = null,
     amount = null,
+    tax_payer = null,
     transaction_date = null,
     transaction_type = null,
     rev_code = null,
     mda_code = null,
     nin_id = null,
     tin = null,
+    phone = null,
     org_name = null,
     paid_by = null,
     confirmed_by = null,
@@ -189,6 +201,9 @@ const getTrx = async (req, res) => {
     ref_no = null,
     sector = null,
     reference_number = null,
+    tax_station = null,
+    mda_var = null,
+    mda_val = null,
   } = req.query;
 
   const params = {
@@ -205,16 +220,21 @@ const getTrx = async (req, res) => {
     mda_code,
     nin_id,
     tin,
+    phone,
     org_name,
-    paid_by,
+    tax_payer: paid_by,
     confirmed_by,
     payer_acct_no,
     payer_bank_name,
+    tax_payer,
     query_type,
     start_date,
     end_date,
     department,
     service_category,
+    tax_station,
+    mda_var,
+    mda_val,
     sector,
   };
 
@@ -401,6 +421,26 @@ const insertTertiaryData = async (inst) => {
   }
 };
 
+const callTransactionList = (req, res) => {
+  const { from = today, to = today, query_type = "" } = req.query;
+
+  db.sequelize
+    .query(`CALL selectTransactions(:from,:to,:query_type)`, {
+      replacements: {
+        from,
+        to,
+        query_type,
+      },
+    })
+    .then((resp) => {
+      res.json({ success: true, data: resp });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.json({ success: false, msg: "Error occurred" });
+    });
+};
+
 const printReport = (req, res) => {
   const today = moment().format("YYYY-MM-DD");
   // console.log(req.user[0].id);
@@ -448,4 +488,5 @@ module.exports = {
   getInvoiceDetails,
   getTertiary,
   printReport,
+  callTransactionList,
 };
