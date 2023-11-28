@@ -96,6 +96,31 @@ const postTrx = async (req, res) => {
       sector = null,
     } = tax;
 
+    let refNo = String(moment().format("YYMMDDhhmm"));
+    //cut the length to 15 digits
+    refNo = refNo.slice(0, 9 - refNo.length) + Math.floor(Math.random() * 1000);
+    let code = null;
+
+    switch (sector) {
+      case "TAX":
+        code = "112" + refNo;
+        break;
+      case "NON TAX":
+        code = "224" + refNo;
+        break;
+      case "LAND":
+        code = "336" + refNo;
+        break;
+      case "VEHICLE":
+        code = "448" + refNo;
+        break;
+      case "LGA":
+        code = "565" + refNo;
+        break;
+      default:
+        code = "100" + refNo;
+    }
+
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -107,7 +132,7 @@ const postTrx = async (req, res) => {
       transaction_date,
       transaction_type,
       status: "saved",
-      reference_number,
+      reference_number: code,
       rev_code: economic_code,
       mda_code: mda_code,
       nin_id,
@@ -131,7 +156,7 @@ const postTrx = async (req, res) => {
     try {
       console.log({ params });
       const results = await callHandleTaxTransaction(params);
-      return { success: true, data: results };
+      return { success: true, data: results, ref_no: code };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
       return {

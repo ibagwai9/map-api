@@ -766,10 +766,10 @@ BEGIN
 			UPDATE tax_transactions SET printed = 1, printed_at = DATE(NOW()), printed_by=in_user_name WHERE reference_number=in_ref;
         END IF;
     ELSEIF in_query_type = 'view-logs' THEN
-        SELECT p.*, t.description, t.tax_payer, t.dr as amount, printed, t.paymentdate
-        FROM print_logs p
-        JOIN tax_transactions t ON p.ref_no = t.reference_number
-        WHERE t.dr > 0 AND p.ref_no = in_ref;
+      SELECT p.*, t.description, t.tax_payer, t.dr as amount, printed, t.paymentdate
+FROM tax_transactions t
+LEFT JOIN print_logs p ON p.ref_no = t.reference_number
+WHERE t.dr > 0 AND t.reference_number  = in_ref;
     ELSEIF in_query_type = 'summary' THEN
 		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
 			WHERE printed <> 0 AND DATE(printed_at) BETWEEN in_from AND in_to;
