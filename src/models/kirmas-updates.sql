@@ -1,5 +1,4 @@
-ALTER TABLE `tax_transactions` ADD `qty` INT(4) NOT NULL DEFAULT '1' AFTER `dr`;
-
+DROP PROCEDURE IF EXISTS `print_report`;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `mda_queries`$$
 
@@ -216,7 +215,9 @@ IN in_sector VARCHAR(50),
 IN in_user_name VARCHAR(50))
 BEGIN
 	DECLARE print_count INT;
-	IF in_query_type = 'print' THEN
+	IF in_query_type = 'print' THEN	
+     CALL print_logs('insert', in_user_id, in_user_name, in_ref );
+    
 		SELECT distinct printed INTO print_count FROM tax_transactions WHERE reference_number=in_ref;
         
         IF print_count >= 1 THEN
@@ -224,7 +225,12 @@ BEGIN
         ELSE
 			UPDATE tax_transactions SET printed = 1, printed_by = in_user_name, printed_at = DATE(NOW()), printed_by=in_user_id WHERE reference_number=in_ref;
         END IF;
-    ELSEIF in_query_type = 'summary' THEN
+    ELSEIF in_query_type = 'view-logs' THEN
+        SELECT p.*, t.description, t.tax_payer, t.dr as amount
+        FROM print_logs p
+        JOIN tax_transactions t ON p.ref_no = t.reference_number
+        WHERE t.dr > 0 AND p.ref_no = in_ref;
+ELSEIF in_query_type = 'summary' THEN
 		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
 			WHERE printed <> 0 AND DATE(printed_at) BETWEEN in_from AND in_to;
 	ELSEIF in_query_type = 'summary_by_user' THEN
@@ -248,7 +254,7 @@ BEGIN
                 WHERE x.reference_number = y.reference_number
             ) AS dr 
         FROM tax_transactions y 
-        WHERE printed <> 0 and FIND_IN_SET(sector, 'TAX,NON TAX,LAND,LGA,VEHICLES') > 0
+        WHERE printed <> 0 AND FIND_IN_SET(sector, in_sector) > 0
             AND DATE(y.printed_at) BETWEEN in_from AND in_to AND y.mda_code = in_mda_code
         GROUP BY y.reference_number;
         ELSE
@@ -265,7 +271,7 @@ BEGIN
                 WHERE x.reference_number = y.reference_number
             ) AS dr 
         FROM tax_transactions y 
-        WHERE printed <> 0 and FIND_IN_SET(sector, 'TAX,NON TAX,LAND,LGA,VEHICLES') > 0
+        WHERE printed <> 0 AND FIND_IN_SET(sector, in_sector) > 0
             AND DATE(y.printed_at) BETWEEN in_from AND in_to
         GROUP BY y.reference_number;
         END IF;
@@ -290,6 +296,14 @@ BEGIN
 	ELSEIF in_query_type = 'by_user' THEN
 		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
 			WHERE printed <> 0 AND printed_by = in_user_id AND DATE(created_at) BETWEEN in_from AND in_to;
+	ELSEIF in_query_type = 'view-history' THEN 
+        IF in_view ='all' THEN
+            SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(sector, in_sector) > 0;
+        ELSEIF in_view ='invoice' THEN
+             SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND status ='saved' AND  FIND_IN_SET(sector, in_sector) > 0;
+        ELSEIF in_view ='receipt' THEN
+            SELECT * FROM tax_transactions WHERE dr>0 AND status ='paid' AND status!='saved' AND   FIND_IN_SET(sector, in_sector) > 0 AND   DATE(created_at) BETWEEN in_from AND in_to ;
+        END IF;
 	END IF;
 END $$
 DELIMITER;
