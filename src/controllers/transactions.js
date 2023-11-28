@@ -247,14 +247,6 @@ async function getQRCode(req, res) {
 
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
-<<<<<<< HEAD
-=======
-    const paymentAmount =
-      payment[0] && payment[0].length ? payment[0][0].paymentAmount : 0;
-    const user = await db.sequelize.query(
-      `SELECT * FROM tax_payers WHERE taxID = ${payment[0][0]?.user_id}`
-    );
->>>>>>> 99cc31f07ef5709e0cbe8e64c9c50ac1f6d21e85
 
     const user = await db.User.findOne({
       where: { id: payment[0][0].user_id },
