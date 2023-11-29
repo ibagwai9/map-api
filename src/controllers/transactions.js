@@ -117,7 +117,7 @@ const postTrx = async (req, res) => {
     tax_station = null,
     mda_var = null,
     mda_val = null,
-    tax_payer=''
+    tax_payer = "",
   } = req.body;
 
   const commonRefNo = generateCommonRefNo(tax_list[0].sector);
