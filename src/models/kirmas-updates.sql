@@ -740,6 +740,7 @@ END IF;
 END$$
 DELIMITER ;
 
+
 DELIMITER $$
     DROP PROCEDURE IF EXISTS `print_report` $$
 CREATE PROCEDURE `print_report`(
@@ -757,16 +758,10 @@ BEGIN
 	DECLARE print_count INT;
 	IF in_query_type = 'print' THEN
         CALL print_logs('insert', in_user_id, in_user_name, in_ref );
-    
-		SELECT  printed INTO print_count FROM tax_transactions WHERE reference_number=in_ref;
-        IF print_count IS NOT NULL THEN
-			UPDATE tax_transactions SET printed = print_count + 1 WHERE reference_number=in_ref;
-            COMMIT;
-        ELSE
-			UPDATE tax_transactions SET printed = 1, printed_at = DATE(NOW()), printed_by=in_user_name WHERE reference_number=in_ref;
-        END IF;
+		SELECT  (printed +1) INTO print_count FROM tax_transactions WHERE reference_number=in_ref LIMIT 1;
+        UPDATE tax_transactions SET printed = print_count, printed_at = DATE(NOW()), printed_by=in_user_name WHERE reference_number=in_ref AND status ='saved';
     ELSEIF in_query_type = 'view-logs' THEN
-      SELECT p.*, t.description, t.tax_payer, t.dr as amount, printed, t.paymentdate
+      SELECT p.*, t.description, t.tax_payer, t.dr as amount, (SELECT x.printed FROM tax_transactions x WHERE x.reference_number = in_ref LIMIT 1) AS printed, t.paymentdate
 FROM tax_transactions t
 LEFT JOIN print_logs p ON p.ref_no = t.reference_number
 WHERE t.dr > 0 AND t.reference_number  = in_ref;

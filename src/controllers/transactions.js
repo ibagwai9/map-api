@@ -70,14 +70,40 @@ const callHandleTaxTransaction = async (replacements) => {
     throw new Error("Error executing stored procedure: " + JSON.stringify(err));
   }
 };
-// This can serve create invoice or payment and nothing else
+
+const generateCommonRefNo = (sector) => {
+  let refNo = String(moment().format("YYMMDDhhmm"));
+  refNo = refNo.slice(0, 9 - refNo.length) + Math.floor(Math.random() * 1000);
+  let code = null;
+
+  switch (sector) {
+    case "TAX":
+      code = "112";
+      break;
+    case "NON TAX":
+      code = "224";
+      break;
+    case "LAND":
+      code = "336";
+      break;
+    case "VEHICLE":
+      code = "448";
+      break;
+    case "LGA":
+      code = "565";
+      break;
+    default:
+      code = "100";
+  }
+  return code + refNo;
+};
+
 const postTrx = async (req, res) => {
   const {
     user_id = null,
     agent_id = null,
     tax_list = [],
     transaction_date,
-    reference_number,
     nin_id = null,
     tin = null,
     paid_by = null,
@@ -92,6 +118,7 @@ const postTrx = async (req, res) => {
     mda_val = null,
   } = req.body;
 
+  const commonRefNo = generateCommonRefNo(tax_list[0].sector);
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
     const {
@@ -108,31 +135,6 @@ const postTrx = async (req, res) => {
       sector = null,
     } = tax;
 
-    let refNo = String(moment().format("YYMMDDhhmm"));
-    //cut the length to 15 digits
-    refNo = refNo.slice(0, 9 - refNo.length) + Math.floor(Math.random() * 1000);
-    let code = null;
-
-    switch (sector) {
-      case "TAX":
-        code = "112" + refNo;
-        break;
-      case "NON TAX":
-        code = "224" + refNo;
-        break;
-      case "LAND":
-        code = "336" + refNo;
-        break;
-      case "VEHICLE":
-        code = "448" + refNo;
-        break;
-      case "LGA":
-        code = "565" + refNo;
-        break;
-      default:
-        code = "100" + refNo;
-    }
-
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -144,7 +146,7 @@ const postTrx = async (req, res) => {
       transaction_date,
       transaction_type,
       status: "saved",
-      reference_number: code,
+      reference_number: commonRefNo,
       rev_code: economic_code,
       mda_code: mda_code,
       nin_id,
@@ -166,9 +168,8 @@ const postTrx = async (req, res) => {
     };
 
     try {
-      console.log({ params });
       const results = await callHandleTaxTransaction(params);
-      return { success: true, data: results, ref_no: code };
+      return { success: true, data: results, ref_no: commonRefNo };
     } catch (error) {
       console.error("Error executing stored procedure:", error);
       return {
@@ -489,7 +490,7 @@ const printReport = (req, res) => {
     to = today,
     query_type = "",
     view = "all",
-    sector=''
+    sector = "",
   } = req.body;
   // const { sector = "" } = req.query;
   db.sequelize
