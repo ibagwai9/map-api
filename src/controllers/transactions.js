@@ -72,6 +72,7 @@ const callHandleTaxTransaction = async (replacements) => {
 };
 // This can serve create invoice or payment and nothing else
 const postTrx = async (req, res) => {
+  console.log(req.body);
   const {
     user_id = null,
     agent_id = null,
@@ -90,6 +91,7 @@ const postTrx = async (req, res) => {
     tax_station = null,
     mda_var = null,
     mda_val = null,
+    tax_payer=''
   } = req.body;
 
   // Helper function to call the tax transaction asynchronously
@@ -152,7 +154,7 @@ const postTrx = async (req, res) => {
       phone,
       org_name: mda_name,
       paid_by,
-      tax_payer: paid_by,
+      tax_payer,
       confirmed_by,
       payer_acct_no,
       payer_bank_name,
