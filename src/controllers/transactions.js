@@ -1,6 +1,8 @@
 const db = require("../models");
 const QRCode = require("qrcode");
 const moment = require("moment");
+
+const crypto = require("crypto");
 const { default: axios } = require("axios");
 require("dotenv").config();
 const getInvoiceDetails = async (refNo) => {
@@ -120,7 +122,6 @@ const postTrx = async (req, res) => {
     tax_payer = "",
   } = req.body;
 
-  const commonRefNo = generateCommonRefNo(tax_list[0].sector);
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
     const {
@@ -137,6 +138,7 @@ const postTrx = async (req, res) => {
       sector = null,
     } = tax;
 
+    const commonRefNo = generateCommonRefNo(tax_list[0].sector);
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -520,7 +522,48 @@ const printReport = (req, res) => {
       res.json({ success: false, msg: "Error occurred" });
     });
 };
+const validatePayment = async (req, res) => {
+  const { paymentMethod, transactionId } = req.body;
+
+  try {
+    const merchantSecretKey =
+      "E187B1191265B18338B5DEBAF9F38FEC37B170FF582D4666DAB1F098304D5EE7F3BE15540461FE92F1D40332FDBBA34579034EE2AC78B1A1B8D9A321974025C4";
+
+    const transactionReferenceNumber = req.query.ref_no;
+    // const sector = req.query.ref_no;
+
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    // const subpdtid = req.body.item_code; //6204; // Your product ID
+    const amount = req.query.amount;
+    // const txnref = req.body.txnref;
+
+    const hashv = merchantSecretKey + transactionReferenceNumber + timestamp;
+    const thash = crypto.createHash("sha512").update(hashv).digest("hex");
+
+    const response = await axios.get(
+      `https://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=6576&transactionreference=${transactionReferenceNumber}&amount=${amount}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${thash}`,
+        },
+      }
+    );
+
+    if (response.data.status === "APPROVED") {
+      res.status(200).json({ message: "Payment successful" });
+    } else {
+      res.status(400).json({ message: response.data.error });
+    }
+  } catch (error) {
+    console.error("Error validating payment:", error);
+    res.status(500).json({ message: "Error validating payment", error });
+  }
+};
+
 module.exports = {
+  validatePayment,
   getQRCode,
   getTrx,
   postTrx,

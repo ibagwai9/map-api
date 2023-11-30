@@ -226,7 +226,7 @@ BEGIN
 			UPDATE tax_transactions SET printed = 1, printed_by = in_user_name, printed_at = DATE(NOW()), printed_by=in_user_id WHERE reference_number=in_ref;
         END IF;
     ELSEIF in_query_type = 'view-logs' THEN
-        SELECT p.*, t.description, t.tax_payer, t.dr as amount
+        SELECT p.*, t.description, t.status, t.tax_payer, t.dr as amount
         FROM print_logs p
         JOIN tax_transactions t ON p.ref_no = t.reference_number
         WHERE t.dr > 0 AND p.ref_no = in_ref;
@@ -758,10 +758,10 @@ BEGIN
 	DECLARE print_count INT;
 	IF in_query_type = 'print' THEN
         CALL print_logs('insert', in_user_id, in_user_name, in_ref );
-		SELECT  (printed +1) INTO print_count FROM tax_transactions WHERE reference_number=in_ref LIMIT 1;
-        UPDATE tax_transactions SET printed = print_count, printed_at = DATE(NOW()), printed_by=in_user_name WHERE reference_number=in_ref AND status ='saved';
+
+        UPDATE tax_transactions t SET t.printed = (t.printed+1), printed_at = DATE(NOW()), printed_by=in_user_name WHERE reference_number=in_ref;
     ELSEIF in_query_type = 'view-logs' THEN
-      SELECT p.*, t.description, t.tax_payer, t.dr as amount, (SELECT x.printed FROM tax_transactions x WHERE x.reference_number = in_ref LIMIT 1) AS printed, t.paymentdate
+      SELECT p.*, t.description, t.tax_payer, t.dr as amount, t.status, (SELECT x.printed FROM tax_transactions x WHERE x.reference_number = in_ref LIMIT 1) AS printed, t.paymentdate
 FROM tax_transactions t
 LEFT JOIN print_logs p ON p.ref_no = t.reference_number
 WHERE t.dr > 0 AND t.reference_number  = in_ref;
