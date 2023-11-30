@@ -523,7 +523,6 @@ const printReport = (req, res) => {
     });
 };
 const validatePayment = async (req, res) => {
-  const { paymentMethod, transactionId } = req.body;
 
   try {
     const merchantSecretKey =
