@@ -523,13 +523,12 @@ const printReport = (req, res) => {
     });
 };
 const validatePayment = async (req, res) => {
-
   try {
     const merchantSecretKey =
       "E187B1191265B18338B5DEBAF9F38FEC37B170FF582D4666DAB1F098304D5EE7F3BE15540461FE92F1D40332FDBBA34579034EE2AC78B1A1B8D9A321974025C4";
 
     const transactionReferenceNumber = req.query.ref_no;
-    // const sector = req.query.ref_no;
+    const sector = req.query.sector;
 
     const timestamp = Math.floor(Date.now() / 1000);
 
@@ -539,9 +538,28 @@ const validatePayment = async (req, res) => {
 
     const hashv = merchantSecretKey + transactionReferenceNumber + timestamp;
     const thash = crypto.createHash("sha512").update(hashv).digest("hex");
+    let code = null;
+    switch (sector) {
+      case "TAX":
+        code = "6576";
+        break;
+      case "NON TAX":
+        code = "6601";
+        break;
+      case "LAND":
+        code = "6913";
+        break;
+      case "LGA":
+        code = "8285";
+        break;
+      default:
+        code = "6405";
+    }
 
     const response = await axios.get(
-      `https://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=6576&transactionreference=${transactionReferenceNumber}&amount=${amount}`,
+      `https://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${transactionReferenceNumber}&amount=${
+        amount * 100
+      }`,
       {
         headers: {
           "Content-Type": "application/json",
