@@ -491,8 +491,8 @@ END $$
 
 
 
-DROP PROCEDURE IF EXISTS `HandleTaxTransaction`;
 DELIMITER $$
+DROP PROCEDURE IF EXISTS HandleTaxTransaction $$
 CREATE PROCEDURE `HandleTaxTransaction`(
 IN `p_query_type` ENUM('view_invoice','view_payment',"paid_invoice",'insert_payment','insert_invoice','check_balance','view_payer_ledger','view_agent_history','approve_payment'), 
 IN `p_user_id` VARCHAR(9), 
@@ -731,13 +731,18 @@ BEGIN
     WHERE reference_number = p_reference_number AND status = 'pending';
     
 ELSEIF p_query_type = 'view_invoice' THEN
-  SELECT  * FROM tax_transactions x  where x.reference_number  = p_reference_number;
+  SELECT x.*, 
+       COALESCE(x.phone, t.phone) AS payer_phone
+FROM tax_transactions x
+LEFT JOIN tax_payers t ON x.user_id = t.taxID
+WHERE x.reference_number = p_reference_number;
+
 ELSE
   -- Invalid query_type
   SIGNAL SQLSTATE '45000'
   SET MESSAGE_TEXT = 'Invalid query_type';
 END IF;
-END$$
+END $$
 DELIMITER ;
 
 
