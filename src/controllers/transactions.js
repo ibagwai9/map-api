@@ -101,7 +101,6 @@ const generateCommonRefNo = (sector) => {
 };
 
 const postTrx = async (req, res) => {
-  console.log(req.body);
   const {
     user_id = null,
     agent_id = null,
@@ -495,11 +494,13 @@ const printReport = (req, res) => {
     query_type = "",
     view = "all",
     sector = "",
+    offset = 0,
+    limit = 200,
   } = req.body;
   // const { sector = "" } = req.query;
   db.sequelize
     .query(
-      `CALL print_report (:query_type, :ref_no, :user_id, :user_name, :from, :to, :mda_code, :sector, :view)`,
+      `CALL print_report (:query_type, :ref_no, :user_id, :user_name, :from, :to, :mda_code, :sector, :view, :offset, :limit)`,
       {
         replacements: {
           ref_no,
@@ -511,6 +512,8 @@ const printReport = (req, res) => {
           mda_code,
           sector,
           view,
+          offset,
+          limit,
         },
       }
     )
