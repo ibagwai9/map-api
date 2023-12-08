@@ -458,42 +458,52 @@ const webHook = (req, res) => {
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
   console.log(req.body);
   const {
-    event = "",
-    data = {
-      paymentId: 3509593,
-      remittanceAmount: 101834,
-      amount: 103500,
-      responseCode: "00",
-      responseDescription: "Approved by Financial Institution",
-      cardNumber: "506099*********7499",
-      merchantReference: "1293000000000000027",
-      paymentReference: "FBN|WEB|MX6072|03-03-2021|3509593|143441",
-      retrievalReferenceNumber: "000106923853",
-      splitAccounts: [],
-      transactionDate: 1614730600897,
-      accountNumber: null,
-      bankCode: "011",
-      token: null,
-      currencyCode: "566",
-      channel: "WEB",
-      merchantCustomerId: null,
-      merchantCustomerName: "Blessing Eyuod",
-      escrow: false,
-      nonCardProviderId: null,
-      payableCode: "9405967",
-    },
+    event = "TRANSACTION.COMPLETED",
+    uuid = "112231208124418",
+    timestamp = 1702039676910,
   } = req.body;
+  const {
+    paymentId = 1245447101,
+    remittanceAmount = 985,
+    amount = 1000,
+    responseCode = "00",
+    responseDescription = "Approved by Financial Institution",
+    cardNumber = "",
+    merchantReference = "112231208124418",
+    paymentReference = "ABP|WEB|MX60969|08-12-2023|1245447101|146999",
+    retrievalReferenceNumber = "869816042486",
+    splitAccounts = [],
+    transactionDate = 1702039676910,
+    accountNumber = null,
+    bankCode = "044",
+    token = null,
+    currencyCode = "566",
+    channel = "WEB",
+    merchantCustomerId = "134",
+    merchantCustomerName = "mylikita health solution limited",
+    escrow = false,
+    nonCardProviderId = null,
+    payableCode = "9969062",
+  } = req.body.data;
   const isAllowed = allowedList.includes(clientIP);
-  console.log(req.body);
-  if (!isAllowed) {
+  if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
-      db.sequelize.query(`UPDATE tax_transactions 
-      SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
-        dateSettled
-      ).format("YYYY-MM-DD")}", 
-      paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
-      paymentAmount="${amountPaid}"
-      WHERE reference_number='${referenceNo}'`);
+      db.sequelize
+        .query(
+          `UPDATE tax_transactions 
+      SET status="PAID", interswitch_ref="${paymentReference}", payer_acct_no='${retrievalReferenceNumber}',  logId="${paymentId}", dateSettled="${moment(
+            timestamp
+          ).format("YYYY-MM-DD")}", 
+      paymentdate="${moment(transactionDate)}", modeOfPayment="${channel}", 
+      paymentAmount="${amount / 100}"
+      WHERE reference_number='${merchantReference}'`
+        )
+        .then((resp) => {
+          console.log("hoookkkkkkkkkkkkk");
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
   }
 };
