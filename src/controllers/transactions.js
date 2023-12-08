@@ -3,7 +3,7 @@ const QRCode = require("qrcode");
 const moment = require("moment");
 
 const crypto = require("crypto");
-const { default: axios } = require("axios");
+const axios = require("axios");
 require("dotenv").config();
 const getInvoiceDetails = async (refNo) => {
   try {
@@ -101,7 +101,6 @@ const generateCommonRefNo = (sector) => {
 };
 
 const postTrx = async (req, res) => {
-  console.log(req.body);
   const {
     user_id = null,
     agent_id = null,
@@ -122,6 +121,7 @@ const postTrx = async (req, res) => {
     tax_payer = "",
   } = req.body;
 
+  const commonRefNo = generateCommonRefNo(tax_list[0].sector);
   // Helper function to call the tax transaction asynchronously
   const callHandleTaxTransactionAsync = async (tax) => {
     const {
@@ -138,7 +138,6 @@ const postTrx = async (req, res) => {
       sector = null,
     } = tax;
 
-    const commonRefNo = generateCommonRefNo(tax_list[0].sector);
     const params = {
       query_type: `insert_${transaction_type}`,
       item_code,
@@ -311,7 +310,7 @@ async function getQRCode(req, res) {
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
 
     const user = await db.User.findOne({
-      where: { id: payment[0][0].user_id },
+      where: { taxID: payment[0][0].user_id },
     });
 
     const name = user.dataValues.name || "Invslid";
@@ -495,11 +494,13 @@ const printReport = (req, res) => {
     query_type = "",
     view = "all",
     sector = "",
+    offset = 0,
+    limit = 200,
   } = req.body;
   // const { sector = "" } = req.query;
   db.sequelize
     .query(
-      `CALL print_report (:query_type, :ref_no, :user_id, :user_name, :from, :to, :mda_code, :sector, :view)`,
+      `CALL print_report (:query_type, :ref_no, :user_id, :user_name, :from, :to, :mda_code, :sector, :view, :offset, :limit)`,
       {
         replacements: {
           ref_no,
@@ -511,6 +512,8 @@ const printReport = (req, res) => {
           mda_code,
           sector,
           view,
+          offset,
+          limit,
         },
       }
     )
@@ -527,16 +530,16 @@ const validatePayment = async (req, res) => {
     const merchantSecretKey =
       "E187B1191265B18338B5DEBAF9F38FEC37B170FF582D4666DAB1F098304D5EE7F3BE15540461FE92F1D40332FDBBA34579034EE2AC78B1A1B8D9A321974025C4";
 
-    const transactionReferenceNumber = req.query.ref_no;
-    const sector = req.query.sector;
+    const {
+      ref_no = "",
+      sector = "",
+      amount = "0",
+      item_code = "",
+    } = req.query;
 
     const timestamp = Math.floor(Date.now() / 1000);
 
-    // const subpdtid = req.body.item_code; //6204; // Your product ID
-    const amount = req.query.amount;
-    // const txnref = req.body.txnref;
-
-    const hashv = merchantSecretKey + transactionReferenceNumber + timestamp;
+    const hashv = merchantSecretKey + ref_no + timestamp;
     const thash = crypto.createHash("sha512").update(hashv).digest("hex");
     let code = null;
     switch (sector) {
@@ -556,22 +559,52 @@ const validatePayment = async (req, res) => {
         code = "6405";
     }
 
-    const response = await axios.get(
-      `https://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${transactionReferenceNumber}&amount=${
-        amount * 100
-      }`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${thash}`,
-        },
-      }
-    );
+    let maxRetries = 3;
+    let currentRetry = 0;
 
-    if (response.data.status === "APPROVED") {
-      res.status(200).json({ message: "Payment successful" });
-    } else {
-      res.status(400).json({ message: response.data.error });
+    while (currentRetry < maxRetries) {
+      try {
+        const response = await axios.get(
+          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${
+            amount * 100
+          }`,
+          {
+            headers: {
+              GET: "/HTTP/1.1",
+              Host: "sandbox.interswitchng.com",
+              "User-Agent":
+                "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.1) Gecko/2008070208 Firefox/3.0.1",
+              Accept: "*/*",
+              "Accept-Language": "en-us,en;q=0.5",
+              "Keep-Alive": 300,
+              Connection: "keep-alive",
+              Hash: thash,
+            },
+          }
+        );
+
+        console.log({ response });
+
+        if (response.data.status === "APPROVED") {
+          res.status(200).json({ message: "Payment successful" });
+        } else {
+          res.status(400).json({ message: response.data.error });
+        }
+
+        break; // Break out of the loop if the request is successful
+      } catch (error) {
+        if (error.code === "ECONNRESET") {
+          currentRetry++;
+          console.warn(
+            `Retrying request. Retry ${currentRetry} of ${maxRetries}`
+          );
+        } else {
+          // Handle other errors
+          console.error(error);
+          res.status(500).json({ message: "Error validating payment", error });
+          break; // Break out of the loop if it's not a connection reset error
+        }
+      }
     }
   } catch (error) {
     console.error("Error validating payment:", error);

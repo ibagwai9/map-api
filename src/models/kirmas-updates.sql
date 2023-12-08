@@ -212,7 +212,9 @@ IN in_from DATE,
 IN in_to DATE , 
 IN in_mda_code VARCHAR(50), 
 IN in_sector VARCHAR(50), 
-IN in_user_name VARCHAR(50))
+IN in_user_name VARCHAR(50),
+IN in_offset INT,
+IN in_limit INT)
 BEGIN
 	DECLARE print_count INT;
 	IF in_query_type = 'print' THEN	
@@ -298,7 +300,12 @@ ELSEIF in_query_type = 'summary' THEN
 			WHERE printed <> 0 AND printed_by = in_user_id AND DATE(created_at) BETWEEN in_from AND in_to;
 	ELSEIF in_query_type = 'view-history' THEN 
         IF in_view ='all' THEN
-            SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(sector, in_sector) > 0;
+            SELECT * FROM tax_transactions 
+            WHERE dr>0 
+            AND  DATE(created_at) BETWEEN in_from AND in_to 
+            AND  FIND_IN_SET(sector, in_sector) > 0
+            LIMIT in_limit
+            OFFSET in_offset;
         ELSEIF in_view ='invoice' THEN
              SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND status ='saved' AND  FIND_IN_SET(sector, in_sector) > 0;
         ELSEIF in_view ='receipt' THEN
@@ -491,8 +498,8 @@ END $$
 
 
 
-DROP PROCEDURE IF EXISTS `HandleTaxTransaction`;
 DELIMITER $$
+DROP PROCEDURE IF EXISTS HandleTaxTransaction $$
 CREATE PROCEDURE `HandleTaxTransaction`(
 IN `p_query_type` ENUM('view_invoice','view_payment',"paid_invoice",'insert_payment','insert_invoice','check_balance','view_payer_ledger','view_agent_history','approve_payment'), 
 IN `p_user_id` VARCHAR(9), 
@@ -576,7 +583,12 @@ BEGIN
         p_mda_val
     );
   ELSEIF p_query_type = 'paid_invoice' THEN
-        SELECT  * FROM tax_transactions x  where x.reference_number  = p_reference_number and  `status` in ("success","paid") and logId is not null;
+         SELECT x.*, 
+       COALESCE(x.phone, t.phone) AS payer_phone
+FROM tax_transactions x
+LEFT JOIN tax_payers t ON x.user_id = t.taxID
+WHERE x.reference_number = p_reference_number  AND  `status` in ("success","paid") and logId is not null;
+
   ELSEIF p_query_type = 'view_payment' THEN
     -- View payment transaction
     SELECT * FROM tax_transactions WHERE reference_number = p_reference_number;
@@ -731,13 +743,18 @@ BEGIN
     WHERE reference_number = p_reference_number AND status = 'pending';
     
 ELSEIF p_query_type = 'view_invoice' THEN
-  SELECT  * FROM tax_transactions x  where x.reference_number  = p_reference_number;
+  SELECT x.*, 
+       COALESCE(x.phone, t.phone) AS payer_phone
+FROM tax_transactions x
+LEFT JOIN tax_payers t ON x.user_id = t.taxID
+WHERE x.reference_number = p_reference_number;
+
 ELSE
   -- Invalid query_type
   SIGNAL SQLSTATE '45000'
   SET MESSAGE_TEXT = 'Invalid query_type';
 END IF;
-END$$
+END $$
 DELIMITER ;
 
 
@@ -752,7 +769,9 @@ IN in_from DATE,
 IN in_to DATE , 
 IN in_mda_code VARCHAR(50), 
 IN in_sector VARCHAR(50),
-IN `in_view` VARCHAR(50)
+IN `in_view` VARCHAR(50),
+IN in_offset INT,
+IN in_limit INT
 )
 BEGIN
 	DECLARE print_count INT;
@@ -791,7 +810,9 @@ WHERE t.dr > 0 AND t.reference_number  = in_ref;
         FROM tax_transactions y 
         WHERE printed <> 0 and FIND_IN_SET(sector, in_sector) > 0
             AND DATE(y.printed_at) BETWEEN in_from AND in_to AND y.mda_code = in_mda_code
-        GROUP BY y.reference_number;
+        GROUP BY y.reference_number 
+                   LIMIT in_limit
+            OFFSET in_offset;
         ELSE
             SELECT  
             y.*,
@@ -808,7 +829,9 @@ WHERE t.dr > 0 AND t.reference_number  = in_ref;
         FROM tax_transactions y 
         WHERE printed <> 0 and FIND_IN_SET(sector, in_sector) > 0
             AND DATE(y.printed_at) BETWEEN in_from AND in_to
-        GROUP BY y.reference_number;
+        GROUP BY y.reference_number           
+         LIMIT in_limit
+            OFFSET in_offset;
         END IF;
 	ELSEIF in_query_type = 'details-by-date-and-user' THEN 
 		SELECT 
@@ -830,14 +853,36 @@ WHERE t.dr > 0 AND t.reference_number  = in_ref;
 	ELSEIF in_query_type = 'by_user' THEN
 		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
 			WHERE printed <> 0 AND printed_by = in_user_id AND DATE(created_at) BETWEEN in_from AND in_to;
-            ELSEIF in_query_type = 'view-history' THEN 
+        ELSEIF in_query_type = 'view-summary' THEN 
+            SELECT department, sector, SUM(dr) AS total, in_from  AS start_date, in_to AS end_date
+            FROM tax_transactions
+            WHERE dr > 0
+            AND status IN ('paid', 'success')
+            AND FIND_IN_SET(sector, in_sector) > 0
+            AND DATE(created_at) BETWEEN in_from AND in_to
+            GROUP BY department, sector;
+    ELSEIF in_query_type = 'view-history' THEN 
         IF in_view ='all' THEN
-            SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(sector, in_sector) > 0;
+            SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(sector, in_sector) > 0   
+            LIMIT in_limit
+            OFFSET in_offset;
         ELSEIF in_view ='invoice' THEN
-             SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND status ='saved' AND  FIND_IN_SET(sector, in_sector) > 0;
+            SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND status ='saved' AND  FIND_IN_SET(sector, in_sector) > 0
+             LIMIT in_limit
+            OFFSET in_offset;
         ELSEIF in_view ='receipt' THEN
-            SELECT * FROM tax_transactions WHERE dr>0 AND status ='paid' AND status!='saved' AND   FIND_IN_SET(sector, in_sector) > 0 AND   DATE(created_at) BETWEEN in_from AND in_to ;
+            SELECT * FROM tax_transactions WHERE dr>0 AND status IN('paid','success')  AND   FIND_IN_SET(sector, in_sector) > 0 AND   DATE(created_at) BETWEEN in_from AND in_to 
+             LIMIT in_limit
+            OFFSET in_offset;
         END IF;
-	END IF;
+    ELSEIF in_query_type = 'count-history' THEN  
+        IF in_view ='all' THEN
+            SELECT COUNT(*) AS row_counts FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(sector, in_sector) > 0;          
+        ELSEIF in_view ='invoice' THEN
+            SELECT COUNT(*) AS row_counts FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND status ='saved' AND  FIND_IN_SET(sector, in_sector) > 0;
+         ELSEIF in_view ='receipt' THEN
+            SELECT COUNT(*) AS row_counts FROM tax_transactions WHERE dr>0 AND status IN('paid','success')  AND   FIND_IN_SET(sector, in_sector) > 0 AND   DATE(created_at) BETWEEN in_from AND in_to ;
+        END IF;
+    END IF;
 END $$
 DELIMITER ;
