@@ -821,7 +821,6 @@ module.exports.forgotPassword = (req, res) => {
         },
       })
       .then((user) => {
-        console.log(user);
         if (user) {
           send(phone, SMSTemplate(cc), () => {
             res.json({
@@ -840,6 +839,7 @@ module.exports.forgotPassword = (req, res) => {
       })
       .catch((err) => {
         console.log(err);
+        console.log("err");
         res.status(500).json({ success: false, message: err });
       });
   });
@@ -1034,8 +1034,6 @@ module.exports.UpdateTaxPayer = (req, res) => {
         .then((resp) => res.json({ success: true, data: resp }))
         .catch((error) => {
           console.error({ error });
-
-          // Catch other errors
           res.status(500).json({ success: false, msg: "Error occured" });
         });
     });
