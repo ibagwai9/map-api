@@ -308,9 +308,10 @@ async function getQRCode(req, res) {
 
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
-
+console.log(payment);
+console.log(payment[0][0])
     const user = await db.User.findOne({
-      where: { taxID: payment[0][0].user_id },
+      where: { taxID: payment[0][0]?.user_id },
     });
 
     const name = user.dataValues.name || "Invslid";

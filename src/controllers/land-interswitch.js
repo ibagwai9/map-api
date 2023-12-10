@@ -459,64 +459,91 @@ const webHook = (req, res) => {
   console.log(req.body);
   const {
     event = "",
-    data = {
-      paymentId: 3509593,
-      remittanceAmount: 101834,
-      amount: 103500,
-      responseCode: "00",
-      responseDescription: "Approved by Financial Institution",
-      cardNumber: "506099*********7499",
-      merchantReference: "1293000000000000027",
-      paymentReference: "FBN|WEB|MX6072|03-03-2021|3509593|143441",
-      retrievalReferenceNumber: "000106923853",
-      splitAccounts: [],
-      transactionDate: 1614730600897,
-      accountNumber: null,
-      bankCode: "011",
-      token: null,
-      currencyCode: "566",
-      channel: "WEB",
-      merchantCustomerId: null,
-      merchantCustomerName: "Blessing Eyuod",
-      escrow: false,
-      nonCardProviderId: null,
-      payableCode: "9405967",
-    },
+    uuid = "",
+    timestamp = null,
   } = req.body;
+  const {
+    paymentId = null,
+    remittanceAmount = null,
+    amount = null,
+    responseCode = "",
+    responseDescription = "",
+    cardNumber = "",
+    merchantReference = "",
+    paymentReference = "",
+    retrievalReferenceNumber = "",
+    splitAccounts = [],
+    transactionDate = null,
+    accountNumber = null,
+    bankCode = "",
+    token = null,
+    currencyCode = "",
+    channel = "",
+    merchantCustomerId = "",
+    merchantCustomerName = "",
+    escrow = false,
+    nonCardProviderId = null,
+    payableCode = "",
+  } = req.body.data;
   const isAllowed = allowedList.includes(clientIP);
   if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
-      db.sequelize.query(`UPDATE tax_transactions 
-      SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
-        dateSettled
-      ).format("YYYY-MM-DD")}", 
-      paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
-      paymentAmount="${amountPaid}"
-      WHERE reference_number='${referenceNo}'`);
+      db.sequelize
+        .query(
+          `UPDATE tax_transactions 
+      SET status="PAID", interswitch_ref="${paymentReference}", payer_acct_no='${retrievalReferenceNumber}',  logId="${paymentId}", dateSettled="${moment(
+            timestamp
+          ).format("YYYY-MM-DD")}", 
+      paymentdate="${moment(transactionDate)}", modeOfPayment="${channel}", 
+      paymentAmount="${amount / 100}"
+      WHERE reference_number='${merchantReference}'`
+        )
+        .then((resp) => {
+          console.log("hoookkkkkkkkkkkkk");
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
   }
 };
 
 const interResponse = (req, res) => {
   const {
-    Amount = 0,
+    Amount = 1000,
     CardNumber = "",
     MerchantReference = "",
-    Channel = "WEB",
+    PaymentReference = "",
+    RetrievalReferenceNumber = "",
+    Stan = "",
+    Channel = "",
+    TerminalId = "",
+    SplitAccounts = [],
     TransactionDate = "",
+    ResponseCode = "",
+    ResponseDescription = "",
     BankCode = "",
     PaymentId = "",
-    paymentReference = "",
+    RemittanceAmount = 0,
+    payRef = "",
+    txnref = "",
+    amount = null,
+    apprAmt = null,
+    resp = "",
+    desc = "",
+    retRef = "",
+    cardNum = "",
+    mac = "",
   } = req.body;
   db.sequelize
     .query(
       `UPDATE tax_transactions 
-      SET status="PAID", interswitch_ref="${paymentReference}", payer_acct_no='${CardNumber}', bank_name='${Channel}', bank_branch='${BankCode}',   logId="${PaymentId}", dateSettled="${moment(
-        TransactionDate
-      ).format("YYYY-MM-DD")}", 
-      paymentdate="${TransactionDate}", modeOfPayment="CARD", 
-      paymentAmount="${Amount / 100}"
-      WHERE reference_number='${MerchantReference}'`
+                      SET status=${ResponseCode==='00'?"PAID":"saved"}, interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
+                      paymentdate="${moment().format(
+                        "YYYY-MM-DD"
+                      )}", modeOfPayment="${Channel}", 
+                    paymentAmount="${Amount / 100}"
+                    WHERE reference_number="${MerchantReference}"`
     )
     .then((resp) => {
       res.json({ success: true, data: resp });

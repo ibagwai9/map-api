@@ -5,7 +5,6 @@ const {
   getPaymentSummary,
   callTransactionList,
   printReport,
-  validatePayment,
 } = require("../controllers/transactions");
 const passport = require("passport");
 
@@ -46,10 +45,4 @@ module.exports = (app) => {
   // app.get('/get-tertiary-trx',
   // // passport.authenticate("jwt", { session: false }),
   //  getTertiary)
-
-  app.get(
-    "/transactions/validate-payment",
-    // passport.authenticate("jwt", { session: false }),
-    validatePayment
-  );
 };
