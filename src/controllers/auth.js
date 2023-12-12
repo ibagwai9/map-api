@@ -15,6 +15,7 @@ module.exports.SignUp = (req, res) => {
     org_email = "",
     role = "user",
     accessTo = "",
+    sector='',
     bvn = "",
     company_name = "",
     office_address = "",
@@ -25,6 +26,7 @@ module.exports.SignUp = (req, res) => {
     phone = "",
     office_phone = "",
     state = "",
+    ward='',
     lga = "",
     address = "",
     department = "",
@@ -65,11 +67,12 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID)",
+                  "CALL user_accounts(:query_type, NULL, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID,:sector,:ward)",
                   {
                     replacements: {
                       query_type: "insert",
                       org_name,
+                      sector,
                       contact_name,
                       username,
                       email,
@@ -95,6 +98,7 @@ module.exports.SignUp = (req, res) => {
                       rank,
                       status,
                       taxID,
+                      ward
                     },
                   }
                 )
@@ -689,7 +693,8 @@ module.exports.verifyToken = async function (req, res) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const { phone, taxID } = decoded;
 
-    const user = await db.User.findOne({
+    const user = await 
+     db.User.findOne({
       where: {
         [db.Sequelize.Op.or]: [
           // { username },
@@ -714,7 +719,7 @@ module.exports.verifyToken = async function (req, res) {
     res.json({
       success: true,
       user,
-      tax_accounts: tax_accounts[0],
+      tax_accounts: tax_accounts[0]?tax_accounts[0]:[],
     });
   } catch (err) {
     console.error(err);
@@ -816,7 +821,6 @@ module.exports.forgotPassword = (req, res) => {
         },
       })
       .then((user) => {
-        console.log(user);
         if (user) {
           send(phone, SMSTemplate(cc), () => {
             res.json({
@@ -835,6 +839,7 @@ module.exports.forgotPassword = (req, res) => {
       })
       .catch((err) => {
         console.log(err);
+        console.log("err");
         res.status(500).json({ success: false, message: err });
       });
   });
@@ -858,13 +863,13 @@ module.exports.codeVerification = (req, res) => {
 
 module.exports.searchUser = (req, res) => {
   const { query_type = "select-user", id = "" } = req.query;
-
   db.sequelize
     .query(
-      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status)",
+      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:sector,:ward)",
       {
         replacements: {
           query_type,
+          sector:"",
           id,
           org_name: "",
           contact_name: "",
@@ -891,6 +896,7 @@ module.exports.searchUser = (req, res) => {
           department: "",
           rank: "",
           status: "active",
+          ward:""
         },
       }
     )
@@ -979,6 +985,8 @@ module.exports.UpdateTaxPayer = (req, res) => {
     rank = "",
     status = "active",
     taxID = null,
+    sector='',
+    ward=''
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -986,11 +994,12 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward);",
           {
             replacements: {
               user_id,
               query_type,
+              sector,
               org_name,
               name,
               username,
@@ -999,6 +1008,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               password: password ? newPass : null,
               role,
               bvn,
+              ward,
               tin,
               org_tin,
               org_name,
@@ -1017,14 +1027,13 @@ module.exports.UpdateTaxPayer = (req, res) => {
               rank,
               status,
               taxID,
+              sector
             },
           }
         )
         .then((resp) => res.json({ success: true, data: resp }))
         .catch((error) => {
           console.error({ error });
-
-          // Catch other errors
           res.status(500).json({ success: false, msg: "Error occured" });
         });
     });
@@ -1066,7 +1075,7 @@ module.exports.getTaxPayers = (req, res) => {
     )
     .then((resp) => {
       const taxPayerData = resp[0];
-      res.json({ success: true, data: taxPayerData });
+      res.json({ success: true, data: taxPayerData ?taxPayerData:[]});
     })
 
     .catch((error) => {
