@@ -177,6 +177,41 @@ const deleteUser = (req, res) => {
     .catch((err) => res.status(500).json({ msg: "Failed to delete!" }));
 };
 
+const resetPassword = (req, res) => {
+  const { id, password, newPassword } = req.body;
+
+  User.findOne({ where: { id } })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ msg: "User not found", success: false });
+      }
+
+      bcrypt.compare(password, user.password).then((isMatch) => {
+        if (!isMatch) {
+          return res
+            .status(400)
+            .json({ msg: "Incorrect password", success: false });
+        }
+
+        bcrypt.genSalt(10, (err, salt) => {
+          bcrypt.hash(newPassword, salt, (err, hash) => {
+            if (err) throw err;
+            user.password = hash;
+            user
+              .save()
+              .then(() =>
+                res
+                  .status(200)
+                  .json({ msg: "Password reset successful", success: true })
+              )
+              .catch((err) => res.status(500).json({ err, success: false }));
+          });
+        });
+      });
+    })
+    .catch((err) => res.status(500).json({ err }));
+};
+
 module.exports = {
   create,
   login,
@@ -185,4 +220,5 @@ module.exports = {
   update,
   verifyAuth,
   deleteUser,
+  resetPassword,
 };
