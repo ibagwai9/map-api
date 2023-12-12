@@ -795,6 +795,7 @@ module.exports.forgotPassword = (req, res) => {
       res.status(500).json({ status: "failed", err });
     });
 };
+
 module.exports.forgotPassword = (req, res) => {
   const { phone } = req.query;
 
@@ -826,7 +827,7 @@ module.exports.forgotPassword = (req, res) => {
             res.json({
               success: true,
               message: "otp was send successfully",
-              results: { phone, code: cc },
+              // results: { phone, code: cc },
             });
           }),
             () => {
