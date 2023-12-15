@@ -827,7 +827,7 @@ module.exports.forgotPassword = (req, res) => {
             res.json({
               success: true,
               message: "otp was send successfully",
-              // results: { phone, code: cc },
+              results: { phone, code: cc },
             });
           }),
             () => {
