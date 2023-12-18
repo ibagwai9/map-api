@@ -157,6 +157,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
             </Customer>
         </Customers>
     </CustomerInformationResponse>`;
+    console.log(responseData)
               res.set("Content-Type", "text/xml");
               res.send(responseData);
             }
