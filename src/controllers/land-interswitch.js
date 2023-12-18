@@ -96,7 +96,9 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const amount = parseFloat(
               taxList.reduce((a, b) => a + parseFloat(b.dr), 0).toFixed(2)
             ).toFixed(2);
-
+              console.log(amount);
+              console.log("amount");
+              console.log(`<Amount>${amount}</Amount>`)
             const startFormatted = startDate.format("MMM, YY");
             const endFormatted = endDate.format("MMM, YY");
 
