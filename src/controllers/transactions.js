@@ -116,8 +116,6 @@ const postTrx = async (req, res) => {
     start_date = null,
     end_date = null,
     tax_station = null,
-    mda_var = null,
-    mda_val = null,
     tax_payer = "",
   } = req.body;
 
@@ -136,6 +134,8 @@ const postTrx = async (req, res) => {
       service_category = null,
       transaction_type,
       sector = null,
+      mda_var = null,
+      mda_val = null,
     } = tax;
 
     const params = {
@@ -308,8 +308,8 @@ async function getQRCode(req, res) {
 
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
-console.log(payment);
-console.log(payment[0][0])
+    console.log(payment);
+    console.log(payment[0][0])
     const user = await db.User.findOne({
       where: { taxID: payment[0][0]?.user_id },
     });
@@ -318,15 +318,13 @@ console.log(payment[0][0])
     const phoneNumber = user.dataValues.phone || "Invalid";
     console.log({ user: user.dataValues.id });
 
-    const url = `https://kirmas.kn.gov.ng/payment-${
-      status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
-    }?ref_no=${refno}`;
+    const url = `https://kirmas.kn.gov.ng/payment-${status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
+      }?ref_no=${refno}`;
     // Create a payload string with the payer's information
     const payload = `Date:${moment(transaction_date).format(
       "DD/MM/YYYY"
-    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
-      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-    } ID: ${refno}\nUrl: ${url}`;
+    )}\nName: ${name}\nPhone: ${phoneNumber}\n${status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
+      } ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -566,8 +564,7 @@ const validatePayment = async (req, res) => {
     while (currentRetry < maxRetries) {
       try {
         const response = await axios.get(
-          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${
-            amount * 100
+          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${amount * 100
           }`,
           {
             headers: {
