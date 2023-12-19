@@ -9,6 +9,7 @@ const {
   update,
   deleteUser,
   verifyAuth,
+  resetPassword,
 } = require("../controllers/user");
 // const passport = require("passport");
 
@@ -63,5 +64,13 @@ module.exports = (app) => {
       session: false,
     }),
     allowOnly(config.accessLevels.admin, deleteUser)
+  );
+
+  app.post(
+    "/users/reset-password-new",
+    passport.authenticate("jwt", {
+      session: false,
+    }),
+    resetPassword
   );
 };

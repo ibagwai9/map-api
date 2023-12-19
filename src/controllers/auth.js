@@ -795,6 +795,7 @@ module.exports.forgotPassword = (req, res) => {
       res.status(500).json({ status: "failed", err });
     });
 };
+
 module.exports.forgotPassword = (req, res) => {
   const { phone } = req.query;
 
