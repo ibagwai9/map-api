@@ -96,9 +96,10 @@ const handleInvoiceValidation = async (reqJson, res) => {
             const amount = parseFloat(
               taxList.reduce((a, b) => a + parseFloat(b.dr), 0).toFixed(2)
             ).toFixed(2);
-              console.log(amount);
-              console.log("amount");
-              console.log(`<Amount>${amount}</Amount>`)
+
+            console.log(amount);
+            console.log("amount");
+            console.log(`<Amount>${amount}</Amount>`);
             const startFormatted = startDate.format("MMM, YY");
             const endFormatted = endDate.format("MMM, YY");
 
@@ -157,7 +158,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
             </Customer>
         </Customers>
     </CustomerInformationResponse>`;
-    console.log(responseData)
+              console.log(responseData);
               res.set("Content-Type", "text/xml");
               res.send(responseData);
             }
@@ -460,11 +461,7 @@ const webHook = (req, res) => {
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
   console.log(req.body);
-  const {
-    event = "",
-    uuid = "",
-    timestamp = null,
-  } = req.body;
+  const { event = "", uuid = "", timestamp = null } = req.body;
   const {
     paymentId = null,
     remittanceAmount = null,
@@ -508,6 +505,17 @@ const webHook = (req, res) => {
           console.error(err);
         });
     }
+  } else {
+    db.sequelize
+      .query(
+        `UPDATE tax_transactions SET status="saved" WHERE reference_number='${merchantReference}'`
+      )
+      .then((resp) => {
+        console.log("hoookkkkkkkkkkkkk1");
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }
 };
 
@@ -541,7 +549,9 @@ const interResponse = (req, res) => {
   db.sequelize
     .query(
       `UPDATE tax_transactions 
-                      SET status=${ResponseCode==='00'?"PAID":"saved"}, interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
+                      SET status=${
+                        ResponseCode === "00" ? "PAID" : "saved"
+                      }, interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
                         "YYYY-MM-DD"
                       )}", modeOfPayment="${Channel}", 
