@@ -491,7 +491,7 @@ const webHook = (req, res) => {
       db.sequelize
         .query(
           `UPDATE tax_transactions 
-      SET status="PAID", interswitch_ref="${paymentReference}", payer_acct_no='${retrievalReferenceNumber}',  logId="${paymentId}", dateSettled="${moment(
+      SET status="success", interswitch_ref="${paymentReference}", payer_acct_no='${retrievalReferenceNumber}',  logId="${paymentId}", dateSettled="${moment(
             timestamp
           ).format("YYYY-MM-DD")}", 
       paymentdate="${moment(transactionDate)}", modeOfPayment="${channel}", 
@@ -550,7 +550,7 @@ const interResponse = (req, res) => {
     .query(
       `UPDATE tax_transactions 
                       SET status=${
-                        ResponseCode === "00" ? "PAID" : "saved"
+                        ResponseCode === "00" ? "success" : "saved"
                       }, interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
                         "YYYY-MM-DD"
