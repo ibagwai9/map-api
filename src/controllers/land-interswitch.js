@@ -546,25 +546,26 @@ const interResponse = (req, res) => {
     cardNum = "",
     mac = "",
   } = req.body;
-  db.sequelize
-    .query(
-      `UPDATE tax_transactions 
-                      SET status=${
-                        ResponseCode === "00" ? "success" : "saved"
-                      }, interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
+  if (ResponseCode === "00") {
+    db.sequelize
+      .query(
+        `UPDATE tax_transactions 
+                      SET status="success"
+                      }", interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
                         "YYYY-MM-DD"
                       )}", modeOfPayment="${Channel}", 
                     paymentAmount="${Amount / 100}"
                     WHERE reference_number="${MerchantReference}"`
-    )
-    .then((resp) => {
-      res.json({ success: true, data: resp });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.json({ success: false, msg: "Error occurred" });
-    });
+      )
+      .then((resp) => {
+        res.json({ success: true, data: resp });
+      })
+      .catch((err) => {
+        console.error(err);
+        res.json({ success: false, msg: "Error occurred" });
+      });
+  }
 };
 module.exports = {
   webHook,
