@@ -550,8 +550,7 @@ const interResponse = (req, res) => {
     db.sequelize
       .query(
         `UPDATE tax_transactions 
-                      SET status="success"
-                      }", interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
+                      SET status="success", interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
                         "YYYY-MM-DD"
                       )}", modeOfPayment="${Channel}", 
