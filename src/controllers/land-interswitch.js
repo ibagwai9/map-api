@@ -486,7 +486,7 @@ const webHook = (req, res) => {
     payableCode = "",
   } = req.body.data;
   const isAllowed = allowedList.includes(clientIP);
-  console.log(clientIP)
+  console.log(clientIP?.split(","))
   console.log(isAllowed);
   console.log(req.body);
   if (isAllowed) {
