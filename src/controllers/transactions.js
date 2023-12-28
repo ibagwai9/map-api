@@ -52,6 +52,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_date,
         :transaction_type,
         :status,
+        :invoice_status,
         :reference_number,
         :department,
         :service_category,
@@ -117,6 +118,7 @@ const postTrx = async (req, res) => {
     end_date = null,
     tax_station = null,
     tax_payer = "",
+    invoice_status = ""
   } = req.body;
 
   const commonRefNo = generateCommonRefNo(tax_list[0].sector);
@@ -168,6 +170,7 @@ const postTrx = async (req, res) => {
       mda_val,
       start_date,
       end_date,
+      invoice_status
     };
 
     try {
@@ -245,6 +248,7 @@ const getTrx = async (req, res) => {
     tax_station = null,
     mda_var = null,
     mda_val = null,
+    invoice_status = ''
   } = req.query;
 
   const params = {
@@ -277,6 +281,7 @@ const getTrx = async (req, res) => {
     mda_var,
     mda_val,
     sector,
+    invoice_status
   };
 
   try {
@@ -487,6 +492,7 @@ const printReport = (req, res) => {
   const {
     ref_no = "",
     user_id = "",
+    user_name = "",
     mda_code = "",
     from = today,
     to = today,
@@ -503,8 +509,8 @@ const printReport = (req, res) => {
       {
         replacements: {
           ref_no,
-          user_id: req.user[0].id,
-          user_name: req.user[0].name,
+          user_id,
+          user_name,
           from,
           to,
           query_type,
