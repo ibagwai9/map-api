@@ -236,7 +236,10 @@ const handleInvoice = (req, res) => {
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
 
-  const isAllowed = allowedList.includes(clientIP);
+  const arrIP= clientIP?.split(",").map(ip => ip.trim());
+  console.log(arrIP);
+  console.log(req.body);
+  const isAllowed = arrIP.some(ip => allowedList.includes(ip));
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
@@ -491,6 +494,8 @@ const webHook = (req, res) => {
   console.log(req.body);
   const isAllowed = arrIP.some(ip => allowedList.includes(ip));
   console.log(isAllowed);
+  console.log(arrIP);
+
   if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
       db.sequelize
