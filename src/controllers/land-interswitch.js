@@ -485,10 +485,11 @@ const webHook = (req, res) => {
     nonCardProviderId = null,
     payableCode = "",
   } = req.body.data;
-  const isAllowed = allowedList.includes(clientIP);
-  console.log(clientIP?.split(","))
+  // const isAllowed = allowedList.includes(clientIP);
+  const arrIP= clientIP?.split(",").map(ip => ip.trim());
   console.log(isAllowed);
   console.log(req.body);
+  const isAllowed = arrIP.some(ip => allowedList.includes(ip));
   if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
       db.sequelize
