@@ -487,9 +487,10 @@ const webHook = (req, res) => {
   } = req.body.data;
   // const isAllowed = allowedList.includes(clientIP);
   const arrIP= clientIP?.split(",").map(ip => ip.trim());
-  console.log(isAllowed);
+
   console.log(req.body);
   const isAllowed = arrIP.some(ip => allowedList.includes(ip));
+  console.log(isAllowed);
   if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
       db.sequelize
