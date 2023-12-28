@@ -486,6 +486,8 @@ const webHook = (req, res) => {
     payableCode = "",
   } = req.body.data;
   const isAllowed = allowedList.includes(clientIP);
+  console.log(isAllowed);
+  console.log(req.body);
   if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
       db.sequelize
@@ -505,18 +507,7 @@ const webHook = (req, res) => {
           console.error(err);
         });
     }
-  } else {
-    db.sequelize
-      .query(
-        `UPDATE tax_transactions SET status="saved" WHERE reference_number='${merchantReference}'`
-      )
-      .then((resp) => {
-        console.log("hoookkkkkkkkkkkkk1");
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }
+  } 
 };
 
 const interResponse = (req, res) => {
@@ -550,7 +541,7 @@ const interResponse = (req, res) => {
     db.sequelize
       .query(
         `UPDATE tax_transactions 
-                      SET status="success", interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
+                      SET  interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
                         "YYYY-MM-DD"
                       )}", modeOfPayment="${Channel}", 
