@@ -236,7 +236,10 @@ const handleInvoice = (req, res) => {
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
 
-  const isAllowed = allowedList.includes(clientIP);
+  const arrIP= clientIP?.split(",").map(ip => ip.trim());
+  console.log(arrIP);
+  console.log(req.body);
+  const isAllowed = arrIP.some(ip => allowedList.includes(ip));
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
@@ -485,7 +488,14 @@ const webHook = (req, res) => {
     nonCardProviderId = null,
     payableCode = "",
   } = req.body.data;
-  const isAllowed = allowedList.includes(clientIP);
+  // const isAllowed = allowedList.includes(clientIP);
+  const arrIP= clientIP?.split(",").map(ip => ip.trim());
+
+  console.log(req.body);
+  const isAllowed = arrIP.some(ip => allowedList.includes(ip));
+  console.log(isAllowed);
+  console.log(arrIP);
+
   if (isAllowed) {
     if (event === "TRANSACTION.COMPLETED") {
       db.sequelize
@@ -505,18 +515,7 @@ const webHook = (req, res) => {
           console.error(err);
         });
     }
-  } else {
-    db.sequelize
-      .query(
-        `UPDATE tax_transactions SET status="saved" WHERE reference_number='${merchantReference}'`
-      )
-      .then((resp) => {
-        console.log("hoookkkkkkkkkkkkk1");
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }
+  } 
 };
 
 const interResponse = (req, res) => {
@@ -546,25 +545,25 @@ const interResponse = (req, res) => {
     cardNum = "",
     mac = "",
   } = req.body;
-  db.sequelize
-    .query(
-      `UPDATE tax_transactions 
-                      SET status=${
-                        ResponseCode === "00" ? "success" : "saved"
-                      }, interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
+  if (ResponseCode === "00") {
+    db.sequelize
+      .query(
+        `UPDATE tax_transactions 
+                      SET  interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
                         "YYYY-MM-DD"
                       )}", modeOfPayment="${Channel}", 
                     paymentAmount="${Amount / 100}"
                     WHERE reference_number="${MerchantReference}"`
-    )
-    .then((resp) => {
-      res.json({ success: true, data: resp });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.json({ success: false, msg: "Error occurred" });
-    });
+      )
+      .then((resp) => {
+        res.json({ success: true, data: resp });
+      })
+      .catch((err) => {
+        console.error(err);
+        res.json({ success: false, msg: "Error occurred" });
+      });
+  }
 };
 module.exports = {
   webHook,
