@@ -346,7 +346,7 @@ const handleInvoice = (req, res) => {
                     SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                     paymentdate="${moment(paymentDate).format(
                       "YYYY-MM-DD"
-                    )}", modeOfPayment="${modeOfPayment}", 
+                    )}", modeOfPayment="${modeOfPayment}",  
                   paymentAmount="${amountPaid}"
                   WHERE reference_number="${referenceNo}"`)
                       );
