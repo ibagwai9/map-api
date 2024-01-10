@@ -22,9 +22,30 @@ const getInvoiceDetails = async (refNo) => {
 const getInvoiceDetailsLGA = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,b.org_name,b.account_type,  b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description ,a.tax_payer, b.name FROM tax_transactions a 
-      JOIN tax_payers b on a.user_id=b.taxID
-       where   a.reference_number='${refNo}' and   a.status NOT  IN ('paid', 'success') `
+      `
+      SELECT 
+      a.user_id,
+      b.org_name,
+      b.account_type,
+      b.email,
+      b.phone,
+      a.reference_number,
+      a.item_code,
+      a.dr AS dr,
+      a.cr AS cr,
+      a.description,
+      a.tax_payer,
+      b.name
+  FROM
+      kirmasDB.tax_transactions a
+  JOIN
+      kirmasDB.tax_payers b
+  ON
+      a.user_id = b.taxID
+      AND (a.tax_payer = b.name OR a.tax_payer = b.org_name)
+  WHERE
+  a.reference_number='${refNo}' and
+  a.status NOT  IN ('paid', 'success') `
     );
     console.log(reqData[0]);
     return reqData[0];
