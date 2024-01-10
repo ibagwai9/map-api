@@ -4,7 +4,6 @@ const moment = require("moment");
 
 const crypto = require("crypto");
 const axios = require("axios");
-const { error } = require("console");
 require("dotenv").config();
 const getInvoiceDetails = async (refNo) => {
   try {
@@ -26,19 +25,29 @@ const getInvoiceDetailsLGA = async (refNo) => {
       `
       SELECT 
       a.user_id,
-      a.phone,
+      b.org_name,
+      b.account_type,
+      b.email,
+      b.phone,
       a.reference_number,
       a.item_code,
       a.dr AS dr,
       a.cr AS cr,
       a.description,
       a.tax_payer,
-      a.tax_payer as name
+      b.name
   FROM
       kirmasDB.tax_transactions a
+  JOIN
+      kirmasDB.tax_payers b
+  ON
+      a.user_id = b.taxID
+      AND (a.tax_payer = b.name OR a.tax_payer = b.org_name)
   WHERE
   a.reference_number='${refNo}' and
-  a.status NOT  IN ('paid', 'success') `
+  a.status NOT  IN ('paid', 'success')
+      
+       `
     );
     console.log(reqData[0]);
     return reqData[0];
@@ -317,7 +326,7 @@ async function getQRCode(req, res) {
   const refno = req.query.ref_no || "";
   try {
     const payment = await db.sequelize.query(
-      `SELECT * FROM tax_transactions WHERE dr>0 AND reference_number =${refno} LIMIT 1;`
+      `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
     );
 
     const transaction_date =
@@ -329,21 +338,21 @@ async function getQRCode(req, res) {
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
     console.log(payment);
     console.log(payment[0][0])
-    // const user = await db.User.findOne({
-    //   where: { taxID: payment[0][0]?.user_id },
-    // });
+    const user = await db.User.findOne({
+      where: { taxID: payment[0][0]?.user_id },
+    });
 
-    const name = payment[0][0].tax_payer || "Invalid";
-    const phoneNumber = payment[0][0].phone || "Invalid";
-    const amount = payment[0][0].dr || "Invalid";
+    const name = user.dataValues.name || "Invslid";
+    const phoneNumber = user.dataValues.phone || "Invalid";
+    console.log({ user: user.dataValues.id });
 
     const url = `https://kirmas.kn.gov.ng/payment-${status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
       }?ref_no=${refno}`;
     // Create a payload string with the payer's information
-    const payload = `Amount: ${amount}\nDate:${moment(transaction_date).format(
+    const payload = `Date:${moment(transaction_date).format(
       "DD/MM/YYYY"
     )}\nName: ${name}\nPhone: ${phoneNumber}\n${status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-      } ID: ${refno}`;
+      } ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -630,28 +639,11 @@ const validatePayment = async (req, res) => {
   }
 };
 
-const authTrx = (req, res) => {
-  const { query_type = null, id = null, ref_no = null, remark = null, remarked_by = null, staff_id = null, } = req.body
-  db.sequelize.query(`CALL payment_remarks(query_type,id,ref_no,remark,remarked_by,staff_id)`, {
-    replacements: {
-      query_type, id, ref_no, remark, remarked_by, staff_id,
-    }
-  })
-    .then(data => {
-      res.json({ success: true, data })
-    })
-    .catch(error => {
-      console.error(error);
-      res.status(500).json({ status: false, msg: 'Error occured in procedure call' })
-    })
-}
-
 module.exports = {
   validatePayment,
   getQRCode,
   getTrx,
   postTrx,
-  authTrx,
   getInvoiceDetails,
   getInvoiceDetailsLGA,
   getPaymentSummary,
