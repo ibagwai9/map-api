@@ -26,24 +26,16 @@ const getInvoiceDetailsLGA = async (refNo) => {
       `
       SELECT 
       a.user_id,
-      b.org_name,
-      b.account_type,
-      b.email,
-      b.phone,
+      a.phone,
       a.reference_number,
       a.item_code,
       a.dr AS dr,
       a.cr AS cr,
       a.description,
       a.tax_payer,
-      b.name
+      a.tax_payer as name
   FROM
       kirmasDB.tax_transactions a
-  JOIN
-      kirmasDB.tax_payers b
-  ON
-      a.user_id = b.taxID
-      AND (a.tax_payer = b.name OR a.tax_payer = b.org_name)
   WHERE
   a.reference_number='${refNo}' and
   a.status NOT  IN ('paid', 'success') `
