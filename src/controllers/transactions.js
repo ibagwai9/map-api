@@ -76,6 +76,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_type,
         :status,
         :invoice_status,
+        :tracking_status,
         :reference_number,
         :department,
         :service_category,
@@ -93,7 +94,7 @@ const callHandleTaxTransaction = async (replacements) => {
     return results;
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    throw new Error("Error executing stored procedure: " + JSON.stringify(err));
+    // throw new Error("Error executing stored procedure: " + JSON.stringify(err));
   }
 };
 
@@ -141,7 +142,7 @@ const postTrx = async (req, res) => {
     end_date = null,
     tax_station = null,
     tax_payer = "",
-    invoice_status = ""
+    invoice_status = "",
   } = req.body;
 
   const commonRefNo = generateCommonRefNo(tax_list[0].sector);
@@ -193,7 +194,8 @@ const postTrx = async (req, res) => {
       mda_val,
       start_date,
       end_date,
-      invoice_status
+      invoice_status,
+      // tracking_status,
     };
 
     try {
@@ -271,7 +273,8 @@ const getTrx = async (req, res) => {
     tax_station = null,
     mda_var = null,
     mda_val = null,
-    invoice_status = ''
+    invoice_status = "",
+    tracking_status = "",
   } = req.query;
 
   const params = {
@@ -304,7 +307,8 @@ const getTrx = async (req, res) => {
     mda_var,
     mda_val,
     sector,
-    invoice_status
+    invoice_status,
+    tracking_status,
   };
 
   try {
@@ -337,7 +341,7 @@ async function getQRCode(req, res) {
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
     console.log(payment);
-    console.log(payment[0][0])
+    console.log(payment[0][0]);
     const user = await db.User.findOne({
       where: { taxID: payment[0][0]?.user_id },
     });
@@ -346,13 +350,15 @@ async function getQRCode(req, res) {
     const phoneNumber = user.dataValues.phone || "Invalid";
     console.log({ user: user.dataValues.id });
 
-    const url = `https://kirmas.kn.gov.ng/payment-${status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
-      }?ref_no=${refno}`;
+    const url = `https://kirmas.kn.gov.ng/payment-${
+      status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
+    }?ref_no=${refno}`;
     // Create a payload string with the payer's information
     const payload = `Date:${moment(transaction_date).format(
       "DD/MM/YYYY"
-    )}\nName: ${name}\nPhone: ${phoneNumber}\n${status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-      } ID: ${refno}\nUrl: ${url}`;
+    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
+      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
+    } ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -593,7 +599,8 @@ const validatePayment = async (req, res) => {
     while (currentRetry < maxRetries) {
       try {
         const response = await axios.get(
-          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${amount * 100
+          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${
+            amount * 100
           }`,
           {
             headers: {
