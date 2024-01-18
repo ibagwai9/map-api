@@ -65,6 +65,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_type,
         :status,
         :invoice_status,
+        :tracking_status,
         :reference_number,
         :department,
         :service_category,
@@ -82,7 +83,7 @@ const callHandleTaxTransaction = async (replacements) => {
     return results;
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    throw new Error("Error executing stored procedure: " + JSON.stringify(err));
+    // throw new Error("Error executing stored procedure: " + JSON.stringify(err));
   }
 };
 
@@ -183,6 +184,7 @@ const postTrx = async (req, res) => {
       start_date,
       end_date,
       invoice_status,
+      // tracking_status,
     };
 
     try {
@@ -261,6 +263,7 @@ const getTrx = async (req, res) => {
     mda_var = null,
     mda_val = null,
     invoice_status = "",
+    tracking_status = "",
   } = req.query;
 
   const params = {
@@ -294,6 +297,7 @@ const getTrx = async (req, res) => {
     mda_val,
     sector,
     invoice_status,
+    tracking_status,
   };
 
   try {
