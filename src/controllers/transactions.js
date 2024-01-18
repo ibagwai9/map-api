@@ -4,7 +4,6 @@ const moment = require("moment");
 
 const crypto = require("crypto");
 const axios = require("axios");
-const { error } = require("console");
 require("dotenv").config();
 const getInvoiceDetails = async (refNo) => {
   try {
@@ -23,9 +22,32 @@ const getInvoiceDetails = async (refNo) => {
 const getInvoiceDetailsLGA = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `SELECT a.user_id,b.org_name,b.account_type,  b.email, b.phone, a.reference_number, a.item_code, a.dr AS dr,a.cr AS cr,a.description ,a.tax_payer, b.name FROM tax_transactions a 
-      JOIN tax_payers b on a.user_id=b.taxID
-       where   a.reference_number='${refNo}' and   a.status NOT  IN ('paid', 'success') `
+      `
+      SELECT 
+      a.user_id,
+      b.org_name,
+      b.account_type,
+      b.email,
+      b.phone,
+      a.reference_number,
+      a.item_code,
+      a.dr AS dr,
+      a.cr AS cr,
+      a.description,
+      a.tax_payer,
+      b.name
+  FROM
+      kirmasDB.tax_transactions a
+  JOIN
+      kirmasDB.tax_payers b
+  ON
+      a.user_id = b.taxID
+      AND (a.tax_payer = b.name OR a.tax_payer = b.org_name)
+  WHERE
+  a.reference_number='${refNo}' and
+  a.status NOT  IN ('paid', 'success')
+      
+       `
     );
     console.log(reqData[0]);
     return reqData[0];
@@ -54,6 +76,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_type,
         :status,
         :invoice_status,
+        :tracking_status,
         :reference_number,
         :department,
         :service_category,
@@ -71,7 +94,7 @@ const callHandleTaxTransaction = async (replacements) => {
     return results;
   } catch (err) {
     console.error("Error executing stored procedure:", err);
-    throw new Error("Error executing stored procedure: " + JSON.stringify(err));
+    // throw new Error("Error executing stored procedure: " + JSON.stringify(err));
   }
 };
 
@@ -119,7 +142,7 @@ const postTrx = async (req, res) => {
     end_date = null,
     tax_station = null,
     tax_payer = "",
-    invoice_status = ""
+    invoice_status = "",
   } = req.body;
 
   const commonRefNo = generateCommonRefNo(tax_list[0].sector);
@@ -171,7 +194,8 @@ const postTrx = async (req, res) => {
       mda_val,
       start_date,
       end_date,
-      invoice_status
+      invoice_status,
+      // tracking_status,
     };
 
     try {
@@ -249,7 +273,8 @@ const getTrx = async (req, res) => {
     tax_station = null,
     mda_var = null,
     mda_val = null,
-    invoice_status = ''
+    invoice_status = "",
+    tracking_status = "",
   } = req.query;
 
   const params = {
@@ -282,7 +307,8 @@ const getTrx = async (req, res) => {
     mda_var,
     mda_val,
     sector,
-    invoice_status
+    invoice_status,
+    tracking_status,
   };
 
   try {
@@ -304,7 +330,7 @@ async function getQRCode(req, res) {
   const refno = req.query.ref_no || "";
   try {
     const payment = await db.sequelize.query(
-      `SELECT * FROM tax_transactions WHERE dr>0 AND reference_number =${refno} LIMIT 1;`
+      `SELECT * FROM tax_transactions WHERE reference_number =${refno} LIMIT 1;`
     );
 
     const transaction_date =
@@ -315,22 +341,24 @@ async function getQRCode(req, res) {
     const status =
       payment[0] && payment[0].length ? payment[0][0].status : "Invalid";
     console.log(payment);
-    console.log(payment[0][0])
-    // const user = await db.User.findOne({
-    //   where: { taxID: payment[0][0]?.user_id },
-    // });
+    console.log(payment[0][0]);
+    const user = await db.User.findOne({
+      where: { taxID: payment[0][0]?.user_id },
+    });
 
-    const name = payment[0][0].tax_payer || "Invalid";
-    const phoneNumber = payment[0][0].phone || "Invalid";
-    const amount = payment[0][0].dr || "Invalid";
+    const name = user.dataValues.name || "Invslid";
+    const phoneNumber = user.dataValues.phone || "Invalid";
+    console.log({ user: user.dataValues.id });
 
-    const url = `https://kirmas.kn.gov.ng/payment-${status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
-      }?ref_no=${refno}`;
+    const url = `https://kirmas.kn.gov.ng/payment-${
+      status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
+    }?ref_no=${refno}`;
     // Create a payload string with the payer's information
-    const payload = `Amount: ${amount}\nDate:${moment(transaction_date).format(
+    const payload = `Date:${moment(transaction_date).format(
       "DD/MM/YYYY"
-    )}\nName: ${name}\nPhone: ${phoneNumber}\n${status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-      } ID: ${refno}`;
+    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
+      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
+    } ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -571,7 +599,8 @@ const validatePayment = async (req, res) => {
     while (currentRetry < maxRetries) {
       try {
         const response = await axios.get(
-          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${amount * 100
+          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${
+            amount * 100
           }`,
           {
             headers: {
@@ -617,28 +646,11 @@ const validatePayment = async (req, res) => {
   }
 };
 
-const authTrx = (req, res) => {
-  const { query_type = null, id = null, ref_no = null, remark = null, remarked_by = null, staff_id = null, } = req.body
-  db.sequelize.query(`CALL payment_remarks(query_type,id,ref_no,remark,remarked_by,staff_id)`, {
-    replacements: {
-      query_type, id, ref_no, remark, remarked_by, staff_id,
-    }
-  })
-    .then(data => {
-      res.json({ success: true, data })
-    })
-    .catch(error => {
-      console.error(error);
-      res.status(500).json({ status: false, msg: 'Error occured in procedure call' })
-    })
-}
-
 module.exports = {
   validatePayment,
   getQRCode,
   getTrx,
   postTrx,
-  authTrx,
   getInvoiceDetails,
   getInvoiceDetailsLGA,
   getPaymentSummary,

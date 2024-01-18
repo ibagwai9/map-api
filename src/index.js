@@ -98,6 +98,7 @@ require("./routes/Sector")(app);
 require("./routes/segment")(app);
 require("./routes/interswitch.js")(app);
 require("./routes/budget.js")(app);
+require("./routes/reciept_logs.js")(app);
 
 var server = app.listen(port, function () {
   var host = server.address().address;
