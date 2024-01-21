@@ -10,8 +10,8 @@ module.exports.reciept_logs = (req, res) => {
     staff_id = "",
     interswitch_ref_no = "",
     logId = "",
-    date_from = "",
-    date_to = "",
+    date_from = null,
+    date_to = null,
   } = req.body;
   console.log(req.body);
   const { query_type = "" } = req.query;
