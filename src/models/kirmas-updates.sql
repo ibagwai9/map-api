@@ -1,4 +1,4 @@
-DROP PROCEDURE IF EXISTS `print_report`;
+DROP PROCEDURE IF EXISTS `mda_queries`;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `mda_queries`$$
 
@@ -1418,6 +1418,632 @@ BEGIN
         INSERT INTO `tax_payers`(user_id, `name`, `username`, `email`, `office_email`, `role`, `bvn`, `tin`,`org_tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `office_phone`, `state`, `lga`, `ward`, `address`, `office_address`) 
 		VALUES (in_id, in_name, in_username, in_email, in_office_email, in_role, in_bvn, in_tin,  in_org_tin, in_tax_id, in_org_name, in_rc, in_account_type, in_phone,  in_office_phone, in_state, in_lga, in_ward, in_address,in_office_address);
 
+    END IF;
+END $$
+DELIMITER ;
+
+UPDATE  tax_transactions SET remark='KIRS ISSUED UPDATE STATUS AS PAID', status='PAID', dateSettled='2024-01-04', paymentdate='2024-01-04', logId=(LPAD(FLOOR(RAND() * 100000000), 8, '0')) where  
+ reference_number IN  (112231207124364,112231212033780,112231213110763,112231213105883,112231129075126,112231212012551,112231212095178,112231211102997,112231212125667,11223120501543,112231205015464,11223120501410,112231208100690,112231208105817,112231208091981,112231206084912,112231208124404,112231128112772,112231128112806,112231201103512,112231221021771,112231221020426,112231228113135,112231228113389,112231228114552,112231228111194,112231201024795,112231221014299,112231128010278,112231128110154,112231128105232,112231128115703,112231128020780,112231128115217,112231128115458,11223112801231,112231128120509,112231128115247,112231128115835,2310170247561,112231128021361,112231128012867,112231129093413,112231128021600,112231128022407,112231128011594,112231128024687,112231128023745,11223112802288,112231128023204,112231128023390,112231128024320,112231128014418,112231128113173,112231128022947,112231128053296,112231128052698,11223112810548,112231128032936,112231128015529,112231128022283,112231128015473,112231128020728,112231128110506,112231128114863,112231128114342,112231128114870,112231128041365,112231128104209,112231128015512,112231129010403,112231128122531,11223111010051,11223111010027,11223111002019,112231207080267,11223121912318,112231219122410,112231219091763,112231128043955,11223112811398,112231128113926,112231128112905,11223112810162,112231128081938,112231128105346,112231128114795,112231128111941,112231128113246,112231128114786,112231128095262,112231128094759,112231128095728,112231128124965,112231128095927,112231128095525,112231128094355,112231128112258,112231128094598,112231128094195,224231128115741,224231128114809,224231128013417,112231227110109,112231128014805,112231204104361,11223110111253,112231128100399,112231128101591,11223110108044,11223110108347,11223110108549,11223103102150,112231128101628,112231128103248,11223110108026,11223110108471,112231201031652,112231129103951,112231128020917,11223110109084,11223103111431,11223110110133,112231129011857,112231128111426,112231211112165,112231211111841,112231213105303,112231215075105,112231215023284,112231219113361,112231219103270,112231219103846,112231219104619,112231219103830,11223120409397,112231204100308,112231204094819,112231214011337,11223120501543,112231205015464,1122312141237,11223121310432,112231215124598,112231205011844,11223111301299,112231128124866,112231128124645,112231208110928,112231212110819,112231212110644,112231128015983,112231128014665,112231128014805,112231204104361,11223110111253,112231128100399,112231128101591,11223110108044,11223110108347,11223110108549,11223103102150,112231128101628,112231128103248,11223110108026,11223110108471)
+
+DROP TABLE IF EXISTS `payment_remarks`;
+
+CREATE TABLE `payment_remarks` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `ref_no` varchar(20) NOT NULL,
+  `remark` varchar(200) NOT NULL,
+  `remarked_by` varchar(50) DEFAULT NULL,
+  `staff_id` int(8) NOT NULL,
+  `remarked_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `ref_no` (`ref_no`),
+  CONSTRAINT `payment_remarks_ibfk_1` FOREIGN KEY (`ref_no`) REFERENCES `tax_transactions` (`reference_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS  `payment_remarks` $$
+CREATE PROCEDURE payment_remarks 
+(   IN query_type VARCHAR(20),
+    IN in_id int(10),
+    IN in_ref_no int(20),
+    IN in_remark varchar(200),
+    IN in_remarked_by varchar (50),
+    IN in_staff_id int(8) )
+
+BEGIN 
+
+IF query_type = 'create' THEN
+    INSERT INTO `payment_remarks`(`ref_no`, `remark`, `remark_by`, `staff_id`) 
+    VALUES ( in_ref_no, in_remark, in_remark_by, in_staff_id);
+
+ELSEIF query_type ='select' THEN
+    SELECT * FROM `payment_remarks` WHERE ref_no = in_ref_no;
+END IF;
+
+END $$
+
+
+CREATE DEFINER=`sanda_user`@`%` PROCEDURE `print_report`(
+    IN in_query_type VARCHAR(50), 
+    IN in_ref VARCHAR(50), 
+    IN in_user_id VARCHAR(50), 
+    IN `in_user_name` VARCHAR(50),
+    IN in_from DATE, 
+    IN in_to DATE , 
+    IN in_mda_code VARCHAR(50), 
+    IN in_sector VARCHAR(50),
+    IN `in_view` VARCHAR(50),
+    IN in_offset INT,
+    IN in_limit INT
+)
+BEGIN
+	DECLARE print_count, total_prints INT;
+	DECLARE total_rows, total_revenue DOUBLE;
+
+	IF in_query_type = 'print' THEN
+        CALL print_logs('insert', in_user_id, in_user_name, in_ref );
+		SELECT  (printed +1) INTO print_count FROM tax_transactions WHERE reference_number=in_ref  LIMIT 1;
+		IF print_count > 1 THEN
+        	UPDATE tax_transactions t SET t.printed = (t.printed+1) WHERE reference_number=in_ref;
+    	ELSE
+    		UPDATE tax_transactions t SET t.printed = (t.printed+1), printed_at = DATE(NOW()), printed_by=in_user_name WHERE reference_number=in_ref;
+    	END IF;
+    ELSEIF in_query_type = 'view-logs' THEN
+        SELECT p.*, t.description, t.tax_payer, t.dr as amount, t.status, (SELECT x.printed FROM tax_transactions x WHERE x.reference_number = in_ref LIMIT 1) AS printed, t.paymentdate
+        FROM tax_transactions t
+        LEFT JOIN print_logs p ON p.ref_no = t.reference_number
+        WHERE t.dr > 0 AND t.reference_number  = in_ref;
+    ELSEIF in_query_type = 'summary' THEN
+		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
+			WHERE printed > 0 AND DATE(printed_at) BETWEEN in_from AND in_to;
+	ELSEIF in_query_type = 'summary_by_user' THEN
+		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
+			WHERE printed > 0 AND printed_by=in_user_id AND DATE(printed_at) BETWEEN in_from AND in_to;
+	ELSEIF in_query_type = 'all_summary' then
+		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
+			WHERE printed > 0;
+	ELSEIF in_query_type = 'details-by-date' THEN
+
+        IF in_mda_code IS NOT NULL AND in_mda_code != '' THEN
+            -- Fetch paginated results with total rows
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT COUNT(*) INTO @total_prints
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT  
+                y.*,
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                @total_prints AS total_prints,
+                (SELECT SUM(x.dr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS dr 
+            FROM tax_transactions y 
+            WHERE y.printed > 0 AND y.logId IS NOT NULL AND FIND_IN_SET(y.sector, in_sector) > 0
+                AND DATE(y.printed_at) BETWEEN in_from AND in_to AND y.mda_code = in_mda_code
+            LIMIT in_offset, in_limit;
+
+        ELSE
+
+           -- Fetch  total rows
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT COUNT(*) INTO @total_prints
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+            -- Fetch paginated results with total rows
+            SELECT  
+                y.*,
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                @total_prints AS total_prints,
+                (SELECT SUM(x.dr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS dr 
+            FROM tax_transactions y 
+            WHERE y.printed > 0 AND y.logId IS NOT NULL AND FIND_IN_SET(y.sector, in_sector) > 0
+                AND DATE(y.printed_at) BETWEEN in_from AND in_to
+            LIMIT in_offset, in_limit;
+        END IF;
+        ELSEIF in_query_type = 'departmental-receipt-summary' THEN
+
+        IF in_mda_code IS NOT NULL AND in_mda_code != '' THEN
+            -- Fetch paginated results with total rows
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT COUNT(*) INTO @total_prints
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT  
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                @total_prints AS total_prints,
+                 SUM(x.dr)  AS total,
+                 COUNT(*)  AS total_printed,
+                  x.department,  x.mda_name,  x.sector, in_from  AS start_date, in_to AS end_date
+            FROM tax_transactions x 
+            WHERE x.printed > 0 AND x.logId IS NOT NULL AND FIND_IN_SET(x.sector, in_sector) > 0
+                AND DATE(x.printed_at) BETWEEN in_from AND in_to AND x.mda_code = in_mda_code
+            GROUP BY department, mda_name, sector;
+
+        ELSE
+
+           -- Fetch  total rows
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT COUNT(*) INTO @total_prints
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+            -- Fetch paginated results with total rows
+            SELECT  
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                @total_prints AS total_prints,
+                SUM(x.cr)  AS total,
+                 COUNT(*)  AS total_printed,
+                  x.department,  x.mda_name,   x.sector, in_from  AS start_date, in_to AS end_date
+            FROM tax_transactions x 
+            WHERE y.printed > 0 AND x.logId IS NOT NULL AND FIND_IN_SET(x.sector, in_sector) > 0
+                AND DATE(x.printed_at) BETWEEN in_from AND in_to 
+            GROUP BY department, mda_name, sector;
+        END IF;
+    ELSEIF in_query_type = 'items-receipt-summary' THEN
+
+        IF in_mda_code IS NOT NULL AND in_mda_code != '' THEN
+            -- Fetch paginated results with total rows
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT COUNT(*) INTO @total_prints
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+             AND mda_code = in_mda_code
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT  
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                @total_prints AS total_prints,
+                SUM(x.dr) AS total,
+                  x.department,  x.mda_name,  x.`description`,   x.sector, in_from  AS start_date, in_to AS end_date
+            FROM tax_transactions x 
+            WHERE x.printed > 0 AND x.logId IS NOT NULL AND FIND_IN_SET(x.sector, in_sector) > 0
+                AND DATE(x.printed_at) BETWEEN in_from AND in_to AND x.mda_code = in_mda_code
+            GROUP BY  mda_name, `description`,  sector;
+
+        ELSE
+
+           -- Fetch  total rows
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+            SELECT COUNT(*) INTO @total_prints
+            FROM tax_transactions
+            WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(printed_at) BETWEEN in_from AND in_to;
+            -- Fetch paginated results with total rows
+            SELECT  
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                @total_prints AS total_prints,
+                SUM(x.cr)  AS total,
+                  x.department,  x.mda_name,  x.`description`,   x.sector, in_from  AS start_date, in_to AS end_date
+            FROM tax_transactions x 
+            WHERE x.printed > 0 AND x.logId IS NOT NULL AND FIND_IN_SET(x.sector, in_sector) > 0
+                AND DATE(x.printed_at) BETWEEN in_from AND in_to 
+            GROUP BY  mda_name, `description`,  sector;
+        END IF;
+    ELSEIF in_query_type = 'total-by-date' THEN 
+        SELECT SUM(dr) AS total_revenue FROM tax_transactions
+                WHERE status !='saved' AND logId IS NOT NULL AND printed > 0 AND FIND_IN_SET(sector, in_sector) > 0 AND DATE(printed_at) BETWEEN in_from AND in_to;
+	ELSEIF in_query_type = 'details-by-date-and-user' THEN 
+		
+        -- Fetch paginated results with total rows
+        SELECT COUNT(*) INTO @total_rows
+        FROM tax_transactions
+        WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+            AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+        SELECT SUM(dr) INTO @total_revenue
+        FROM tax_transactions
+        WHERE printed > 0 AND logId IS NOT NULL AND FIND_IN_SET(sector, in_sector) > 0
+            AND DATE(printed_at) BETWEEN in_from AND in_to;
+
+           SELECT  
+                y.*,
+                @total_rows AS total_rows,
+                @total_revenue AS total_revenue,
+                (SELECT SUM(x.dr) FROM tax_transactions x WHERE x.reference_number = y.reference_number) AS dr 
+            FROM tax_transactions y 
+            WHERE y.printed > 0 AND y.printed_by = in_user_name AND y.logId IS NOT NULL AND FIND_IN_SET(y.sector, in_sector) > 0
+                AND DATE(y.printed_at) BETWEEN in_from AND in_to
+            GROUP BY y.reference_number 
+            LIMIT in_offset, in_limit;
+	ELSEIF in_query_type = 'total-by-date-and-user' THEN 
+        SELECT SUM(dr) AS total_revenue FROM tax_transactions
+                WHERE status !='saved' AND logId IS NOT NULL AND printed > 0 AND FIND_IN_SET(sector, in_sector) > 0 AND printed_by = in_user_name AND DATE(printed_at) BETWEEN in_from AND in_to;
+	ELSEIF in_query_type = 'count-receipt' THEN  
+        SELECT COUNT(*) as row_counts FROM tax_transactions 
+        WHERE printed > 0 
+        AND FIND_IN_SET(sector, in_sector) > 0
+        AND DATE(created_at) BETWEEN in_from AND in_to;
+    ELSEIF in_query_type = 'by_user' THEN
+		SELECT COUNT(distinct reference_number) as counts FROM tax_transactions 
+			WHERE printed > 0 AND printed_by = in_user_id AND DATE(created_at) BETWEEN in_from AND in_to;
+        ELSEIF in_query_type = 'view-summary' THEN 
+            IF in_mda_code IS NOT NULL THEN
+                SELECT department, mda_name, sector,COUNT(*)  AS total_printed, SUM(dr) AS total, in_from  AS start_date, in_to AS end_date
+                FROM tax_transactions
+                WHERE dr > 0
+                AND status IN ('paid', 'success')
+                AND mda_code = in_mda_code
+                AND DATE(created_at) BETWEEN in_from AND in_to
+                GROUP BY department, sector;
+           ELSE
+                SELECT department, mda_name, sector,COUNT(*)  AS total_printed, SUM(dr) AS total, in_from  AS start_date, in_to AS end_date
+                FROM tax_transactions
+                WHERE dr > 0
+                AND status IN ('paid', 'success')
+                AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(created_at) BETWEEN in_from AND in_to
+                GROUP BY department, sector;
+           END IF;
+ ELSEIF in_query_type = 'view-items-summary' THEN 
+            IF in_mda_code IS NOT NULL THEN
+                SELECT COUNT(*) INTO @total_rows
+                FROM tax_transactions 
+                WHERE  cr > 0
+                AND status IN ('paid', 'success')
+                AND mda_code = in_mda_code
+                AND DATE(created_at) BETWEEN  in_from AND in_to;
+
+                SELECT @total_rows AS total_rows,
+                  x.department, x.sector, x.mda_name, x.`description`, in_from  AS start_date, in_to AS end_date, SUM(x.cr) AS total FROM tax_transactions x
+                WHERE x.cr > 0
+                AND x.status IN ('paid', 'success')
+                AND x.mda_code = in_mda_code
+                AND DATE(x.created_at) BETWEEN  in_from AND in_to
+                GROUP BY department, mda_name, `description`,  sector;
+            ELSE
+                  SELECT COUNT(*) INTO @total_rows
+                FROM tax_transactions  
+                WHERE cr > 0
+                AND status IN ('paid', 'success')
+                AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(created_at) BETWEEN  in_from AND in_to;
+
+                SELECT x.department, x.sector, x.mda_name, x.`description`, in_from  AS start_date, in_to AS end_date, SUM(x.cr) AS total FROM tax_transactions x
+                WHERE x.cr > 0
+                AND x.status IN ('paid', 'success')
+                AND FIND_IN_SET(x.sector, in_sector) > 0
+                AND DATE(x.created_at) BETWEEN  in_from AND in_to
+                GROUP BY department, mda_name, `description`,  sector;
+            END IF;
+    ELSEIF in_query_type = 'view-history' THEN 
+        IF in_view ='all' THEN
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+            
+            SELECT x.*, @total_rows AS total_rows,
+                 @total_revenue AS total_revenue
+
+             FROM tax_transactions x WHERE x.dr>0 AND  DATE(x.created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(x.sector, in_sector) > 0   
+                LIMIT in_offset, in_limit;
+
+        ELSEIF in_view ='invoice' THEN
+        
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status ='saved'
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions 
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status ='saved'
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+            
+            SELECT x.*, @total_rows AS total_rows,
+                 @total_revenue AS total_revenue
+            FROM tax_transactions x WHERE x.dr>0 AND  DATE(x.created_at) BETWEEN in_from AND in_to AND x.status ='saved' AND  FIND_IN_SET(x.sector, in_sector) > 0
+            LIMIT in_offset, in_limit;
+        ELSEIF in_view ='receipt' THEN
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+            AND DATE(created_at) BETWEEN in_from AND in_to;
+
+            SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+            AND DATE(created_at) BETWEEN in_from AND in_to;
+            
+            SELECT x.*, @total_rows AS total_rows,
+                 @total_revenue AS total_revenue
+                 FROM tax_transactions x WHERE x.dr>0 AND x.status IN('paid','success')  AND   FIND_IN_SET(x.sector, in_sector) > 0 AND   DATE(x.created_at) BETWEEN in_from AND in_to 
+             LIMIT in_offset, in_limit;
+        END IF;
+    ELSEIF in_query_type = 'search-history' THEN 
+            SELECT * FROM tax_transactions WHERE dr>0 AND  DATE(created_at) BETWEEN in_from AND in_to AND  FIND_IN_SET(sector, in_sector) > 0   
+            AND reference_number LIKE CONCAT('%',in_ref,'%')
+            LIMIT in_offset, in_limit;
+    ELSEIF in_query_type = 'count-history' THEN  
+        IF in_view ='all' THEN
+         SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+
+        SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+            
+            SELECT x.*, @total_rows AS total_rows,
+                 @total_revenue AS total_revenue 
+             FROM tax_transactions x WHERE x.dr>0 AND  DATE(x.dateSettled) BETWEEN in_from AND in_to AND  FIND_IN_SET(x.sector, in_sector) > 0;          
+        ELSEIF in_view ='invoice' THEN
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+
+        SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+            
+            SELECT x.*, @total_rows AS total_rows,
+                 @total_revenue AS total_revenue 
+             FROM tax_transactions x WHERE x.dr>0 AND  DATE(x.dateSettled) BETWEEN in_from AND in_to AND x.status ='saved' AND  FIND_IN_SET(x.sector, in_sector) > 0;
+         ELSEIF in_view ='receipt' THEN
+            SELECT COUNT(*) INTO @total_rows
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+
+        SELECT SUM(dr) INTO @total_revenue
+            FROM tax_transactions
+            WHERE  dr>0 AND FIND_IN_SET(sector, in_sector) > 0
+            AND status IN('paid','success')
+                AND DATE(created_at) BETWEEN in_from AND in_to;
+            
+            SELECT x.*, @total_rows AS total_rows,
+                 @total_revenue AS total_revenue 
+             FROM tax_transactions x WHERE x.dr>0 AND x.status IN('paid','success')  AND   FIND_IN_SET(x.sector, in_sector) > 0 AND   DATE(x.dateSettled) BETWEEN in_from AND in_to ;
+        END IF;
+    END IF;
+END
+
+
+
+
+
+ALTER TABLE `tax_payers` ADD `nin` INT NULL DEFAULT NULL AFTER `bvn`;
+
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS user_accounts $$
+CREATE PROCEDURE `user_accounts`(
+    IN `query_type` VARCHAR(20), 
+    IN `in_id` VARCHAR(255), 
+    IN `in_name` VARCHAR(255), 
+    IN `in_username` VARCHAR(255), 
+    IN `in_email` VARCHAR(255), 
+    IN `in_office_email` VARCHAR(255), 
+    IN `in_password` VARCHAR(255), 
+    IN `in_role` VARCHAR(255), 
+    IN `in_bvn` VARCHAR(11), 
+    IN `in_tin` VARCHAR(11), 
+    IN `in_org_tin` VARCHAR(11), 
+    IN `in_org_name` VARCHAR(200), 
+    IN `in_rc` VARCHAR(11), 
+    IN `in_account_type` VARCHAR(20), 
+    IN `in_phone` VARCHAR(15), 
+    IN `in_office_phone` VARCHAR(15), 
+    IN `in_state` VARCHAR(20), 
+    IN `in_lga` VARCHAR(100), 
+    IN `in_address` VARCHAR(200), 
+    IN `in_office_address` VARCHAR(200), 
+    IN `in_mda_name` VARCHAR(150), 
+    IN `in_mda_code` VARCHAR(150), 
+    IN `in_department` VARCHAR(150), 
+    IN `in_accessTo` VARCHAR(300), 
+    IN `in_rank` VARCHAR(100), 
+    IN `in_status` VARCHAR(20), 
+    IN `in_tax_id` VARCHAR(20),
+    IN `in_sector` VARCHAR(20),
+    IN `in_ward` VARCHAR(20),
+    IN `in_limit` INT(10),
+    IN `in_offset` INT(10))
+BEGIN
+  
+    DECLARE Tax_ID, ins_user_id INT DEFAULT NULL;
+    DECLARE reord_exists, total_rows INT;   
+
+    IF query_type = 'insert' THEN
+		# CALL in_number_generator('select', NULL, 'application_number', NULL, @Tax_ID);
+        SELECT next_code + 1 INTO Tax_ID FROM number_generator WHERE description='application_number';
+        
+        INSERT INTO users (name, username, email, password, role,account_type, phone, accessTo, mda_name, mda_code, department, `rank`,`status`, TaxID)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department,in_rank,in_status, Tax_ID); 
+        SET ins_user_id = LAST_INSERT_ID();
+        
+		IF in_account_type = 'individual' OR in_account_type = 'org' THEN
+			INSERT INTO `tax_payers`(ward,user_id, `name`, `username`, `email`, `office_email`, `role`, `bvn`, `tin`,`org_tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `office_phone`, `state`, `lga`, `address`, `office_address`) 
+			VALUES (in_ward,ins_user_id, in_name, in_username, in_email, in_office_email, in_role, in_bvn, in_tin,  in_org_tin, Tax_ID, in_org_name, in_rc, in_account_type, in_phone,  in_office_phone, in_state, in_lga, in_address,in_office_address);
+
+		END IF;
+        
+        UPDATE number_generator SET `next_code` = Tax_ID WHERE description='application_number';
+		# CALL in_number_generator('update', NULL, 'application_number', @Tax_ID, @void);
+		# UPDATE users SET taxID = @Tax_ID WHERE id = ins_user_id;
+		# SELECT  @Tax_ID as taxID;
+
+    ELSEIF query_type='create-admin' THEN
+		SELECT next_code + 1 INTO Tax_ID FROM number_generator WHERE description='application_number';
+       INSERT INTO users (name, username, email,  password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID, `rank`,sector)
+        VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, Tax_ID, in_rank,in_sector); 
+        UPDATE number_generator SET `next_code` = Tax_ID WHERE description='application_number';
+        
+    ELSEIF  query_type = 'update-admin' THEN
+        -- Update columns based on input parameters, maintaining initial values if not provided
+        UPDATE users
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            password = IFNULL(in_password, password),
+            role = IFNULL(in_role, role),
+            account_type = IFNULL(in_account_type, account_type),
+            phone = IFNULL(in_phone, phone),
+            accessTo = IFNULL(in_accessTo, accessTo),
+            mda_name = IFNULL(in_mda_name, mda_name),
+            mda_code = IFNULL(in_mda_code, mda_code),
+            department = IFNULL(in_department, department),
+            sector= IFNULL(in_sector, sector)
+           
+        WHERE id = in_id;
+    ELSEIF query_type = 'update-taxpayer' THEN
+        -- Update columns based on input parameters, maintaining initial values if not provided
+        UPDATE tax_payers
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            role = IFNULL(in_role, role),
+            bvn = IFNULL(in_bvn, bvn),
+            org_tin = IFNULL(in_org_tin, org_tin),
+            tin = IFNULL(in_tin, tin),
+            org_name = IFNULL(in_org_name, org_name),
+            rc = IFNULL(in_rc, rc),
+            account_type = IFNULL(in_account_type, account_type),
+            phone = IFNULL(in_phone, phone),
+            state = IFNULL(in_state, state),
+            lga = IFNULL(in_lga, lga),
+            address = IFNULL(in_address, address),
+            office_address = IFNULL(in_office_address, office_address),
+             ward= IFNULL(in_ward, ward)
+          WHERE taxID = in_tax_id;
+         UPDATE users
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            phone = IFNULL(in_phone, phone),
+            mda_name = IFNULL(in_mda_name, mda_name),
+            mda_code = IFNULL(in_mda_code, mda_code),
+            department = IFNULL(in_department, department)
+          WHERE taxID = in_tax_id;
+        -- SELECT statement here if needed
+    ELSEIF query_type = 'update' THEN
+        -- Update columns based on input parameters, maintaining initial values if not provided
+        UPDATE users
+        SET 
+            name = IFNULL(in_name, name),
+            username = IFNULL(in_username, username),
+            email = IFNULL(in_email, email),
+            password = IFNULL(in_password, password),
+            role = IFNULL(in_role, role),
+            account_type = IFNULL(in_account_type, account_type),
+            phone = IFNULL(in_phone, phone)
+        WHERE id = in_id;
+    ELSEIF query_type = 'delete' THEN
+        DELETE FROM users WHERE id = in_id;
+    ELSEIF query_type = 'select-user' THEN
+        SELECT * FROM `tax_payers` u WHERE   u.phone LIKE CONCAT('%', in_id, '%') OR u.email LIKE CONCAT('%', in_id, '%'); 
+    ELSEIF query_type = 'select-tax-payer' THEN
+        SELECT * FROM `tax_payers` u 
+        WHERE u.taxID LIKE CONCAT('%', in_id, '%') 
+        OR u.nin LIKE CONCAT('%', in_id, '%') 
+        OR u.org_tin  LIKE CONCAT('%', in_id, '%')   
+        OR u.email  LIKE CONCAT('%', in_id, '%')  
+        OR u.office_email  LIKE CONCAT('%', in_id, '%')  
+        OR u.office_phone  LIKE CONCAT('%', in_id, '%')  
+        OR u.phone  LIKE CONCAT('%', in_id, '%'); 
+    ELSEIF query_type = 'add-account' THEN
+        INSERT INTO `tax_payers`(user_id, `name`, `username`, `email`, `office_email`, `role`, `bvn`, `tin`,`org_tin`, `taxID`, `org_name`, `rc`, `account_type`, `phone`, `office_phone`, `state`, `lga`, `ward`, `address`, `office_address`) 
+		VALUES (in_id, in_name, in_username, in_email, in_office_email, in_role, in_bvn, in_tin,  in_org_tin, in_tax_id, in_org_name, in_rc, in_account_type, in_phone,  in_office_phone, in_state, in_lga, in_ward, in_address,in_office_address);
+    ELSEIF query_type = 'select-tax-payers' THEN
+        IF in_account_type IS NOT NULL AND in_account_type !='' THEN
+            SELECT COUNT(*) INTO @total_rows   FROM `tax_payers` WHERE account_type=in_account_type LIMIT in_offset, in_limit ;
+            SELECT  x.*,  @total_rows as total_rows    FROM `tax_payers` x  WHERE x.account_type=in_account_type LIMIT in_offset, in_limit ;
+        ELSE
+            SELECT COUNT(*) INTO @total_rows   FROM `tax_payers` LIMIT in_offset, in_limit ;
+           
+            SELECT  x.*,  @total_rows as total_rows  FROM `tax_payers` x LIMIT in_offset, in_limit;
+        END IF;
     END IF;
 END $$
 DELIMITER ;

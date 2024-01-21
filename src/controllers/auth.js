@@ -38,6 +38,8 @@ module.exports.SignUp = (req, res) => {
     query_type = 'insert',
     taxID = null,
     user_id = null,
+    limit = 50,
+    offset = 0
   } = req.body;
   console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
@@ -69,7 +71,7 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, :user_id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:taxID,:sector,:ward)",
+                  "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
                   {
                     replacements: {
                       query_type,
@@ -101,7 +103,9 @@ module.exports.SignUp = (req, res) => {
                       rank,
                       status,
                       taxID,
-                      ward
+                      ward,
+                      limit,
+                      offset
                     },
                   }
                 )
@@ -423,12 +427,10 @@ module.exports.BudgetAppSignUp = (req, res) => {
 
   db.sequelize.query(`SELECT  max(id) + 1 as id from users `).then((result) => {
     let maxId = result[0][0].id;
-    //   console.log(maxId);
 
     db.sequelize
       .query(
-        `SELECT * from users
-   where username="${username}"`
+        `SELECT * from users where username="${username}"`
       )
       .then((resp) => {
         if (resp[0].length) {
@@ -445,7 +447,7 @@ module.exports.BudgetAppSignUp = (req, res) => {
               db.sequelize
                 .query(
                   `INSERT INTO users (id, username, password,fullname, role, accessTo, department ) VALUES 
-            ("${maxId}", "${username}","${newPass}","${fullname}","${role}","${accessTo}", "${department}")`
+                    ("${maxId}", "${username}","${newPass}","${fullname}","${role}","${accessTo}", "${department}")`
                 )
                 .then((results) => {
                   db.sequelize
@@ -869,7 +871,7 @@ module.exports.searchUser = (req, res) => {
   const { query_type = "select-user", id = "" } = req.query;
   db.sequelize
     .query(
-      "CALL user_accounts(:query_type, :id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank,:status,:sector,:ward)",
+      "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
       {
         replacements: {
           query_type,
@@ -900,7 +902,9 @@ module.exports.searchUser = (req, res) => {
           department: "",
           rank: "",
           status: "active",
-          ward: ""
+          ward: "",
+          limit: 50,
+          offset: 0
         },
       }
     )
@@ -989,7 +993,9 @@ module.exports.UpdateTaxPayer = (req, res) => {
     status = "active",
     taxID = null,
     sector = '',
-    ward = ''
+    ward = '',
+    limit = 50,
+    offset = 0
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -997,7 +1003,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward);",
+          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
           {
             replacements: {
               user_id,
@@ -1030,7 +1036,9 @@ module.exports.UpdateTaxPayer = (req, res) => {
               rank,
               status,
               taxID,
-              sector
+              sector,
+              limit,
+              offset
             },
           }
         )
