@@ -1862,3 +1862,6 @@ ELSE
   SET MESSAGE_TEXT = 'Invalid query_type';
 END IF;
 END
+
+
+
