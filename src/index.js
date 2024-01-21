@@ -20,7 +20,7 @@ const cron = require("node-cron");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger-doc.json");
 
-let port = process.env.PORT || 3589;
+let port = process.env.PORT || 45599;
 const { getTertiary } = require("./controllers/transactions");
 const { institutions } = require("./config/institutions");
 const { addHospitalData } = require("./controllers/transactions-hpt");
