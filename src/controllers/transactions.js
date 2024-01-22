@@ -65,7 +65,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_type,
         :status,
         :invoice_status,
-        :tracking_status,
+        "",
         :reference_number,
         :department,
         :service_category,
