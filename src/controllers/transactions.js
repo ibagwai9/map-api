@@ -22,32 +22,21 @@ const getInvoiceDetails = async (refNo) => {
 const getInvoiceDetailsLGA = async (refNo) => {
   try {
     const reqData = await db.sequelize.query(
-      `
-      SELECT 
-      a.user_id,
-      b.org_name,
-      b.account_type,
-      b.email,
-      b.phone,
-      a.reference_number,
-      a.item_code,
-      a.dr AS dr,
-      a.cr AS cr,
-      a.description,
-      a.tax_payer,
-      b.name
-  FROM
-      kirmasDB.tax_transactions a
-  JOIN
-      kirmasDB.tax_payers b
-  ON
-      a.user_id = b.taxID
-      AND (a.tax_payer = b.name OR a.tax_payer = b.org_name)
-  WHERE
-  a.reference_number='${refNo}' and
-  a.status NOT  IN ('paid', 'success')
-      
-       `
+      `SELECT 
+  a.user_id,
+  a.phone,
+  a.reference_number,
+  a.item_code,
+  a.dr AS dr,
+  a.cr AS cr,
+  a.description,
+  a.tax_payer,
+  a.tax_payer as name
+FROM
+  kirmasDB.tax_transactions a
+WHERE
+a.reference_number='${refNo}' and
+a.status NOT  IN ('paid', 'success')`
     );
     console.log(reqData[0]);
     return reqData[0];
@@ -76,7 +65,7 @@ const callHandleTaxTransaction = async (replacements) => {
         :transaction_type,
         :status,
         :invoice_status,
-        :tracking_status,
+        "",
         :reference_number,
         :department,
         :service_category,
@@ -195,7 +184,7 @@ const postTrx = async (req, res) => {
       start_date,
       end_date,
       invoice_status,
-      // tracking_status,
+      // tracking_status: tracking_status ? tracking_status : "",
     };
 
     try {
@@ -308,7 +297,7 @@ const getTrx = async (req, res) => {
     mda_val,
     sector,
     invoice_status,
-    tracking_status,
+    tracking_status: tracking_status ? tracking_status : "",
   };
 
   try {
@@ -322,6 +311,8 @@ const getTrx = async (req, res) => {
     });
   }
 };
+
+// klklklklklklkl
 
 async function getQRCode(req, res) {
   // Get the reference number from the query parameter
