@@ -30,7 +30,10 @@ module.exports.SignUp = (req, res) => {
     mda_name = "",
     mda_code = "",
     rank = "",
+    contact_phone = "",
+    // user_status = "approved",
   } = req.body;
+  console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
   db.sequelize.query(`SELECT max(id) + 1 as id from users `).then((result) => {
     let maxId = result[0][0].id;
@@ -38,7 +41,7 @@ module.exports.SignUp = (req, res) => {
     db.sequelize
       .query(
         `SELECT * from users
-     where email="${email}"`
+     where phone="${contact_phone}"`
       )
       .then((resp) => {
         console.log(resp[0]);
@@ -46,7 +49,7 @@ module.exports.SignUp = (req, res) => {
           console.log("user exist");
           return res
             .status(400)
-            .json({ success: false, msg: "email already registered" });
+            .json({ success: false, msg: "Phone Number already registered" });
         } else {
           bcrypt.genSalt(10, (err, salt) => {
             bcrypt.hash(password, salt, (err, hash) => {
@@ -72,7 +75,7 @@ module.exports.SignUp = (req, res) => {
                       company_name,
                       rc,
                       account_type,
-                      phone,
+                      phone: contact_phone,
                       office_phone,
                       state,
                       lga,
@@ -83,17 +86,21 @@ module.exports.SignUp = (req, res) => {
                       mda_code,
                       department,
                       rank,
+                      // user_status,
                     },
                   }
                 )
                 .then(
                   (userResp) => {
                     db.sequelize
-                      .query(`SELECT * from users where email=:email`, {
-                        replacements: {
-                          email,
-                        },
-                      })
+                      .query(
+                        `SELECT * from users where phone="${contact_phone}"`,
+                        {
+                          replacements: {
+                            phone,
+                          },
+                        }
+                      )
                       .then((resultR) => {
                         //   res.json({
                         //   status: "success",
@@ -199,8 +206,10 @@ module.exports.SignUp = (req, res) => {
                         // });
                       })
                       .catch((err) => {
-                        console.log(err);
-                        res.status(500).json({ success: false, msg: err });
+                        console.error("Database error:", err);
+                        res
+                          .status(500)
+                          .json({ success: false, msg: "Database error", err });
                       });
                   },
                   (_er) => {
@@ -225,6 +234,7 @@ module.exports.SignIn = async (req, res) => {
           { username },
           { email: username },
           { taxID: username },
+          { phone: username },
         ],
       },
     });
@@ -242,6 +252,7 @@ module.exports.SignIn = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        phone: user.username,
       };
       jwt.sign(
         payload,
@@ -769,6 +780,7 @@ module.exports.searchUser = (req, res) => {
           mda_code: "",
           department: "",
           rank: "",
+          // user_status: "approved",
         },
       }
     )
@@ -826,6 +838,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
     mda_code = "",
     department = "",
     rank = "",
+    // user_status = "approved",
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -862,6 +875,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               mda_code,
               department,
               rank,
+              // user_status,
             },
           }
         )
@@ -913,6 +927,24 @@ module.exports.getTaxPayer = (req, res) => {
             res.status(500).json({ error, msg: "Error occurred" });
           });
       }
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
+};
+
+module.exports.getTaxPayerInfo = (req, res) => {
+  const { user_id } = req.query;
+  db.sequelize
+    .query("SELECT * FROM tax_payers WHERE id=:user_id", {
+      replacements: {
+        user_id,
+      },
+    })
+    .then((resp) => {
+      const taxPayerData = resp[0][0];
+      res.json({ success: true, data: taxPayerData });
     })
     .catch((error) => {
       console.error({ error });
