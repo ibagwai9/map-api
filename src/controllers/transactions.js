@@ -184,7 +184,7 @@ const postTrx = async (req, res) => {
       start_date,
       end_date,
       invoice_status,
-      tracking_status:tracking_status?tracking_status:"",
+      // tracking_status: tracking_status ? tracking_status : "",
     };
 
     try {
@@ -297,7 +297,7 @@ const getTrx = async (req, res) => {
     mda_val,
     sector,
     invoice_status,
-    tracking_status,
+    tracking_status: tracking_status ? tracking_status : "",
   };
 
   try {
