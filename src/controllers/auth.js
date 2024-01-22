@@ -39,7 +39,8 @@ module.exports.SignUp = (req, res) => {
     taxID = null,
     user_id = null,
     limit = 50,
-    offset = 0
+    offset = 0,
+    name=''
   } = req.body;
   console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
@@ -105,7 +106,8 @@ module.exports.SignUp = (req, res) => {
                       taxID,
                       ward,
                       limit,
-                      offset
+                      offset,
+                      name
                     },
                   }
                 )
