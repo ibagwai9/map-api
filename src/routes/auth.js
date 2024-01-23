@@ -21,7 +21,7 @@ const {
 
 module.exports = (app) => {
   app.post("/sign_in", SignIn);
-  // app.post("/sign_up", SignUp);
+  app.post("/sign_up", SignUp);
   // /sign_up
   app.post("/treasury-app/sign_in", TreasuryAppSignIn);
   app.post("/treasury-app/sign_up", TreasuryAppSignUp);

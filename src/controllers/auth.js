@@ -79,7 +79,7 @@ module.exports.SignUp = (req, res) => {
                       user_id,
                       org_name,
                       sector,
-                      name: contact_name,
+                      name: name || contact_name,
                       username,
                       email,
                       org_email,
