@@ -72,14 +72,14 @@ module.exports.SignUp = (req, res) => {
 
               db.sequelize
                 .query(
-                  "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
+                  "CALL user_accounts(:query_type, :user_id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
                   {
                     replacements: {
                       query_type,
                       user_id,
                       org_name,
                       sector,
-                      name: name || contact_name,
+                      contact_name,
                       username,
                       email,
                       org_email,
@@ -1006,14 +1006,14 @@ module.exports.UpdateTaxPayer = (req, res) => {
       let newPass = hash;
       db.sequelize
         .query(
-          "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
+          "CALL user_accounts(:query_type, :user_id, :contact_name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
           {
             replacements: {
               user_id,
               query_type,
               sector,
               org_name,
-              name: name || contact_name,
+               contact_name,
               username,
               email,
               org_email,
