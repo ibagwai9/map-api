@@ -693,7 +693,7 @@ module.exports.verifyToken = async function (req, res) {
 
     const user = await db.User.findOne({
       where: {
-        [db.Sequelize.Op.or]: [
+        [db.Sequelize.Op.and]: [
           // { username },
           { phone: phone },
           { taxID: taxID },
