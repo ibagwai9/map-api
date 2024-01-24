@@ -3,25 +3,37 @@ const db = require("../models");
 const today = moment().format("YYYY-MM-DD");
 
 module.exports.postSector = (req, res) => {
-  const {
-    sector_code="",
-    sector_name="",
-    remark="",
-  } = req.body;
+  const { sector_code = "", sector_name = "", remark = "" } = req.body;
   console.log(req.body);
-  const {query_type=''} = req.query
+  const { query_type = "" } = req.query;
   db.sequelize
-    .query(
-      `call sector (:sector_code,:sector_name,:remark,:query_type)`,
-      {
-        replacements: {
-          sector_code,
-          sector_name,
-          remark,
-          query_type,
-        },
-      }
-    )
+    .query(`call sector (:sector_code,:sector_name,:remark,:query_type)`, {
+      replacements: {
+        sector_code,
+        sector_name,
+        remark,
+        query_type,
+      },
+    })
+    .then((results) => {
+      res.json({ success: true, results });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ success: false, err });
+    });
+};
+
+module.exports.getMdaList = (req, res) => {
+  db.sequelize
+    .query(`SELECT DISTINCT mda_name,mda_code FROM taxes where mda_name!='' `, {
+      replacements: {
+        sector_code,
+        sector_name,
+        remark,
+        query_type,
+      },
+    })
     .then((results) => {
       res.json({ success: true, results });
     })
@@ -36,7 +48,7 @@ module.exports.postSector = (req, res) => {
 //       sector_code,
 //       sector_name,
 //       remark,
-      
+
 //     } = req.body;
 //     console.log(req.body);
 //     const query_type='select'
