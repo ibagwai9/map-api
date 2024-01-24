@@ -265,6 +265,7 @@ module.exports.SignIn = async (req, res) => {
       where: username.length > 10 ? { phone: username } : { taxID: username },
     });
     let users=[user.dataValues]
+    // let users=[user.dataValues]
     if (!users.length) {
       return res.status(404).json({
         success: false,
