@@ -57,6 +57,7 @@ module.exports.postMdaList = (req, res) => {
 
 module.exports.verifyMda = (req, res) => {
   const { id } = req.query;
+  console.log(req.query)
   db.sequelize
     .query(`SELECT *  from mda_list where item_code="${id}"`)
     .then((results) => {
