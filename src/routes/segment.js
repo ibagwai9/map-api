@@ -1,4 +1,9 @@
-const { postContactUs, getTaxPayers, addDepartment } = require("../controllers/segment");
+const { getMdaList, postMdaList, verifyMda } = require("../controllers/sector");
+const {
+  postContactUs,
+  getTaxPayers,
+  addDepartment,
+} = require("../controllers/segment");
 const passport = require("passport");
 
 module.exports = (app) => {
@@ -12,12 +17,14 @@ module.exports = (app) => {
     passport.authenticate("jwt", { session: false }),
     postContactUs
   );
-  
+
+  app.get("/get-mda-list", getMdaList);
+  app.get("/verify-mda", verifyMda);
+  app.post("/post-mda-list", postMdaList);
+
   // app.post(
   //   "/add-departments",
   //   passport.authenticate("jwt", { session: false }),
   //   addDepartment
   // );
-  
-
 };
