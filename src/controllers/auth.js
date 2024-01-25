@@ -989,6 +989,9 @@ module.exports.UpdateTaxPayer = (req, res) => {
     ward = "",
     limit = 50,
     offset = 0,
+    contact_phone,
+    contact_email,
+    contact_address,
   } = req.body;
   bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
@@ -1005,7 +1008,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               org_name,
               contact_name,
               username,
-              email,
+              email: contact_email,
               org_email,
               password: password ? newPass : null,
               role,
@@ -1016,7 +1019,7 @@ module.exports.UpdateTaxPayer = (req, res) => {
               org_name,
               rc,
               account_type,
-              phone,
+              phone: contact_phone,
               office_phone,
               state,
               lga,
@@ -1106,3 +1109,5 @@ module.exports.getTaxPayerInfo = (req, res) => {
       res.status(500).json({ error, msg: "Error occurred" });
     });
 };
+
+
