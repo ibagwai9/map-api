@@ -1,4 +1,9 @@
-const { getMdaList, postMdaList, verifyMda } = require("../controllers/sector");
+const {
+  getMdaList,
+  postMdaList,
+  verifyMda,
+  getPaynowByreferenceNum,
+} = require("../controllers/sector");
 const {
   postContactUs,
   getTaxPayers,
@@ -21,6 +26,7 @@ module.exports = (app) => {
   app.get("/get-mda-list", getMdaList);
   app.get("/verify-mda", verifyMda);
   app.post("/post-mda-list", postMdaList);
+  app.get("/verify-paynow-by-reference", getPaynowByreferenceNum);
 
   // app.post(
   //   "/add-departments",
