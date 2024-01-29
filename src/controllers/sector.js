@@ -39,12 +39,20 @@ module.exports.getMdaList = (req, res) => {
 
 module.exports.postMdaList = (req, res) => {
   let id = uuid();
-  const { mda_name = "", mda_code = "" } = req.body;
+  const {
+    mda_name = "",
+    mda_code = "",
+    code = "",
+    date = "",
+    quantity = "",
+    recieptType,
+    type = "",
+  } = req.body;
   console.log(req.body);
   db.sequelize
     .query(
-      `INSERT INTO mda_list(mda_name,mda_code,item_code) 
-      VALUES ("${mda_name}", "${mda_code}","${id}")`
+      `INSERT INTO mda_list(mda_name,mda_code,item_code,code,date,quantity,reciept_type,type) 
+      VALUES ("${mda_name}", "${mda_code}","${id}","${code}","${date}","${quantity}","${recieptType}","${type}")`
     )
     .then((results) => {
       res.json({ success: true, results, id: id });
@@ -56,11 +64,30 @@ module.exports.postMdaList = (req, res) => {
 };
 
 module.exports.verifyMda = (req, res) => {
-  const { id } = req.query;
+  const { id = "" } = req.query;
   db.sequelize
-    .query(`SELECT *  from mda_list where item_code="${id}"`)
+    .query(`CALL getVerify(:id)`, {
+      replacements: {
+        id,
+      },
+    })
     .then((results) => {
       res.json({ success: true, results, id: id });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ success: false, err });
+    });
+};
+
+module.exports.getPaynowByreferenceNum = (req, res) => {
+  const { reference_number = "" } = req.query;
+  db.sequelize
+    .query(
+      `SELECT * FROM tax_transactions where reference_number = "${reference_number}"`
+    )
+    .then((results) => {
+      res.json({ success: true, results });
     })
     .catch((err) => {
       console.log(err);
