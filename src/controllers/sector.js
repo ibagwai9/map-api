@@ -27,7 +27,7 @@ module.exports.postSector = (req, res) => {
 
 module.exports.getMdaList = (req, res) => {
   db.sequelize
-    .query(`SELECT DISTINCT mda_name,mda_code FROM taxes where mda_name!='' `)
+    .query(`SELECT  mda_name,mda_code FROM verify_tab  `)
     .then((results) => {
       res.json({ success: true, results });
     })
