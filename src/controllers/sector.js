@@ -27,7 +27,7 @@ module.exports.postSector = (req, res) => {
 
 module.exports.getMdaList = (req, res) => {
   db.sequelize
-    .query(`SELECT  mda_name,mda_code FROM verify_tab  `)
+    .query(`SELECT  mda_name,mda_code FROM verify_tab `)
     .then((results) => {
       res.json({ success: true, results });
     })
@@ -87,10 +87,9 @@ module.exports.getPaynowByreferenceNum = (req, res) => {
       `SELECT * FROM tax_transactions where reference_number = "${reference_number}"`
     )
     .then((results) => {
-      res.json({ success: true, results });
+      res.json({ success: true, results:results[0] });
     })
     .catch((err) => {
-      console.log(err);
       res.status(500).json({ success: false, err });
     });
 };
