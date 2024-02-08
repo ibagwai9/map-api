@@ -132,13 +132,14 @@ module.exports.rejectReq = (req, res) => {
 };
 
 module.exports.getTransactionReq = (req, res) => {
-  const { tracking_status = "" } = req.query;
+  const { tracking_status = "",in_sector="" } = req.query;
   db.sequelize
     .query(
-      `SELECT  DISTINCT reference_number,ticket_id,interswitch_ref,tax_payer,GROUP_CONCAT(description," ") as description,dr,date_from,date_to,status FROM tax_transactions   where tracking_status=:tracking_status and  dr>0 GROUP BY reference_number`,
+      `SELECT  DISTINCT reference_number,ticket_id,interswitch_ref,tax_payer,GROUP_CONCAT(description," ") as description,dr,date_from,date_to,status FROM tax_transactions   where  FIND_IN_SET(sector, :in_sector) > 0 and tracking_status=:tracking_status and  dr>0 GROUP BY reference_number`,
       {
         replacements: {
           tracking_status,
+          in_sector
         },
       }
     )
