@@ -40,7 +40,7 @@ module.exports.SignUp = (req, res) => {
     user_id = null,
     limit = 50,
     offset = 0,
-    name=''
+    name = ''
   } = req.body;
   console.log(req.body, "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
 
@@ -69,7 +69,6 @@ module.exports.SignUp = (req, res) => {
             bcrypt.hash(password, salt, (err, hash) => {
               if (err) throw err;
               let newPass = hash;
-
               db.sequelize
                 .query(
                   "CALL user_accounts(:query_type, :user_id, :name, :username, :email,:org_email, :password, :role, :bvn, :tin,:org_tin, :org_name, :rc, :account_type, :phone,:office_phone, :state, :lga, :address,:office_address, :mda_name, :mda_code, :department, :accessTo,:rank, :status,:taxID,:sector,:ward,:limit,:offset);",
@@ -79,7 +78,7 @@ module.exports.SignUp = (req, res) => {
                       user_id,
                       org_name,
                       sector,
-                      name: contact_name,
+                      name: name || contact_name,
                       username,
                       email,
                       org_email,
@@ -113,121 +112,129 @@ module.exports.SignUp = (req, res) => {
                 )
                 .then(
                   (userResp) => {
-                    db.sequelize
-                      .query(
-                        `SELECT * from users where phone="${contact_phone}"`
-                      )
-                      .then((resultR) => {
-                        //   res.json({
-                        //   status: "success",
-                        //   result : result[]
-                        // });
-                        let user = resultR[0][0];
-                        console.log(user);
+                    if (query_type !== 'add-account') {
+                      db.sequelize
+                        .query(
+                          `SELECT * from users where phone="${contact_phone}"`
+                        )
+                        .then((resultR) => {
+                          //   res.json({
+                          //   status: "success",
+                          //   result : result[]
+                          // });
+                          let user = resultR[0][0];
+                          console.log(user);
 
-                        let payload = {
-                          id: user.id,
-                          username: user.username,
-                          email: user.email,
-                          taxID: user.taxID,
-                        };
-                        jwt.sign(
-                          payload,
-                          process.env.JWT_SECRET_KEY,
-                          {
-                            expiresIn: 84300,
-                          },
-                          (err, token) => {
-                            if (err) throw err;
-
-                            res.json({
-                              success: true,
-                              msg: "Successfully logged in",
-                              token,
-                              user,
-                              taxID: user.taxID,
-                            });
-                          }
-                        );
-                        if (phone) {
-                          send(
-                            phone,
-                            `Welcome to KIRMAS\nYour Tax ID is ${user.taxID}`,
-                            (resp) => {
-                              console.log("SMS sent");
-                              console.log(resp);
+                          let payload = {
+                            id: user.id,
+                            username: user.username,
+                            email: user.email,
+                            taxID: user.taxID,
+                          };
+                          jwt.sign(
+                            payload,
+                            process.env.JWT_SECRET_KEY,
+                            {
+                              expiresIn: 84300,
                             },
-                            (err) => {
-                              console.log("SMS not sent");
-                              console.log(err);
+                            (err, token) => {
+                              if (err) throw err;
+
+                              res.json({
+                                success: true,
+                                msg: "Successfully logged in",
+                                token,
+                                user,
+                                taxID: user.taxID,
+                              });
                             }
                           );
-                        }
-                        if (email) {
-                          transport
-                            .sendMail({
-                              from: "KIRMAS",
-                              to: email,
-                              subject: "Welcome",
-                              html: ` <center>
-                              <img src='https://mdas.kigra.gov.ng/images/knlogo.png'
-                              height='80px' width='80px' />
-                            </center>
-                    
-                            <h3>Warm welcome,</h3>
-                            <h4>Thank you for registering with KIRMAS</h4>
-                    
-                            <p>Your Tax ID is ${user.taxID}.</p>      
-                            <p>Do let us know if you are experiencing any difficulty at any point. Thank you.</p>
-                            <br />
-                    
-                            <p>Best regards.</p>
-                            <p>KIRMAS Support</p>`,
-                            })
-                            .then((info) => {
-                              console.log("Message sent: %s", info.messageId);
-                            })
-                            .catch((err) => console.log("Error", err));
-                        }
+                          if (phone) {
+                            send(
+                              phone,
+                              `Welcome to KIRMAS\nYour Tax ID is ${user.taxID}`,
+                              (resp) => {
+                                console.log("SMS sent");
+                                console.log(resp);
+                              },
+                              (err) => {
+                                console.log("SMS not sent");
+                                console.log(err);
+                              }
+                            );
+                          }
+                          if (email) {
+                            transport
+                              .sendMail({
+                                from: "KIRMAS",
+                                to: email,
+                                subject: "Welcome",
+                                html: ` <center>
+                            <img src='https://mdas.kigra.gov.ng/images/knlogo.png'
+                            height='80px' width='80px' />
+                          </center>
+                  
+                          <h3>Warm welcome,</h3>
+                          <h4>Thank you for registering with KIRMAS</h4>
+                  
+                          <p>Your Tax ID is ${user.taxID}.</p>      
+                          <p>Do let us know if you are experiencing any difficulty at any point. Thank you.</p>
+                          <br />
+                  
+                          <p>Best regards.</p>
+                          <p>KIRMAS Support</p>`,
+                              })
+                              .then((info) => {
+                                console.log("Message sent: %s", info.messageId);
+                              })
+                              .catch((err) => console.log("Error", err));
+                          }
 
-                        // .then((resultR) => {
-                        //   //   res.json({
-                        //   //   status: "success",
-                        //   //   result : result[]
-                        //   // });
-                        //   let user = resultR[0][0];
-                        //   console.log(user);
+                          // .then((resultR) => {
+                          //   //   res.json({
+                          //   //   status: "success",
+                          //   //   result : result[]
+                          //   // });
+                          //   let user = resultR[0][0];
+                          //   console.log(user);
 
-                        //   let payload = {
-                        //     email: user.email,
-                        //   };
-                        //   jwt.sign(
-                        //     payload,
-                        //     "secret",
-                        //     {
-                        //       expiresIn: "1d",
-                        //     },
-                        //     (err, token) => {
-                        //       if (err) throw err;
+                          //   let payload = {
+                          //     email: user.email,
+                          //   };
+                          //   jwt.sign(
+                          //     payload,
+                          //     "secret",
+                          //     {
+                          //       expiresIn: "1d",
+                          //     },
+                          //     (err, token) => {
+                          //       if (err) throw err;
 
-                        //       res.json({
-                        //         success: true,
-                        //         msg: "Successfully logged in",
-                        //         token:'Bearer ' + token,
-                        //         user,
-                        //         taxID:user.taxID,
-                        //       });
+                          //       res.json({
+                          //         success: true,
+                          //         msg: "Successfully logged in",
+                          //         token:'Bearer ' + token,
+                          //         user,
+                          //         taxID:user.taxID,
+                          //       });
 
-                        //     }
-                        //   );
-                        // });
-                      })
-                      .catch((err) => {
-                        console.error("Database error:", err);
-                        res
-                          .status(500)
-                          .json({ success: false, msg: "Database error", err });
+                          //     }
+                          //   );
+                          // });
+                        })
+                        .catch((err) => {
+                          console.error("Database error:", err);
+                          res
+                            .status(500)
+                            .json({ success: false, msg: "Database error", err });
+                        });
+                    } else {
+                      res.json({
+                        success: true,
+                        msg: "Successfully logged in",
+                        taxID,
                       });
+                    }
                   },
                   (_er) => {
                     console.log(_er);

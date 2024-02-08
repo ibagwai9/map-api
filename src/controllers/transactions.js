@@ -341,15 +341,13 @@ async function getQRCode(req, res) {
     const phoneNumber = user.dataValues.phone || "Invalid";
     console.log({ user: user.dataValues.id });
 
-    const url = `https://kirmas.kn.gov.ng/payment-${
-      status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
-    }?ref_no=${refno}`;
+    const url = `https://kirmas.kn.gov.ng/payment-${status === "saved" ? "invoice" : status == "Paid" ? "receipt" : "404"
+      }?ref_no=${refno}`;
     // Create a payload string with the payer's information
     const payload = `Date:${moment(transaction_date).format(
       "DD/MM/YYYY"
-    )}\nName: ${name}\nPhone: ${phoneNumber}\n${
-      status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
-    } ID: ${refno}\nUrl: ${url}`;
+    )}\nName: ${name}\nPhone: ${phoneNumber}\n${status === "saved" ? "Invoice" : status === "Paid" ? "Receipt" : "Invalid"
+      } ID: ${refno}\nUrl: ${url}`;
     QRCode.toDataURL(payload, (err, dataUrl) => {
       if (err) {
         // Handle error, e.g., return an error response
@@ -487,14 +485,16 @@ const insertTertiaryData = async (inst) => {
 };
 
 const callTransactionList = (req, res) => {
-  const { from = today, to = today, query_type = "" } = req.query;
-
+  const { from = today, to = today, query_type = "", mda_code = null, sector = null } = req.query;
+  // console.log(req.user);
   db.sequelize
-    .query(`CALL selectTransactions(:from,:to,:query_type)`, {
+    .query(`CALL selectTransactions(:query_type,:from,:to,:mda_code,:sector)`, {
       replacements: {
         from,
         to,
         query_type,
+        mda_code,
+        sector: sector ? sector : req.user[0].sector,
       },
     })
     .then((resp) => {
@@ -530,7 +530,7 @@ const printReport = (req, res) => {
         replacements: {
           ref_no,
           user_id,
-          user_name,
+          user_name: user_name ? user_name : req.user[0].name,
           from,
           to,
           query_type,
@@ -590,8 +590,7 @@ const validatePayment = async (req, res) => {
     while (currentRetry < maxRetries) {
       try {
         const response = await axios.get(
-          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${
-            amount * 100
+          `http://sandbox.interswitchng.com/webpay/api/v1/gettransaction.json?productid=${code}&transactionreference=${ref_no}&amount=${amount * 100
           }`,
           {
             headers: {
