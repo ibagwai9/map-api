@@ -378,11 +378,12 @@ BEGIN
 		# SELECT  @Tax_ID as taxID;
 
     ELSEIF in_query_type='create-admin' THEN
+        START TRANSACTION;
 		SELECT next_code + 1 INTO Tax_ID FROM number_generator WHERE description='application_number';
        INSERT INTO users (name, username, email,  password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID, `rank`,sector)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, Tax_ID, in_rank,in_sector); 
         UPDATE number_generator SET `next_code` = Tax_ID WHERE description='application_number';
-        
+        COMMIT;
     ELSEIF  in_query_type = 'update-admin' THEN
         -- Update columns based on input parameters, maintaining initial values if not provided
         UPDATE users

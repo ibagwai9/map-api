@@ -130,11 +130,7 @@ const handleInvoiceValidation = async (reqJson, res) => {
     </CustomerInformationResponse>`);
             } else {
               const xmlString = `<PaymentItems>
-                ${results
-                  .filter((item) => item.cr > 0)
-                  .map(
-                    (product) => `
-                  <Item>
+              ${results.filter((item) => item.cr > 0).map((product) =>`<Item>
                     <ProductName>${product.description}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
@@ -142,16 +138,14 @@ const handleInvoiceValidation = async (reqJson, res) => {
                     <Subtotal>${product.cr}</Subtotal>
                     <Tax>0</Tax>
                     <Total>${product.cr}</Total>
-                  </Item>`
-                  )
-                  .join("")}</PaymentItems>`;
+                  </Item>`).join("")}</PaymentItems>`;
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <FirstName>${firstName.replace("&", "&amp;")}</FirstName>
+                <FirstName>${firstName?.replace("&", "&amp;")?.replace("'", "")}</FirstName>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
                 ${xmlString}

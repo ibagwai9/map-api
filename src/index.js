@@ -20,7 +20,7 @@ const cron = require("node-cron");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger-doc.json");
 
-let port = process.env.PORT || 3589;
+let port = process.env.PORT || 45599;
 const { getTertiary } = require("./controllers/transactions");
 const { institutions } = require("./config/institutions");
 const { addHospitalData } = require("./controllers/transactions-hpt");
@@ -87,6 +87,7 @@ app.use(helmet.xContentTypeOptions());
 //default route
 app.get("/", (req, res) => res.send("Hello my World, it gonna be good day!"));
 
+require('./routes/tax-clearance.js')(app);
 require("./routes/transactions.js")(app);
 require("./routes/user.js")(app);
 require("./routes/pv_collection.js")(app);
@@ -99,7 +100,6 @@ require("./routes/segment")(app);
 require("./routes/interswitch.js")(app);
 require("./routes/budget.js")(app);
 require("./routes/reciept_logs.js")(app);
-
 var server = app.listen(port, function () {
   var host = server.address().address;
   var port = server.address().port;
