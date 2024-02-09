@@ -135,3 +135,4 @@ DECLARE print_count, total_prints, total_rows INT;
     END IF;
 END$$
 DELIMITER ;
+ALTER TABLE `tax_clearance` ADD `tcc_ref` INT(20) NULL DEFAULT NULL AFTER `tin`;
