@@ -59,7 +59,7 @@ const queryClearance = async function ({
                     approved_by,
                     printed,
                     printed_by,
-                    staff_name: req.user[0].name,
+                    staff_name,
                     from,
                     to,
                     limit,
