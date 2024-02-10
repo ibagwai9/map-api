@@ -378,11 +378,12 @@ BEGIN
 		# SELECT  @Tax_ID as taxID;
 
     ELSEIF in_query_type='create-admin' THEN
+        START TRANSACTION;
 		SELECT next_code + 1 INTO Tax_ID FROM number_generator WHERE description='application_number';
        INSERT INTO users (name, username, email,  password, role, account_type, phone,  accessTo, mda_name, mda_code, department, TaxID, `rank`,sector)
         VALUES (in_name, in_username, in_email, in_password, in_role, in_account_type, in_phone, in_accessTo, in_mda_name, in_mda_code, in_department, Tax_ID, in_rank,in_sector); 
         UPDATE number_generator SET `next_code` = Tax_ID WHERE description='application_number';
-        
+        COMMIT;
     ELSEIF  in_query_type = 'update-admin' THEN
         -- Update columns based on input parameters, maintaining initial values if not provided
         UPDATE users
@@ -2046,5 +2047,57 @@ BEGIN
             SELECT  x.*,  @total_rows as total_rows  FROM `tax_payers` x LIMIT in_offset, in_limit;
         END IF;
     END IF;
+END $$
+DELIMITER ;
+
+
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS selectTransactions $$
+CREATE PROCEDURE `selectTransactions`(IN `query_type` VARCHAR(50), IN `in_from` VARCHAR(20), IN `in_to` VARCHAR(20), IN `in_mda_code` VARCHAR(50), IN `in_sector` VARCHAR(50) )
+BEGIN  
+  IF query_type='sector' THEN 
+    IF in_sector IS NOT NULL  THEN
+        IF  in_mda_code IS NOT NULL THEN 
+            SELECT  COALESCE(SUM(tt.dr), 0) AS total_amt, tt.sector
+                FROM tax_transactions AS tt
+                WHERE  FIND_IN_SET(tt.sector, in_sector) > 0
+                AND tt.status IN ('paid', 'success')
+                AND tt.mda_code = in_mda_code
+                AND DATE(tt.dateSettled) BETWEEN in_from AND in_to
+                GROUP BY sector;
+        ELSE
+            SELECT  COALESCE(SUM(tt.dr), 0) AS total_amt, tt.sector
+                FROM tax_transactions AS tt
+                WHERE  FIND_IN_SET(tt.sector, in_sector) > 0
+                AND tt.status IN ('paid', 'success')
+                AND DATE(tt.dateSettled) BETWEEN in_from AND in_to
+                GROUP BY sector;
+        END IF;
+    ELSE
+        SELECT
+            all_sectors.sector,
+            COALESCE(SUM(tt.dr), 0) AS total_amt
+        FROM (
+            SELECT DISTINCT sector
+            FROM taxes
+        ) AS all_sectors
+        LEFT JOIN tax_transactions AS tt
+            ON all_sectors.sector = tt.sector
+            AND tt.status IN ('paid', 'success')
+            AND DATE(tt.created_at) BETWEEN in_from AND in_to
+        GROUP BY all_sectors.sector;
+    END IF;
+    
+  ELSEIF query_type='mda' THEN
+    SELECT SUM(dr) AS total_amt, sector,mda_name FROM tax_transactions WHERE status = 'paid' AND date(created_at) BETWEEN in_from and in_to GROUP BY sector, mda_name;
+    
+    ELSEIF query_type = 'get_revenue' THEN
+        SELECT SUM(dr) as total_amt, description, mda_name,rev_code FROM `tax_transactions` WHERE  status IN ('paid','success') AND date(created_at) BETWEEN in_from and in_to GROUP BY rev_code;
+    
+    ELSEIF query_type = 'top_50' THEN
+        SELECT * FROM `tax_transactions`  WHERE status IN ('paid','success') AND date(created_at) BETWEEN in_from and in_to ORDER BY `tax_transactions`.`dr` DESC LIMIT 50;
+    
+  END IF;
 END $$
 DELIMITER ;
