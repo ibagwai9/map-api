@@ -130,22 +130,31 @@ const handleInvoiceValidation = async (reqJson, res) => {
     </CustomerInformationResponse>`);
             } else {
               const xmlString = `<PaymentItems>
-              ${results.filter((item) => item.cr > 0).map((product) =>`<Item>
-                    <ProductName>${product.description}</ProductName>
+              ${results
+                .filter((item) => item.cr > 0)
+                .map(
+                  (product) => `<Item>
+                    <ProductName>${product.description
+                      ?.replace("&", "&amp;")
+                      ?.replace("'", "")}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
                     <Price>${product.cr}</Price>
                     <Subtotal>${product.cr}</Subtotal>
                     <Tax>0</Tax>
                     <Total>${product.cr}</Total>
-                  </Item>`).join("")}</PaymentItems>`;
+                  </Item>`
+                )
+                .join("")}</PaymentItems>`;
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
             <Customer>
                 <Status>0</Status>
                 <CustReference>${custreference}</CustReference>
-                <FirstName>${firstName?.replace("&", "&amp;")?.replace("'", "")}</FirstName>
+                <FirstName>${firstName
+                  ?.replace("&", "&amp;")
+                  ?.replace("'", "")}</FirstName>
                 <Phone>${results[0].phone}</Phone>
                 <Amount>${amount}</Amount>
                 ${xmlString}
@@ -230,10 +239,10 @@ const handleInvoice = (req, res) => {
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
 
-  const arrIP= clientIP?.split(",").map(ip => ip.trim());
+  const arrIP = clientIP?.split(",").map((ip) => ip.trim());
   console.log(arrIP);
   console.log(req.body);
-  const isAllowed = arrIP.some(ip => allowedList.includes(ip));
+  const isAllowed = arrIP.some((ip) => allowedList.includes(ip));
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
@@ -483,10 +492,10 @@ const webHook = (req, res) => {
     payableCode = "",
   } = req.body.data;
   // const isAllowed = allowedList.includes(clientIP);
-  const arrIP= clientIP?.split(",").map(ip => ip.trim());
+  const arrIP = clientIP?.split(",").map((ip) => ip.trim());
 
   console.log(req.body);
-  const isAllowed = arrIP.some(ip => allowedList.includes(ip));
+  const isAllowed = arrIP.some((ip) => allowedList.includes(ip));
   console.log(isAllowed);
   console.log(arrIP);
 
@@ -509,7 +518,7 @@ const webHook = (req, res) => {
           console.error(err);
         });
     }
-  } 
+  }
 };
 
 const interResponse = (req, res) => {
