@@ -1097,6 +1097,30 @@ module.exports.getTaxPayers = (req, res) => {
     });
 };
 
+module.exports.searchTaxPayerByAll = (req, res) => {
+  const { user_id,type="" } = req.query;
+  // First, try to find the record in the tax_payers table
+  db.sequelize
+    .query(
+      `SELECT * FROM tax_payers WHERE account_type=:type and (taxID LIKE '%${user_id}%' OR name LIKE '%${user_id}%' OR org_name LIKE '%${user_id}%' OR phone LIKE '%${user_id}%') LIMIT 50`,
+      {
+        replacements: {
+          user_id,
+          type
+        },
+      }
+    )
+    .then((resp) => {
+      const taxPayerData = resp[0];
+      res.json({ success: true, data: taxPayerData ? taxPayerData : [] });
+    })
+
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
+};
+
 module.exports.getTaxPayerInfo = (req, res) => {
   const { user_id } = req.query;
   db.sequelize
