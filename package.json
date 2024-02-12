@@ -12,7 +12,8 @@
     "cont-int": "echo 'This is the cont-int script'"
   },
   "engines": {
-    "node": "18.16.0"
+    "node": "18.16.0",
+    "npm": "10.4.0"
   },
   "license": "MIT",
   "dependencies": {
