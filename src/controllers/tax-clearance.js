@@ -1,5 +1,5 @@
 const db = require("../models");
-import moment from 'moment';
+const moment = require('moment');
 const queryClearance = async function (
   {
     id = null,
