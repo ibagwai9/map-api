@@ -63,7 +63,7 @@ module.exports.getTransaction = (req, res) => {
       tax_transactions t 
   WHERE 
       t.reference_number = :reference_number
-      AND dr > 0
+      AND dr > 0 and status in ("saved")
   GROUP BY 
       reference_number, 
       tax_payer, 
