@@ -7,13 +7,28 @@ require("dotenv").config();
 
 const basename = path.basename(__filename);
 
+// const config = {
+//   username: process.env.DB_USERNAME,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+//   host: process.env.DB_HOST,
+//   port:   process.env.DB_PORT,  
+//   dialect: "mysql",
+//   pool: {
+//     max: 5,
+//     min: 0,
+//     acquire: 30000,
+//     idle: 10000,
+//   },
+// };
+
 const config = {
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  host: process.env.DB_HOST,
-  // port:   process.env.DB_PORT,
-  dialect:"mysql",
+  username: "root",
+  password: "",
+  database: 'new_kirmas',
+  host: "localhost",
+  port:   3307,  
+  dialect: "mysql",
   pool: {
     max: 5,
     min: 0,
@@ -22,9 +37,8 @@ const config = {
   },
 };
 
-
 const db = {};
-// const db = {};
+
 let sequelize;
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);

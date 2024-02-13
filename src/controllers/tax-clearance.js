@@ -1,5 +1,5 @@
 const db = require("../models");
-const moment = require('moment');
+const moment = require("moment");
 const queryClearance = async function (
   {
     id = null,
@@ -35,12 +35,13 @@ const queryClearance = async function (
     to = null,
     limit = 50,
     offset = 0,
-	org_name='',
-	org_id=''
+    org_name = "",
+    org_id = "",
   },
   res
 ) {
   try {
+	
     const data = await db.sequelize.query(
       `CALL TaxClearance(:query_type,:id,:date_issued,:tin,:tcc_ref,:tax_file_no,:taxID,:tax_payer,:income_source,
             :year,:first_amount,:second_amount,:third_amount,:first_income,:second_income,:third_income,
@@ -52,7 +53,7 @@ const queryClearance = async function (
           query_type,
           date_issued: date_issued ? date_issued : null,
           tin,
-          tcc_ref:`KIRS|${moment().format("YYYY-MM-DD")}|`,
+          tcc_ref:tcc_ref|| `KIRS|${moment().format("YYYY-MM-DD")}|`,
           tax_file_no,
           taxID,
           tax_payer,
@@ -81,8 +82,8 @@ const queryClearance = async function (
           to,
           limit,
           offset,
-		  org_name,
-		  org_id
+          org_name,
+          org_id,
         },
       }
     );
@@ -209,8 +210,8 @@ module.exports.postTaxClearance = async (req, res) => {
     to = null,
     limit = 50,
     offset = 0,
-	org_name='',
-	org_id=''
+    org_name = "",
+    org_id = "",
   } = req.body;
 
   try {
@@ -249,8 +250,8 @@ module.exports.postTaxClearance = async (req, res) => {
         to,
         limit,
         offset,
-		org_name,
-		org_id
+        org_name,
+        org_id,
       },
       res
     );
