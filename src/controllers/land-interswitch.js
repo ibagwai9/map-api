@@ -131,12 +131,12 @@ const handleInvoiceValidation = async (reqJson, res) => {
             } else {
               const xmlString = `<PaymentItems>
               ${results
-                .filter((item) => item.cr > 0)
-                .map(
-                  (product) => `<Item>
+                  .filter((item) => item.cr > 0)
+                  .map(
+                    (product) => `<Item>
                     <ProductName>${product.description
-                      ?.replace("&", "&amp;")
-                      ?.replace("'", "")}</ProductName>
+                        ?.replace("&", "&amp;")
+                        ?.replace("'", "")}</ProductName>
                     <ProductCode>${product.item_code}</ProductCode>
                     <Quantity>1</Quantity>
                     <Price>${product.cr}</Price>
@@ -144,8 +144,8 @@ const handleInvoiceValidation = async (reqJson, res) => {
                     <Tax>0</Tax>
                     <Total>${product.cr}</Total>
                   </Item>`
-                )
-                .join("")}</PaymentItems>`;
+                  )
+                  .join("")}</PaymentItems>`;
               let responseData = `<CustomerInformationResponse>
         <MerchantReference>${merchantreference}</MerchantReference>
         <Customers>
@@ -250,9 +250,9 @@ const handleInvoice = (req, res) => {
       const asyncRequestList = [];
       const referenceNo =
         reqJson.paymentnotificationrequest.payments.length &&
-        reqJson.paymentnotificationrequest.payments[0].payment.length
+          reqJson.paymentnotificationrequest.payments[0].payment.length
           ? reqJson.paymentnotificationrequest.payments[0].payment[0]
-              .custreference
+            .custreference
           : null;
       if (referenceNo) {
         const amountPaid =
@@ -284,11 +284,7 @@ const handleInvoice = (req, res) => {
         ) {
           db.sequelize
             .query(
-              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr
-              FROM (SELECT * FROM tax_transactions WHERE reference_number='${referenceNo}' AND status IN ('saved','PAID') AND transaction_type='invoice') AS x
-              LEFT JOIN (SELECT SUM(dr) AS dr_total FROM tax_transactions WHERE reference_number='${referenceNo}' AND status='saved' AND transaction_type='invoice') AS y
-              ON 1=1
-              GROUP BY x.reference_number;`
+              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') AND x.transaction_type='invoice';`
             )
             .then((resp) => {
               if (resp && resp.length && resp[0].length) {
@@ -370,8 +366,8 @@ const handleInvoice = (req, res) => {
                           db.sequelize.query(`UPDATE tax_transactions 
                       SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                       paymentdate="${moment(paymentDate).format(
-                        "YYYY-MM-DD"
-                      )}", modeOfPayment="${modeOfPayment}", 
+                            "YYYY-MM-DD"
+                          )}", modeOfPayment="${modeOfPayment}", 
                     paymentAmount="${amountPaid}"
                     WHERE reference_number="${referenceNo}"`)
                         );
@@ -554,8 +550,8 @@ const interResponse = (req, res) => {
         `UPDATE tax_transactions 
                       SET status="success",  interswitch_ref="${PaymentReference}", logId="${PaymentId}", dateSettled="${TransactionDate}", 
                       paymentdate="${moment().format(
-                        "YYYY-MM-DD"
-                      )}", modeOfPayment="${Channel}", 
+          "YYYY-MM-DD"
+        )}", modeOfPayment="${Channel}", 
                     paymentAmount="${Amount / 100}"
                     WHERE reference_number="${MerchantReference}"`
       )
