@@ -12,7 +12,7 @@ const config = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   host: process.env.DB_HOST,
-  // port:3307,
+  // port:   process.env.DB_PORT,  
   dialect: "mysql",
   pool: {
     max: 5,
@@ -27,7 +27,7 @@ const config = {
 //   password: "",
 //   database: 'new_kirmas',
 //   host: "localhost",
-//   port:   3307,
+//   port:   3307,  
 //   dialect: "mysql",
 //   pool: {
 //     max: 5,
@@ -38,7 +38,7 @@ const config = {
 // };
 
 const db = {};
-// const db = {};
+
 let sequelize;
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
