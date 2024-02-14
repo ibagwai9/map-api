@@ -284,7 +284,7 @@ const handleInvoice = (req, res) => {
         ) {
           db.sequelize
             .query(
-              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') AND x.transaction_type='invoice';`
+              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') and x.dr>0;`
             )
             .then((resp) => {
               if (resp && resp.length && resp[0].length) {
