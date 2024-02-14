@@ -234,7 +234,7 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
 const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
-  // console.log(req);
+  console.log(reqJson);
   // const clientIP = req.ip;
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
@@ -374,7 +374,6 @@ const handleInvoice = (req, res) => {
                       }
                     });
                   });
-
                   Promise.all(asyncRequestList)
                     .then((ok) => {
                       res.set("Content-Type", "text/xml");
