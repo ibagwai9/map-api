@@ -1,5 +1,5 @@
 const passport = require("passport");
-const { postTaxClearance, getTaxClearance } = require("../controllers/tax-clearance");
+const { postTaxClearance, getTaxClearance, verifyTaxClearance } = require("../controllers/tax-clearance");
 
 module.exports = (app) => {
     app.post(
@@ -12,4 +12,10 @@ module.exports = (app) => {
         passport.authenticate("jwt", { session: false }),
         getTaxClearance
     );
+    app.get(
+        "/verify-tax_clearance",
+        passport.authenticate("jwt", { session: false }),
+        verifyTaxClearance
+    );
+    
 }

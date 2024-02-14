@@ -37,23 +37,24 @@ const queryClearance = async function (
     offset = 0,
     org_name = "",
     org_id = "",
+    type = "",
+    address = "",
   },
   res
 ) {
   try {
-	
     const data = await db.sequelize.query(
       `CALL TaxClearance(:query_type,:id,:date_issued,:tin,:tcc_ref,:tax_file_no,:taxID,:tax_payer,:income_source,
             :year,:first_amount,:second_amount,:third_amount,:first_income,:second_income,:third_income,
             :first_year,:second_year,:third_year,:status,:remark,:raised_by,:recommendation,:recommended_by,:rejection,
-            :approved_by,:printed,:printed_by,:staff_name,:from,:to,:limit,:offset,:org_name,:org_id)`,
+            :approved_by,:printed,:printed_by,:staff_name,:from,:to,:limit,:offset,:org_name,:org_id,:type,:address)`,
       {
         replacements: {
           id,
           query_type,
           date_issued: date_issued ? date_issued : null,
           tin,
-          tcc_ref:tcc_ref|| `KIRS|${moment().format("YYYY-MM-DD")}|`,
+          tcc_ref: tcc_ref || `KIRS|${moment().format("YYYY-MM-DD")}|`,
           tax_file_no,
           taxID,
           tax_payer,
@@ -84,6 +85,8 @@ const queryClearance = async function (
           offset,
           org_name,
           org_id,
+          type,
+          address,
         },
       }
     );
@@ -212,6 +215,8 @@ module.exports.postTaxClearance = async (req, res) => {
     offset = 0,
     org_name = "",
     org_id = "",
+    type = "",
+    address = "",
   } = req.body;
 
   try {
@@ -252,6 +257,8 @@ module.exports.postTaxClearance = async (req, res) => {
         offset,
         org_name,
         org_id,
+        type,
+        address,
       },
       res
     );
@@ -259,4 +266,24 @@ module.exports.postTaxClearance = async (req, res) => {
     console.error(err);
     res.status(500).json({ err, success: false });
   }
+};
+
+module.exports.verifyTaxClearance = (req, res) => {
+  const { tcc_ref = "" } = req.query;
+  db.sequelize
+    .query(
+      `SELECT * FROM tax_clearance where status="approved" and tcc_ref=:tcc_ref;`,
+      {
+        replacements: {
+          tcc_ref,
+        },
+      }
+    )
+    .then((resp) => {
+      res.json({ success: true, data: resp[0] });
+    })
+    .catch((error) => {
+      console.error({ error });
+      res.status(500).json({ error, msg: "Error occurred" });
+    });
 };
