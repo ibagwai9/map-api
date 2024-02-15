@@ -47,6 +47,7 @@ const getTransaction = async (req, res) => {
   }
 };
 
+
 const handleInvoiceValidation = async (reqJson, res) => {
   const custreference = reqJson.customerinformationrequest.custreference[0];
   const merchantreference =
@@ -234,7 +235,7 @@ function formatIPv6MappedIPv4(ipv6MappedIPv4) {
 const allowedList = ["41.223.145.174", "154.72.34.174"];
 const handleInvoice = (req, res) => {
   const reqJson = req.body;
-  // console.log(req);
+  console.log(reqJson);
   // const clientIP = req.ip;
   const clientIP =
     req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Get the client's IP address
@@ -284,7 +285,7 @@ const handleInvoice = (req, res) => {
         ) {
           db.sequelize
             .query(
-              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') AND x.transaction_type='invoice';`
+              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') and x.dr>0;`
             )
             .then((resp) => {
               if (resp && resp.length && resp[0].length) {
@@ -374,7 +375,6 @@ const handleInvoice = (req, res) => {
                       }
                     });
                   });
-
                   Promise.all(asyncRequestList)
                     .then((ok) => {
                       res.set("Content-Type", "text/xml");

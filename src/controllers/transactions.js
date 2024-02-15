@@ -35,8 +35,9 @@ const getInvoiceDetailsLGA = async (refNo) => {
 FROM
   kirmasDB.tax_transactions a
 WHERE
-a.reference_number='${refNo}'  and a.status NOT  IN ('paid', 'success')`);
+a.reference_number='${refNo}'  `);
     console.log(reqData[0]);
+    // and a.status NOT  IN ('paid', 'success')
     return reqData[0];
   } catch (error) {
     return error;
