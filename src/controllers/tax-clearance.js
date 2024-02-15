@@ -2,7 +2,7 @@ const db = require("../models");
 const moment = require("moment");
 const queryClearance = async function (
   {
-    id = null,
+    id = "",
     query_type = "insert",
     date_issued = null,
     tin = null,
