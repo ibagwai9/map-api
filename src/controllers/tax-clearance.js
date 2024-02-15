@@ -54,7 +54,7 @@ const queryClearance = async function (
           query_type,
           date_issued: date_issued ? date_issued : null,
           tin,
-          tcc_ref: tcc_ref || `KIRS|${moment().format("YYYY-MM-DD")}|`,
+          tcc_ref: tcc_ref || `KN|${moment().format("YYYYMMDD")}|`,
           tax_file_no,
           taxID,
           tax_payer,
