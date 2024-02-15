@@ -39,6 +39,7 @@ const queryClearance = async function (
     org_id = "",
     type = "",
     address = "",
+    identifier = "",
   },
   res
 ) {
@@ -54,7 +55,8 @@ const queryClearance = async function (
           query_type,
           date_issued: date_issued ? date_issued : null,
           tin,
-          tcc_ref: tcc_ref || `KN|${moment().format("YYYYMMDD")}|`,
+          tcc_ref:
+            tcc_ref || `KN|${identifier}|${moment().format("YYYYMMDD")}|`,
           tax_file_no,
           taxID,
           tax_payer,
@@ -132,6 +134,7 @@ module.exports.getTaxClearance = async (req, res) => {
     to = null,
     limit = 50,
     offset = 0,
+    identifier = "",
   } = req.query;
   try {
     await queryClearance(
@@ -169,6 +172,7 @@ module.exports.getTaxClearance = async (req, res) => {
         to,
         limit,
         offset,
+        identifier,
       },
       res
     );
@@ -214,11 +218,12 @@ module.exports.postTaxClearance = async (req, res) => {
     limit = 50,
     offset = 0,
     org_name = "",
-    org_id = "",
+    org_id = 0,
     type = "",
     address = "",
+	identifier=""
   } = req.body;
-
+  console.log(req.body);
   try {
     await queryClearance(
       {
@@ -259,6 +264,7 @@ module.exports.postTaxClearance = async (req, res) => {
         org_id,
         type,
         address,
+		identifier
       },
       res
     );
