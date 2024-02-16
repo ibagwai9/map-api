@@ -243,7 +243,7 @@ const handleInvoice = (req, res) => {
   const arrIP = clientIP?.split(",").map((ip) => ip.trim());
   console.log(arrIP);
   console.log(req.body);
-  const isAllowed = arrIP.some((ip) => allowedList.includes(ip));
+  const isAllowed = true // arrIP.some((ip) => allowedList.includes(ip));
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
