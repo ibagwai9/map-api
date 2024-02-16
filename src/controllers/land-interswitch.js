@@ -47,7 +47,6 @@ const getTransaction = async (req, res) => {
   }
 };
 
-
 const handleInvoiceValidation = async (reqJson, res) => {
   const custreference = reqJson.customerinformationrequest.custreference[0];
   const merchantreference =
@@ -243,7 +242,7 @@ const handleInvoice = (req, res) => {
   const arrIP = clientIP?.split(",").map((ip) => ip.trim());
   console.log(arrIP);
   console.log(req.body);
-  const isAllowed = true // arrIP.some((ip) => allowedList.includes(ip));
+  const isAllowed = arrIP.some((ip) => allowedList.includes(ip));
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
@@ -293,7 +292,7 @@ const handleInvoice = (req, res) => {
                 const createdAt = resp[0][0].created_at;
                 if (
                   createdAt &&
-                  moment(createdAt).isBefore(moment().subtract(1, "months"))
+                  moment(createdAt).isBefore(moment().subtract(12, "months"))
                 ) {
                   res.set("Content-Type", "text/xml");
                   res.send(`
@@ -306,7 +305,8 @@ const handleInvoice = (req, res) => {
                           </Payment>
                       </Payments>
                   </PaymentNotificationResponse>`);
-                } else if (resp[0][0].dr !== amountPaid) {
+                }
+                 else if (resp[0][0].dr !== amountPaid) {
                   res.set("Content-Type", "text/xml");
                   res.send(`
                   <PaymentNotificationResponse>
@@ -319,32 +319,35 @@ const handleInvoice = (req, res) => {
                           </Payment>
                       </Payments>
                   </PaymentNotificationResponse>`);
-                } else if (resp[0][0].status === "PAID") {
-                  if (logId === resp[0][0].logId) {
-                    res.set("Content-Type", "text/xml");
-                    res.send(`
-                      <PaymentNotificationResponse>
-                          <Payments>
-                              <Payment>
-                              <PaymentLogId>${logId}</PaymentLogId>
-                                  <Status>0</Status>
-                              </Payment>
-                          </Payments>
-                      </PaymentNotificationResponse>`);
-                  } else {
-                    res.set("Content-Type", "text/xml");
-                    res.send(`
-                  <PaymentNotificationResponse>
-                      <Payments>
-                          <Payment>
-                              <PaymentLogId>${logId}</PaymentLogId>
-                              <Status>1</Status>
-                              <StatusMessage>Invalid Customer Reference</StatusMessage>
-                          </Payment>
-                      </Payments>
-                  </PaymentNotificationResponse>`);
-                  }
-                } else {
+                } 
+                // else if (resp[0][0].status === "PAID") {
+                //   if (logId === resp[0][0].logId) {
+                //     res.set("Content-Type", "text/xml");
+                //     res.send(`
+                //       <PaymentNotificationResponse>
+                //           <Payments>
+                //               <Payment>
+                //               <PaymentLogId>${logId}</PaymentLogId>
+                //                   <Status>0</Status>
+                //               </Payment>
+                //           </Payments>
+                //       </PaymentNotificationResponse>`);
+                //   } else {
+                //     res.set("Content-Type", "text/xml");
+                //     res.send(`
+                //   <PaymentNotificationResponse>
+                //       <Payments>
+                //           <Payment>
+                //               <PaymentLogId>${logId}</PaymentLogId>
+                //               <Status>1</Status>
+                //               <StatusMessage>Invalid Customer Reference</StatusMessage>
+                //           </Payment>
+                //       </Payments>
+                //   </PaymentNotificationResponse>`);
+                //   }
+                // } 
+                else {
+                  console.log(reqJson.paymentnotificationrequest.payments);
                   reqJson.paymentnotificationrequest.payments.forEach((p) => {
                     p.payment.forEach((pp) => {
                       const interswitchRef = pp.paymentreference[0];
