@@ -14,7 +14,7 @@ module.exports = (app) => {
     );
     app.get(
         "/verify-tax_clearance",
-        passport.authenticate("jwt", { session: false }),
+        // passport.authenticate("jwt", { session: false }),
         verifyTaxClearance
     );
     

@@ -278,7 +278,7 @@ module.exports.verifyTaxClearance = (req, res) => {
   const { tcc_ref = "" } = req.query;
   db.sequelize
     .query(
-      `SELECT * FROM tax_clearance where status="approved" and tcc_ref=:tcc_ref;`,
+      `SELECT * FROM tax_clearance where status="printed" and tcc_ref=:tcc_ref;`,
       {
         replacements: {
           tcc_ref,
@@ -293,3 +293,5 @@ module.exports.verifyTaxClearance = (req, res) => {
       res.status(500).json({ error, msg: "Error occurred" });
     });
 };
+
+
