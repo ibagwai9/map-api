@@ -292,7 +292,7 @@ const handleInvoice = (req, res) => {
                 const createdAt = resp[0][0].created_at;
                 if (
                   createdAt &&
-                  moment(createdAt).isBefore(moment().subtract(1, "months"))
+                  moment(createdAt).isBefore(moment().subtract(12, "months"))
                 ) {
                   res.set("Content-Type", "text/xml");
                   res.send(`
@@ -320,32 +320,32 @@ const handleInvoice = (req, res) => {
                       </Payments>
                   </PaymentNotificationResponse>`);
                 } 
-                else if (resp[0][0].status === "PAID") {
-                  if (logId === resp[0][0].logId) {
-                    res.set("Content-Type", "text/xml");
-                    res.send(`
-                      <PaymentNotificationResponse>
-                          <Payments>
-                              <Payment>
-                              <PaymentLogId>${logId}</PaymentLogId>
-                                  <Status>0</Status>
-                              </Payment>
-                          </Payments>
-                      </PaymentNotificationResponse>`);
-                  } else {
-                    res.set("Content-Type", "text/xml");
-                    res.send(`
-                  <PaymentNotificationResponse>
-                      <Payments>
-                          <Payment>
-                              <PaymentLogId>${logId}</PaymentLogId>
-                              <Status>1</Status>
-                              <StatusMessage>Invalid Customer Reference</StatusMessage>
-                          </Payment>
-                      </Payments>
-                  </PaymentNotificationResponse>`);
-                  }
-                } 
+                // else if (resp[0][0].status === "PAID") {
+                //   if (logId === resp[0][0].logId) {
+                //     res.set("Content-Type", "text/xml");
+                //     res.send(`
+                //       <PaymentNotificationResponse>
+                //           <Payments>
+                //               <Payment>
+                //               <PaymentLogId>${logId}</PaymentLogId>
+                //                   <Status>0</Status>
+                //               </Payment>
+                //           </Payments>
+                //       </PaymentNotificationResponse>`);
+                //   } else {
+                //     res.set("Content-Type", "text/xml");
+                //     res.send(`
+                //   <PaymentNotificationResponse>
+                //       <Payments>
+                //           <Payment>
+                //               <PaymentLogId>${logId}</PaymentLogId>
+                //               <Status>1</Status>
+                //               <StatusMessage>Invalid Customer Reference</StatusMessage>
+                //           </Payment>
+                //       </Payments>
+                //   </PaymentNotificationResponse>`);
+                //   }
+                // } 
                 else {
                   console.log(reqJson.paymentnotificationrequest.payments);
                   reqJson.paymentnotificationrequest.payments.forEach((p) => {
