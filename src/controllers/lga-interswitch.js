@@ -339,7 +339,7 @@ const handleInvoice = (req, res) => {
                       );
 
                       asyncRequestList.push(
-                        db.sequelize.query(`CALL reveneu_charge_buget('payment','${economic_code}','${moment(dateSettled).format('YYYY')}',${amountPaid})`))
+                        db.sequelize.query(`CALL reveneu_charge_budget('payment','${economic_code}','${moment(dateSettled).format('YYYY')}',${amountPaid})`))
                     } else {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
