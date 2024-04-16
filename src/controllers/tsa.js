@@ -341,7 +341,7 @@ module.exports.getMdaDepartments = (req, res) => {
   const { mda_code = null } = req.query;
   db.sequelize
     .query(
-      `SELECT * FROM taxes x WHERE x.mda_code LIKE '%${mda_code}%' AND x.is_department=1`
+      `SELECT * FROM rev_taxes x WHERE x.mda_code LIKE '%${mda_code}%' AND x.is_department=1`
     )
     .then((resp) => {
       res.json({ success: true, data: resp[0] });

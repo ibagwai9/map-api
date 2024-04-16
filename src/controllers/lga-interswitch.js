@@ -215,9 +215,9 @@ const handleInvoice = (req, res) => {
     const asyncRequestList = [];
     const referenceNo =
       reqJson.paymentnotificationrequest.payments.length &&
-      reqJson.paymentnotificationrequest.payments[0].payment.length
+        reqJson.paymentnotificationrequest.payments[0].payment.length
         ? reqJson.paymentnotificationrequest.payments[0].payment[0]
-            .custreference
+          .custreference
         : null;
     if (referenceNo) {
       const amountPaid =
@@ -262,6 +262,9 @@ const handleInvoice = (req, res) => {
           .then((resp) => {
             if (resp && resp.length && resp[0].length) {
               console.log({ amountPaid, amount: resp[0][0].dr });
+
+              const economic_code = resp[0][0].economic_code;
+
               const createdAt = resp[0][0].created_at;
               if (
                 createdAt &&
@@ -328,19 +331,22 @@ const handleInvoice = (req, res) => {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                 SET status="PAID", interswitch_ref="${interswitchRef}", payer_acct_no='${payer_acct_no}', bank_name='${bank_name}', bank_branch='${bank_branch}', branch_address='${branch_address}', bank_cbn_code='${bank_cbn_code}',  logId="${logId}", dateSettled="${moment(
-                  dateSettled
-                ).format("YYYY-MM-DD")}", 
+                          dateSettled
+                        ).format("YYYY-MM-DD")}", 
                 paymentdate="${paymentDate}", modeOfPayment="${modeOfPayment}", 
                 paymentAmount="${amountPaid}"
                 WHERE reference_number='${referenceNo}'`)
                       );
+
+                      asyncRequestList.push(
+                        db.sequelize.query(`CALL reveneu_charge_buget('payment','${economic_code}','${moment(dateSettled).format('YYYY')}',${amountPaid})`))
                     } else {
                       asyncRequestList.push(
                         db.sequelize.query(`UPDATE tax_transactions 
                     SET status="REVERSED", interswitch_ref="${interswitchRef}", logId="${logId}", dateSettled="${dateSettled}", 
                     paymentdate="${moment(paymentDate).format(
-                      "YYYY-MM-DD"
-                    )}", modeOfPayment="${modeOfPayment}", 
+                          "YYYY-MM-DD"
+                        )}", modeOfPayment="${modeOfPayment}", 
                   paymentAmount="${amountPaid}"
                   WHERE reference_number="${referenceNo}"`)
                       );
