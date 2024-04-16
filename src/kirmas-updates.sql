@@ -73,5 +73,19 @@ COMMIT;
 
 --15/04/2024 (Mergin DBs)
 
-ALTER TABLE `users` ADD `taxID` INT(11) NULL DEFAULT NULL AFTER `id`;
+-- ALTER TABLE `users` ADD `taxID` INT(11) NULL DEFAULT NULL AFTER `id`;
 
+
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `revenue_charge_budget`(IN `query_type` VARCHAR(20), IN `in_economic_code` VARCHAR(20), IN `in_year` VARCHAR(4), IN `in_amount` DOUBLE(10,2))
+BEGIN 
+IF query_type ='payment' THEN
+ 	UPDATE budget b SET b.actual_amount = (b.actual_amount - in_amount) 
+ 	WHERE b.economic_code = in_economic_code AND b.budget_year = in_year; 
+ ELSEIF query_type ='reversal' THEN
+ 	UPDATE budget b SET b.actual_amount = (b.actual_amount + in_amount) 
+ 	WHERE b.economic_code = in_economic_code AND b.budget_year = in_year; 
+END IF;
+END$$
+DELIMITER ;
