@@ -2101,3 +2101,34 @@ BEGIN
   END IF;
 END $$
 DELIMITER ;
+
+Executing:
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '323');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010101' WHERE (`id` = '325');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010101' WHERE (`id` = '326');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010101' WHERE (`id` = '327');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010101' WHERE (`id` = '328');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010104' WHERE (`id` = '330');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010104' WHERE (`id` = '331');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010104' WHERE (`id` = '332');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010104' WHERE (`id` = '333');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010307' WHERE (`id` = '340');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010302' WHERE (`id` = '335');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010303' WHERE (`id` = '336');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010304' WHERE (`id` = '337');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010305' WHERE (`id` = '338');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010306' WHERE (`id` = '339');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010308' WHERE (`id` = '341');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010312' WHERE (`id` = '342');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '324');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '344');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '345');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '346');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '347');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '349');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010314' WHERE (`id` = '5187');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010104' WHERE (`id` = '4382');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010306' WHERE (`id` = '4383');
+UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010310' WHERE (`id` = '4380');
+
+SQL script was successfully applied to the database.

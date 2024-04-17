@@ -33,7 +33,7 @@ const getInvoiceDetailsLGA = async (refNo) => {
   a.tax_payer,
   a.tax_payer as name
 FROM
-  kirmasDB.tax_transactions a
+  tax_transactions a
 WHERE
 a.reference_number='${refNo}'  `);
     console.log(reqData[0]);

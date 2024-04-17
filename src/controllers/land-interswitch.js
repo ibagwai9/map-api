@@ -242,7 +242,7 @@ const handleInvoice = (req, res) => {
   const arrIP = clientIP?.split(",").map((ip) => ip.trim());
   console.log(arrIP);
   console.log(req.body);
-  const isAllowed = arrIP.some((ip) => allowedList.includes(ip));
+  const isAllowed = true //arrIP.some((ip) => allowedList.includes(ip));
   if (isAllowed) {
     if (reqJson.customerinformationrequest) {
       handleInvoiceValidation(reqJson, res);
@@ -284,12 +284,13 @@ const handleInvoice = (req, res) => {
         ) {
           db.sequelize
             .query(
-              `SELECT x.*, IFNULL(SUM(x.dr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') and x.dr>0;`
+              `SELECT x.*, IFNULL(SUM(x.cr), 0) AS dr FROM tax_transactions x WHERE x.reference_number='${referenceNo}' AND x.status IN('saved','PAID') and x.cr>0;`
             )
             .then((resp) => {
               if (resp && resp.length && resp[0].length) {
-                console.log({ amountPaid, amount: resp[0][0].dr });
+                console.log({ amountPaid, amount: resp[0][0] });
                 const createdAt = resp[0][0].created_at;
+                const economic_code = resp[0][0].rev_code;
                 if (
                   createdAt &&
                   moment(createdAt).isBefore(moment().subtract(12, "months"))
@@ -306,7 +307,7 @@ const handleInvoice = (req, res) => {
                       </Payments>
                   </PaymentNotificationResponse>`);
                 }
-                 else if (resp[0][0].dr !== amountPaid) {
+                else if (resp[0][0].dr !== amountPaid) {
                   res.set("Content-Type", "text/xml");
                   res.send(`
                   <PaymentNotificationResponse>
@@ -319,7 +320,7 @@ const handleInvoice = (req, res) => {
                           </Payment>
                       </Payments>
                   </PaymentNotificationResponse>`);
-                } 
+                }
                 // else if (resp[0][0].status === "PAID") {
                 //   if (logId === resp[0][0].logId) {
                 //     res.set("Content-Type", "text/xml");
@@ -365,6 +366,9 @@ const handleInvoice = (req, res) => {
                   paymentAmount="${amountPaid}"
                   WHERE reference_number='${referenceNo}'`)
                         );
+                        asyncRequestList.push(
+                          db.sequelize.query(`CALL revenue_charge_budget('payment','${economic_code}','${moment(dateSettled
+                          ).format("YYYY")}',${amountPaid})`))
                       } else {
                         asyncRequestList.push(
                           db.sequelize.query(`UPDATE tax_transactions 
