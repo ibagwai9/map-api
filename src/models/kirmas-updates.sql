@@ -2102,7 +2102,6 @@ BEGIN
 END $$
 DELIMITER ;
 
-Executing:
 UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010301' WHERE (`id` = '323');
 UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010101' WHERE (`id` = '325');
 UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010101' WHERE (`id` = '326');
@@ -2131,4 +2130,7 @@ UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010104' WHERE (`id` = '4
 UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010306' WHERE (`id` = '4383');
 UPDATE `dbkatsina`.`rev_taxes` SET `economic_code` = '12010310' WHERE (`id` = '4380');
 
-SQL script was successfully applied to the database.
+
+UPDATE budget set actual_amount =0 WHERE actual_amount='';
+
+ALTER TABLE `budget` CHANGE `actual_amount` `actual_amount` DOUBLE(15,2) NULL DEFAULT '0';
