@@ -2101,3 +2101,378 @@ BEGIN
   END IF;
 END $$
 DELIMITER ;
+
+
+ALTER TABLE `taxes` ADD `budget_code` INT(12) NULL DEFAULT NULL AFTER `id`;
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '323');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '324');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010101' WHERE (`id` = '325');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010101' WHERE (`id` = '326');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010101' WHERE (`id` = '327');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010101' WHERE (`id` = '328');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010104' WHERE (`id` = '330');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010104' WHERE (`id` = '331');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010104' WHERE (`id` = '332');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010104' WHERE (`id` = '333');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010302' WHERE (`id` = '335');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010303' WHERE (`id` = '336');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010304' WHERE (`id` = '337');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010305' WHERE (`id` = '338');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010306' WHERE (`id` = '339');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010307' WHERE (`id` = '340');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010312' WHERE (`id` = '342');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010308' WHERE (`id` = '341');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '344');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '345');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '346');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '347');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010603' WHERE (`id` = '348');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010301' WHERE (`id` = '349');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12020455' WHERE (`id` = '350');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010310' WHERE (`id` = '4380');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010104' WHERE (`id` = '4382');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010306' WHERE (`id` = '4383');
+UPDATE `kirmasDB`.`taxes` SET `budget_code` = '12010314' WHERE (`id` = '5187');
+
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS HandleTaxTransaction $$
+CREATE PROCEDURE `HandleTaxTransaction`(IN `p_query_type` VARCHAR(50), IN `p_user_id` VARCHAR(9), IN `p_agent_id` VARCHAR(9), IN `p_tax_payer` VARCHAR(100), IN `p_phone` VARCHAR(100), IN `p_mda_name` VARCHAR(300), IN `p_mda_code` VARCHAR(50), IN `p_item_code` VARCHAR(50), IN `p_rev_code` VARCHAR(50), IN `p_description` VARCHAR(500), IN `p_nin_id` VARCHAR(12), IN `p_tin` VARCHAR(12), IN `p_amount` DECIMAL(20,2), IN `p_transaction_date` DATE, IN `p_transaction_type` ENUM('payment','invoice'), IN `p_status` VARCHAR(20), IN `p_invoice_status` VARCHAR(50), IN `p_tracking_status` VARCHAR(50), IN `p_reference_number` VARCHAR(50), IN `p_department` VARCHAR(150), IN `p_service_category` VARCHAR(150), IN `p_tax_station` VARCHAR(50), IN `p_sector` VARCHAR(50), IN `p_mda_var` VARCHAR(50), IN `p_mda_val` VARCHAR(50), IN `p_start_date` DATE, IN `p_end_date` DATE)
+BEGIN
+IF p_query_type = 'insert_payment' THEN
+    -- Insert a payment transaction
+    INSERT INTO tax_transactions (
+        user_id,
+        item_code,
+        mda_name,
+        mda_code,
+        rev_code,
+        description,
+        nin_id,
+        tin,
+        agent_id,
+        tax_payer,
+        phone,
+        cr,
+        dr,
+        transaction_date,
+        transaction_type,
+        status,
+        invoice_status,
+        tracking_status,
+        reference_number,
+        department, 
+        service_category,
+        tax_station,
+        sector,
+        date_from,
+        date_to,
+        mda_var,
+        mda_val
+    ) VALUES (
+        p_user_id,
+        p_item_code,
+        p_mda_name,
+        p_mda_code,
+        p_rev_code,
+        p_description,
+        p_nin_id,
+        p_tin,
+        p_agent_id,
+        p_tax_payer,
+        p_phone,
+        p_amount,
+        0,
+        p_transaction_date,
+        p_transaction_type,
+        p_status,
+        p_invoice_status,
+        p_tracking_status,
+        p_reference_number,
+        p_department, 
+        p_service_category,
+        p_tax_station,
+        p_sector,
+        p_start_date,
+        p_end_date,
+        p_mda_var,
+        p_mda_val
+    );
+  ELSEIF p_query_type = 'paid_invoice' THEN
+         SELECT x.*, 
+     x.phone AS payer_phone
+FROM tax_transactions x
+WHERE x.reference_number = p_reference_number  AND  `status` in ("success","paid") and logId is not null;
+
+  ELSEIF p_query_type = 'view_payment' THEN
+    -- View payment transaction
+    SELECT * FROM tax_transactions WHERE reference_number = p_reference_number;
+  ELSEIF p_query_type = 'insert_invoice' THEN
+    -- Insert an invoice transaction
+       INSERT INTO tax_transactions (
+        user_id,
+        item_code,
+        mda_name,
+        mda_code,
+        rev_code,
+        description,
+        nin_id,
+        tin,
+        agent_id,
+        tax_payer,
+        phone,
+        cr,
+        dr,
+        transaction_date,
+        transaction_type,
+        status,
+        invoice_status,
+        reference_number,
+        department, 
+        service_category,
+        tax_station,
+        sector,
+        date_from,
+        date_to,
+        mda_var,
+        mda_val
+
+    ) VALUES (
+        p_user_id,
+        p_item_code,
+        p_mda_name,
+        p_mda_code,
+        p_rev_code,
+        p_description,
+        p_nin_id,
+        p_tin,
+        p_agent_id,
+        p_tax_payer,
+        p_phone,
+        0,
+        p_amount,
+        p_transaction_date,
+        p_transaction_type,
+        p_status,
+        p_invoice_status,
+        p_reference_number,
+        p_department, 
+        p_service_category,
+        p_tax_station,
+        p_sector,
+        p_start_date,
+        p_end_date,
+        p_mda_var,
+        p_mda_val
+    );
+   ELSEIF p_query_type = 'check_balance' THEN
+    -- Query user's balance based on their user_id
+    SELECT SUM(CASE WHEN transaction_type = 'payment' THEN cr ELSE -dr END) AS balance
+    FROM tax_transactions
+    WHERE user_id = p_user_id;
+ ELSEIF p_query_type = 'view_payer_ledger' THEN
+    -- View payer's ledger for invoice transactions
+    IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr 
+        FROM tax_transactions y 
+        WHERE y.user_id = p_user_id  
+            AND DATE(y.transaction_date) BETWEEN DATE(p_start_date) AND DATE(p_end_date)
+        GROUP BY y.reference_number;
+    ELSE
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr 
+        FROM tax_transactions y 
+        WHERE y.user_id = p_user_id  
+        GROUP BY y.reference_number;
+    END IF;
+ ELSEIF p_query_type = 'view_agent_history' THEN
+    -- View payer's ledger for invoice transactions
+    IF p_start_date IS NOT NULL AND p_end_date IS NOT NULL THEN
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr,
+            (
+                SELECT SUM(x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS cr  
+
+        FROM tax_transactions y 
+        WHERE y.agent_id = p_agent_id
+            AND DATE(y.transaction_date) BETWEEN DATE(p_start_date) AND DATE(p_end_date)
+        GROUP BY y.reference_number;
+    ELSE
+        SELECT 
+            y.*,
+            (
+                SELECT SUM(x.dr - x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS balance,
+            (
+                SELECT SUM(x.dr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS dr ,
+            (
+                SELECT SUM(x.cr)
+                FROM tax_transactions x
+                WHERE x.reference_number = y.reference_number
+            ) AS cr 
+        FROM tax_transactions y 
+        WHERE y.agent = p_agent_id 
+        GROUP BY y.reference_number;
+    END IF;
+  ELSEIF p_query_type = 'approve_payment' THEN
+    -- Approve a payment transaction
+    UPDATE tax_transactions
+    SET status = 'approved', confirmed_by = p_confirmed_by, confirmed_on = NOW()
+    WHERE reference_number = p_reference_number AND status = 'pending';
+    
+ELSEIF p_query_type = 'view_invoice' THEN
+ SELECT x.*, 
+       x.phone AS payer_phone
+    FROM tax_transactions x
+    WHERE x.reference_number = p_reference_number;
+    
+    ELSEIF p_query_type = 'pending_invoice' THEN
+   
+    IF p_tracking_status IS NOT NULL AND p_status IS NOT NULL THEN
+        SELECT t.*, 
+               (SELECT interswitch_ref_no FROM reciept_logs WHERE ref_no = t.reference_number AND interswitch_ref_no IS NOT NULL  LIMIT 1) AS interswitch_ref_no
+        FROM tax_transactions t
+        WHERE t.tracking_status = p_tracking_status AND t.status = p_status;
+    ELSEIF p_invoice_status IS NOT NULL AND (p_status IS NULL OR p_status = '') THEN
+        SELECT t.*, 
+               (SELECT interswitch_ref_no FROM reciept_logs WHERE ref_no = t.reference_number  AND  interswitch_ref_no IS NOT NULL LIMIT 1) AS interswitch_ref_no
+        FROM tax_transactions t
+        WHERE t.tracking_status = p_tracking_status;
+    END IF;
+    
+ELSE
+  -- Invalid query_type
+  SIGNAL SQLSTATE '45000'
+  SET MESSAGE_TEXT = 'Invalid query_type';
+END IF;
+END $$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS kigra_taxes $$
+CREATE PROCEDURE `kigra_taxes`(
+  IN `query_type` VARCHAR(100), 
+IN `in_id` INT, 
+IN `in_tax_code` VARCHAR(100), 
+IN `in_economic_code` VARCHAR(100), 
+IN `in_tax_parent_code` VARCHAR(100), 
+IN `in_description` VARCHAR(100), 
+IN `in_tax_fee` VARCHAR(10), 
+IN `in_sector` VARCHAR(100), 
+IN `in_input_type` VARCHAR(50), 
+IN `in_uom` VARCHAR(50), 
+IN `in_is_department` VARCHAR(50), 
+IN `in_department` VARCHAR(50), 
+IN `in_mda_name` VARCHAR(50), 
+IN `in_mda_code` VARCHAR(50))
+BEGIN
+  IF query_type='create-tax' THEN   
+    IF in_tax_fee = '' THEN 
+      SET in_tax_fee = NULL;
+    END IF;
+    INSERT INTO `taxes` (`tax_code`, `economic_code`, `tax_parent_code`, `title`, `tax_fee`,`sector`,`default`,`uom`, `is_department`, `department`, `mda_name`, `mda_code`) 
+    VALUES (in_tax_code,in_economic_code,in_tax_parent_code,in_description,in_tax_fee,in_sector,in_input_type,in_uom, in_is_department, in_department, in_mda_name, in_mda_code);
+    
+    ELSEIF query_type = 'update-tax' THEN
+    -- Update an existing tax record based on the provided parameters.
+    UPDATE `taxes` x
+    SET
+      x.`tax_code` = IFNULL(in_tax_code, x.`tax_code`),
+      x.`tax_parent_code` = IFNULL(in_tax_parent_code, x.`tax_parent_code`),
+      x.`economic_code` = IFNULL(in_economic_code, x.`economic_code`),
+      x.`title` = IFNULL(in_description, x.`title`),
+      x.`tax_fee` = IFNULL(in_tax_fee, x.`tax_fee`),
+      x.`uom` = IFNULL(in_uom, x.`uom`),
+      x.`default` = IFNULL(in_tax_fee, x.`default`),
+      x.`sector` = IFNULL(in_sector, x.`sector`)
+    WHERE
+      x.`id` = in_id;
+     ELSEIF query_type = 'delete'  THEN
+     DELETE FROM taxes WHERE  `id` = in_id;
+      
+    ELSEIF query_type = 'select-all'  THEN
+SELECT * FROM `taxes` x WHERE x.sector=in_sector;
+    ELSEIF query_type = 'select-sector-taxes'  THEN
+      SELECT * FROM `taxes` x WHERE  x.sector=in_sector ;
+
+    ELSEIF query_type = 'select-heads'  THEN
+        SELECT * FROM `taxes` x WHERE   x.title!=''
+        AND (x.tax_fee IS NULL  OR  x.tax_fee=''  )  AND x.sector=in_sector;
+    ELSEIF query_type = 'select-main'  THEN
+
+      SELECT * FROM `taxes` x WHERE   x.tax_parent_code !='' AND x.title='' AND x.sector=in_sector;
+  ELSEIF query_type = 'select-sub'  THEN
+
+    IF in_sector IS NOT NULL THEN
+
+    IF in_tax_parent_code IS NOT NULL THEN
+      SELECT * FROM `taxes` x WHERE x.sector=in_sector AND x.tax_fee IS NOT NULL AND  x.tax_parent_code =  in_tax_parent_code;
+  ELSE
+    SELECT * FROM `taxes` x WHERE x.sector=in_sector AND x.tax_fee IS NOT NULL;
+  END IF;
+  ELSE
+        SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code AND x.tax_fee IS NOT NULL;
+END IF;
+ELSEIF query_type = 'selected-sub'  THEN
+IF in_sector IS NOT NULL THEN
+  SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code AND x.sector=in_sector AND x.tax_fee IS NOT NULL AND x.tax_fee!='';
+ELSE
+      SELECT * FROM `taxes` x WHERE x.tax_parent_code =  in_tax_parent_code;
+END IF;
+ELSEIF query_type = 'select' AND in_tax_code IS NOT NULL OR in_tax_parent_code IS NOT NULL THEN
+      IF in_tax_parent_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_parent_code =in_tax_parent_code AND  title IS NOT NULL;
+ELSEIF in_tax_code IS NOT NULL THEN
+SELECT * FROM `taxes` WHERE tax_code =in_tax_code;
+
+END IF;
+ELSEIF  query_type='select-mdas' THEN
+SELECT * FROM mdas_1;
+ELSEIF query_type='select-healthcares' THEN
+SELECT * FROM `state_health_facilities` WHERE ownership_code =1 LIMIT 50;
+ELSEIF query_type='select-high-institutions' THEN
+SELECT * FROM `educ_institutions`;
+ELSEIF query_type='presumptive' THEN
+	SELECT * FROM presumptive_taxes;
+END IF;
+END $$
+DELIMITER ;

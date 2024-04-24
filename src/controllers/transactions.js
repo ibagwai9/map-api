@@ -188,6 +188,9 @@ const postTrx = async (req, res) => {
 
     try {
       const results = await callHandleTaxTransaction(params);
+      // if (commonRefNo && params.query_type.includes('insert')) {
+      //   db.sequelize.query(`CALL update_invoice('add-budget-code', '${item_code}',  '${commonRefNo}');`)
+      // }
       return { success: true, data: results, ref_no: commonRefNo };
     } catch (error) {
       console.error("Error executing stored procedure:", error);

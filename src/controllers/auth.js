@@ -272,6 +272,8 @@ module.exports.SignIn = async (req, res) => {
       where: username.length > 10 ? { phone: username } : { taxID: username },
     });
     let users = [user.dataValues]
+
+    console.log({ users });
     // let users=[user.dataValues]
     if (!users.length) {
       return res.status(404).json({
@@ -280,7 +282,7 @@ module.exports.SignIn = async (req, res) => {
       });
     } else {
       // Only one user found, proceed with authentication
-      console.log(users);
+      console.log({ users });
       const user = users[0];
       const isMatch = await bcrypt.compare(password, user.password);
 
@@ -1099,7 +1101,7 @@ module.exports.getTaxPayers = (req, res) => {
 };
 
 module.exports.searchTaxPayerByAll = (req, res) => {
-  const { user_id,type="" } = req.query;
+  const { user_id, type = "" } = req.query;
   // First, try to find the record in the tax_payers table
   db.sequelize
     .query(
