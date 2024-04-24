@@ -195,6 +195,7 @@ module.exports.postKigrTaxes = (req, res) => {
                 id,
                 title,
                 tax_parent_code,
+                economic_code,
                 parent_code,
                 description,
                 tax_code,
